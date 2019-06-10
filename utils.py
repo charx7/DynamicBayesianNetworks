@@ -48,7 +48,7 @@ if __name__ == '__main__':
   print('Executing test...')
   # Basic test
   data = generateData()
-  
+  print(len(data['features']))
   X = constructDesignMatrix(data, 100)
   print(X.shape)
   

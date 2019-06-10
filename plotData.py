@@ -9,6 +9,16 @@ def plotScatter(var1, var2, label1, label2):
   plt.ylabel(label2)
   plt.show()
 
+def plotHistogram(dataVector, label, burnInPeriod = 1000):
+  plt.title('Histogram of the Variable {0}'.format(label))
+  plt.hist(dataVector[burnInPeriod:], bins='auto')
+  plt.show()
+
+def plotTrace(dataVector, label, burnInPeriod = 1000):
+  plt.plot(dataVector[burnInPeriod:])
+  plt.title('Gibbs sampler trace plot of {0}'.format(label))
+  plt.show()
+
 if __name__ == '__main__':
   print('Testing plotting...')
   data = generateData(num_samples = 100, dimensions = 3, dependent = 1)
