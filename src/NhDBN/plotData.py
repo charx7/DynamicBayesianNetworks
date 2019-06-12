@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from utils import generateData
 
 def plotScatter(var1, var2, label1, label2):
   # Scatter Plot of the variables 
@@ -21,6 +20,7 @@ def plotTrace(dataVector, label, burnInPeriod = 1000):
 
 if __name__ == '__main__':
   print('Testing plotting...')
+  from utils import generateData # TODO Solve this packaging stuff
   data = generateData(num_samples = 100, dimensions = 3, dependent = 1)
 
   plotScatter(data['features']['X1'], data['features']['X2'], 'X1', 'X2' )
