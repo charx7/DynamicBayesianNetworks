@@ -2,12 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import invgamma
 from tqdm import tqdm
-from utils import generateData, constructDesignMatrix
+from utils import generateData, constructDesignMatrix, constructMuMatrix
 from plotData import plotTrace, plotHistogram, plotScatter
 
 def VanillaGibbsSampling(data, numSamples, numIter = 9000):
   # Design Matrix
-  X = constructDesignMatrix(data, num_samples)
+  X = constructDesignMatrix(data, numSamples)
   # Retrieve the response vector
   y = data['response']['y']
 
@@ -20,8 +20,8 @@ def VanillaGibbsSampling(data, numSamples, numIter = 9000):
   beta = []
   sigma_sqr = [] # noise variance parameter
   lambda_sqr = []
-  T = num_samples # T is the number of data points
-  mu = np.zeros(X_cols).reshape(X_cols,1) # Not sure if this is correct prior exp of betas is 0 vector?
+  T = numSamples # T is the number of data points
+  mu = constructMuMatrix(pi) # Prior expectation of betas is the 0 vector
   # Append the initial values of the vectors
   beta.append(np.zeros(X_cols))
   sigma_sqr.append(1)
@@ -38,9 +38,9 @@ def VanillaGibbsSampling(data, numSamples, numIter = 9000):
   # Main for loop of the gibbs sampler
   for it in tqdm(range(numIter)):
     ################# 1(a) Get a sample from sigma square
-    el1 = (y.reshape(num_samples, 1) -  np.dot(X, mu)).T
-    el2 = np.linalg.inv(np.identity(num_samples) + lambda_sqr[it] * np.dot(X, X.T))
-    el3 = (y.reshape(num_samples, 1) -  np.dot(X, mu))
+    el1 = (y.reshape(numSamples, 1) -  np.dot(X, mu)).T
+    el2 = np.linalg.inv(np.identity(numSamples) + lambda_sqr[it] * np.dot(X, X.T))
+    el3 = (y.reshape(numSamples, 1) -  np.dot(X, mu))
 
     # Gamma function parameters
     a_gamma = alpha_gamma_sigma_sqr + (T/2)
@@ -77,7 +77,7 @@ def VanillaGibbsSampling(data, numSamples, numIter = 9000):
     'betas_vector': beta
   }
 
-if __name__ == '__main__':
+def testAlgorithm():
   # Set Seed
   np.random.seed(42)
   # Generate data to test our algo
@@ -101,3 +101,7 @@ if __name__ == '__main__':
   # Plot results for sigma^2
   plotHistogram(results['sigma_sqr_vector'], 'sigma^2', 1000)
   plotTrace(results['sigma_sqr_vector'], 'sigma^2', 1000)
+
+
+if __name__ == '__main__':
+  testAlgorithm()  

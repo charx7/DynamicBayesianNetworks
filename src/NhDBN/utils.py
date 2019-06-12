@@ -1,6 +1,12 @@
 import numpy as np
 import random
 
+def constructMuMatrix(featureSet):
+  # Set the number of vars in the featureSet
+  numFeatures = len(featureSet) + 1 # +1 because of the intercept?
+  # Prior expectation is the zero vector
+  return(np.zeros(numFeatures).reshape(numFeatures, 1)) 
+  
 def generateInitialFeatureSet(numFeatures, fanInRestriction):
   '''
     Function that initializes the feature set Pi.
