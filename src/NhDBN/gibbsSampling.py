@@ -30,7 +30,7 @@ def VanillaGibbsSampling(data, numSamples, numIter = 9000):
   # Use a collapsed sampler gibbs sampler \beta is integrated out with GAM ~ (a,b)
   # Standard choice of hyperparameters for lambda^2
   alpha_gamma_lambda_sqr = 2
-  beta_gamma_lambda_sqr = 0.2
+  beta_gamma_lambda_sqr =  0.2
   # Stndard choice of hyperparameters for sigma^2
   alpha_gamma_sigma_sqr = 0.01
   beta_gamma_sigma_sqr = 0.01
@@ -48,7 +48,7 @@ def VanillaGibbsSampling(data, numSamples, numIter = 9000):
 
     # Sample from the inverse gamma using the parameters and append to the vector of results
     #curr_sigma_sqr = 1 / (np.random.gamma(a_gamma, b_gamma)) #Not the correct Dist to sample
-    curr_sigma_sqr = 1 / (invgamma.rvs(a_gamma, scale = b_gamma, size = 1))
+    curr_sigma_sqr = 1 / (np.random.gamma(a_gamma, scale = (1 / b_gamma), size = 1))
     sigma_sqr.append(np.asscalar(curr_sigma_sqr))
 
     ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
@@ -67,9 +67,9 @@ def VanillaGibbsSampling(data, numSamples, numIter = 9000):
     el2 = ((1/2) * (1/sigma_sqr[1]))
     a_gamma = alpha_gamma_lambda_sqr + ((X.shape[1])/2)
     b_gamma = beta_gamma_lambda_sqr + el2 * el1
-    sample = 1/(invgamma.rvs(a_gamma, scale= b_gamma))
+    sample = 1/(np.random.gamma(a_gamma, scale= 1 / b_gamma))
     # Append the sampled value
-    lambda_sqr.append(sample)
+    lambda_sqr.append(np.asscalar(sample))
 
   return {
     'lambda_sqr_vector': lambda_sqr,

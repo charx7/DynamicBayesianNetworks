@@ -57,10 +57,10 @@ def constructDesignMatrix(data, num_samples):
   ones_vector = np.ones(num_samples)
   
   designMatrix = ones_vector
-  numOfFeatures = len(data['features'])
+  currFeatures = list(dict.keys(data['features']))
   # Stack the vectors to a giant numpy matrix
-  for i in range(numOfFeatures):
-    currFeatureVector = data['features']['X' + str(i+1)]
+  for feature in currFeatures:
+    currFeatureVector = data['features'][feature]
     designMatrix = np.vstack((designMatrix, currFeatureVector))
   
   # Return the transpose num_samples x features

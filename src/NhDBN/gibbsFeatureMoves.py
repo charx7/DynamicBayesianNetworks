@@ -2,21 +2,31 @@ import numpy as np
 from scipy.stats import invgamma
 from tqdm import tqdm
 from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix
+from marginalLikelihood import calculateMarginalLikelihood
 from plotData import plotTrace, plotHistogram, plotScatter
 from generateTestData import generateTestDataSecond
 
 def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
+  # Initialization of the Gibbs Sampling
+  pi = generateInitialFeatureSet(len(data['features']) + 1, 3)
+
+  ##### This has to be functionalized TODO
+  partialData = {
+    'features':{},
+    'response':{}
+  }
+  for feature in pi:
+    currKey = 'X' + str(feature)
+    partialData['features'][currKey] = data['features'][currKey]
+  ##### This has to be functionalized
+  
   # Design Matrix
-  X = constructDesignMatrix(data, numSamples)
+  X = constructDesignMatrix(partialData, numSamples)
   # Retrieve the response vector
   y = data['response']['y']
 
-  # Num Features
-  numFeatures = len(data['features'])
+  # Get the amount of columns on the current design matrix
   X_cols = X.shape[1] 
-
-  # Initialization of the Gibbs Sampling
-  pi = generateInitialFeatureSet(10, 3)
 
   beta = []
   sigma_sqr = [] # noise variance parameter
@@ -25,7 +35,7 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
   mu = constructMuMatrix(pi) # Prior expectation is the zero vector
   
   # Append the initial values of the vectors
-  beta.append(np.zeros(len(pi))) # TODO this beta should be a dict
+  beta.append(np.zeros(len(pi) + 1)) # TODO this beta should be a dict
   sigma_sqr.append(1)
   lambda_sqr.append(1)
 
@@ -50,7 +60,7 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
 
     # Sample from the inverse gamma using the parameters and append to the vector of results
     #curr_sigma_sqr = 1 / (np.random.gamma(a_gamma, b_gamma)) #Not the correct Dist to sample
-    curr_sigma_sqr = 1 / (invgamma.rvs(a_gamma, scale = b_gamma, size = 1))
+    curr_sigma_sqr = 1 / (np.random.gamma(a_gamma, scale = (1 / b_gamma), size = 1))
     sigma_sqr.append(np.asscalar(curr_sigma_sqr))
 
     ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
@@ -69,17 +79,17 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
     el2 = ((1/2) * (1/sigma_sqr[1]))
     a_gamma = alpha_gamma_lambda_sqr + ((X.shape[1])/2)
     b_gamma = beta_gamma_lambda_sqr + el2 * el1
-    sample = 1/(invgamma.rvs(a_gamma, scale= b_gamma))
+    sample = 1/(np.random.gamma(a_gamma, scale= (1/ b_gamma)))
     # Append the sampled value
-    lambda_sqr.append(sample)
+    lambda_sqr.append(np.asscalar(sample))
 
     ################ 4(a) This step proposes a change on the feature set Pi to Pi*
-    # TODO
+    # Calculate the probability of response given the feature set Pi* (marginal likelihood)
+    marginalPi = calculateMarginalLikelihood(X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples)    
 
   return {
     'lambda_sqr_vector': lambda_sqr,
-    'sigma_sqr_vector': sigma_sqr,
-    'betas_vector': beta
+    'sigma_sqr_vector': sigma_sqr
   }
 
 def testAlgorithm():
