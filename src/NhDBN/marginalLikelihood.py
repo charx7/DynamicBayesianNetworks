@@ -9,7 +9,10 @@ def calculateMarginalLikelihood(X, y, mu, alpha_sigma, beta_sigma, lambda_sqr, n
 
   el1 = gamma(T/2 + alpha_sigma) / gamma(alpha_sigma)
   el2 =  (((math.pi) ** (-T/2)) * (2 * beta_sigma) ** (alpha_sigma)) / (cMatrixDeterminant ** (1/2))
-  el3 = (2 * beta_sigma + np.dot(np.dot((y.reshape(num_samples, 1) - np.dot(X, mu)).T , np.linalg.inv(cMatrix)), (y.reshape(num_samples, 1) - np.dot(X, mu)))) ** (T/2 + alpha_sigma) 
+  matrixElement1 = (y.reshape(num_samples, 1) - np.dot(X, mu)).T
+  matrixElement2 = np.linalg.inv(cMatrix)
+  matrixElement3 = y.reshape(num_samples, 1) - np.dot(X, mu)
+  el3 = (2 * beta_sigma + np.dot(np.dot(matrixElement1, matrixElement2), matrixElement3)) ** (-T/2 + alpha_sigma) 
 
   res = el1 * el2 * el3
   return res

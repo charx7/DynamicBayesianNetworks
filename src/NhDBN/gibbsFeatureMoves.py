@@ -11,8 +11,8 @@ from generateTestData import generateTestDataSecond
 
 def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
   # Initialization of the Gibbs Sampling
-  pi = generateInitialFeatureSet(len(data['features']) + 1, 3)
-
+  #pi = generateInitialFeatureSet(len(data['features']) + 1, 3)
+  pi = []
   ##### This has to be functionalized TODO
   partialData = {
     'features':{},
@@ -104,7 +104,7 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
         'response':{}
       }
       for feature in piStar:
-        currKey = 'X' + str(feature)
+        currKey = 'X' + str(int(feature))
         partialData['features'][currKey] = data['features'][currKey]
   
       # Design Matrix
@@ -126,10 +126,13 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
     # Calculate the acceptance/rejection probability of the move given Pi, Pi*
     # First we need to calculate HR given the move we selected
     if randomInteger == 0:
+      # Add move
       hr = (10 - len(pi)) / len(piStar)
     elif randomInteger == 1:
+      # Delete Move
       hr = len(pi) / (10 - len(piStar))
     elif randomInteger == 2:
+      # Exchange move
       hr = 1
     # Get the threshhold of the probability of acceptance of the move
     acceptanceRatio = min(1, (marginalPiStar/marginalPi) * (piStarPrior/ piPrior) * hr)
@@ -145,7 +148,7 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
         'response':{}
       }
     for feature in pi:
-      currKey = 'X' + str(feature)
+      currKey = 'X' + str(int(feature))
       partialData['features'][currKey] = data['features'][currKey]
   
     # Design Matrix

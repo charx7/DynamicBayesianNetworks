@@ -63,6 +63,10 @@ def constructDesignMatrix(data, num_samples):
     currFeatureVector = data['features'][feature]
     designMatrix = np.vstack((designMatrix, currFeatureVector))
   
+  # If the data is void then we return just the ones vector but reshaped
+  if len(currFeatures) < 1:
+    return  (designMatrix.T).reshape(num_samples, 1)
+
   # Return the transpose num_samples x features
   return designMatrix.T
 
