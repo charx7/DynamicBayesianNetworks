@@ -1,8 +1,11 @@
 import numpy as np
 from scipy.stats import invgamma
+from random import randint
 from tqdm import tqdm
-from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix
+from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, deleteMove, addMove, exchangeMove
+from scores import calculateFeatureScores
 from marginalLikelihood import calculateMarginalLikelihood
+from priors import calculateFeatureSetPriorProb
 from plotData import plotTrace, plotHistogram, plotScatter
 from generateTestData import generateTestDataSecond
 
@@ -28,6 +31,7 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
   # Get the amount of columns on the current design matrix
   X_cols = X.shape[1] 
 
+  selectedFeatures = []
   beta = []
   sigma_sqr = [] # noise variance parameter
   lambda_sqr = []
@@ -35,6 +39,7 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
   mu = constructMuMatrix(pi) # Prior expectation is the zero vector
   
   # Append the initial values of the vectors
+  selectedFeatures.append(pi)
   beta.append(np.zeros(len(pi) + 1)) # TODO this beta should be a dict
   sigma_sqr.append(1)
   lambda_sqr.append(1)
@@ -84,13 +89,89 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
     lambda_sqr.append(np.asscalar(sample))
 
     ################ 4(a) This step proposes a change on the feature set Pi to Pi*
-    # Calculate the probability of response given the feature set Pi* (marginal likelihood)
+    # Calculate the probability of response given the feature set Pi (marginal likelihood)
     marginalPi = calculateMarginalLikelihood(X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples)    
+    # Select a random add, delete or exchange move
+    randomInteger = randint(0,2)
+    
+    func = selectMoveDict(randomInteger)
+    # Try catch block for the random move
+    try:
+      piStar = func(pi, 10, 3)
+      # Construct the new X, mu
+      partialData = {
+        'features':{},
+        'response':{}
+      }
+      for feature in piStar:
+        currKey = 'X' + str(feature)
+        partialData['features'][currKey] = data['features'][currKey]
+  
+      # Design Matrix
+      XStar = constructDesignMatrix(partialData, numSamples)
+      # Mu matrix
+      muStar = constructMuMatrix(piStar)
+      # Calculate marginal likelihook for PiStar
+      marginalPiStar = calculateMarginalLikelihood(XStar, y, muStar, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples) 
+      
+    except ValueError:
+      piStar = pi
+      marginalPiStar = marginalPi
+      # Calculate the probability of response the feature set Pi*
+    
+    # Calculate the prior probabilites of the move Pi -> Pi*
+    piPrior = calculateFeatureSetPriorProb(pi, 10, 3) # TODO not to hardcode the dims and fanIn
+    piStarPrior = calculateFeatureSetPriorProb(piStar, 10, 3)
+
+    # Calculate the acceptance/rejection probability of the move given Pi, Pi*
+    # First we need to calculate HR given the move we selected
+    if randomInteger == 0:
+      hr = (10 - len(pi)) / len(piStar)
+    elif randomInteger == 1:
+      hr = len(pi) / (10 - len(piStar))
+    elif randomInteger == 2:
+      hr = 1
+    # Get the threshhold of the probability of acceptance of the move
+    acceptanceRatio = min(1, (marginalPiStar/marginalPi) * (piStarPrior/ piPrior) * hr)
+    # Get a sample from the U(0,1) to compare the acceptance ratio
+    u = np.random.uniform(0,1)
+    if u < acceptanceRatio:
+      # if the sample is less than the acceptance ratio we accept the move to Pi*
+      pi = piStar
+
+    # Now construct (again the data for calculating everything)
+    partialData = {
+        'features':{},
+        'response':{}
+      }
+    for feature in pi:
+      currKey = 'X' + str(feature)
+      partialData['features'][currKey] = data['features'][currKey]
+  
+    # Design Matrix
+    X = constructDesignMatrix(partialData, numSamples)
+    # Mu matrix
+    mu = constructMuMatrix(pi)
+    # Get the new column size of the design matrix
+    X_cols = X.shape[1] 
+    # Append to the vector of results
+    selectedFeatures.append(pi)
 
   return {
     'lambda_sqr_vector': lambda_sqr,
-    'sigma_sqr_vector': sigma_sqr
+    'sigma_sqr_vector': sigma_sqr,
+    'pi_vector': selectedFeatures
   }
+
+# Switcher that defines what random move we are going to make
+def selectMoveDict(selectedFunc):
+  switcher = {
+    0: addMove,
+    1: deleteMove,
+    2: exchangeMove
+  }
+
+  return switcher.get(selectedFunc)
 
 def testAlgorithm():
   # Set Seed
@@ -98,10 +179,11 @@ def testAlgorithm():
   # Generate data to test our algo
   num_samples = 100
   data = generateTestDataSecond(num_samples = num_samples, dimensions = 10)
-  
+
   # Do the gibbs Sampling
   results = gibbsSamplingWithMoves(data, num_samples)
   print('I have finished running the gibbs sampler!')
-  
+  calculateFeatureScores(results['pi_vector'], 10) # TODO Not hardcode the number of dims
+
 if __name__ == '__main__':
   testAlgorithm()

@@ -66,13 +66,13 @@ def constructDesignMatrix(data, num_samples):
   # Return the transpose num_samples x features
   return designMatrix.T
 
-def deleteMove(featureSet):
+def deleteMove(featureSet, numFeatures, fanInRestriction):
   '''
     Deletes a random feature form the set of features pi.
 
     Args:
         featureSet: The set of features that is going to have an element deletion.
-
+        numFeatures: Argument to have the same args in each func type
     Returns:
         A set without a random element from the inputed featureSet.
 
@@ -87,7 +87,10 @@ def deleteMove(featureSet):
   withoutDeleted = np.setdiff1d(featureSet, elToDel)
   return withoutDeleted
 
-def addMove(featureSet, numFeatures):
+def addMove(featureSet, numFeatures, fanInRestriction):
+  if len(featureSet) > fanInRestriction - 1:
+    raise ValueError('The cardinality of the feature set cannot be more than the fan-in restriction.')
+    
   # Construct a set that contains all features idx
   allFeatures = np.add(np.arange(numFeatures), 1)
   # Construct the set where we are going to sample one feature to add randomly
@@ -97,7 +100,9 @@ def addMove(featureSet, numFeatures):
   # Append the randonly chosen feature and return
   return np.append(featureSet, featureToAdd)
 
-def exchangeMove(featureSet, numFeatures):
+def exchangeMove(featureSet, numFeatures, fanInRestriction):
+  if len(featureSet) < 1:
+    raise ValueError('You must have at least one element on the feature set to be able to exchange it.')
   # Construct a set that contains all features idx
   allFeatures = allFeatures = np.add(np.arange(numFeatures), 1)
   # Randomly select one element to exchange from Pi
@@ -124,7 +129,6 @@ def testPiGeneration():
   print('Executing pi test generation...')
   rndSet = generateInitialFeatureSet(6, 3)
   print(rndSet)
-
   # Test delete Move
   #print(deleteMove(rndSet))
   # Test add Move

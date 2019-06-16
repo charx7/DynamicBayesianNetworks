@@ -3,7 +3,6 @@ import numpy as np
 import math 
 
 def calculateMarginalLikelihood(X, y, mu, alpha_sigma, beta_sigma, lambda_sqr, num_samples):
-  print('Calculating...')
   T = num_samples
   cMatrix = np.identity(num_samples) + lambda_sqr * (np.dot(X, X.T))
   cMatrixDeterminant = np.linalg.det(cMatrix)
