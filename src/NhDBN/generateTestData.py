@@ -15,7 +15,7 @@ def generateTestDataSecond(num_samples = 100, dimensions = 3):
   # Generate a response as a func on the features
   epsilon = np.random.normal(0, 0.1, num_samples)
   # Create the response vector y
-  data['response']['y'] = 0.5 + 0.8 * data['features']['X1'] - 1.3 * data['features']['X2']  + epsilon
+  data['response']['y'] = 0.5 + 0.8 * data['features']['X5'] - 1.3 * data['features']['X2']  + epsilon
 
   return data
 

@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import invgamma
 from random import randint
 from tqdm import tqdm
-from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, deleteMove, addMove, exchangeMove
+from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, deleteMove, addMove, exchangeMove, selectData
 from scores import calculateFeatureScores
 from marginalLikelihood import calculateMarginalLikelihood
 from priors import calculateFeatureSetPriorProb
@@ -11,17 +11,12 @@ from generateTestData import generateTestDataSecond
 
 def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
   # Initialization of the Gibbs Sampling
+  # Uncomment if you want random initialization
   #pi = generateInitialFeatureSet(len(data['features']) + 1, 3)
+  fanInRestriction = 3
+  featureDimensionSpace = len(dict.keys(data['features']))
   pi = []
-  ##### This has to be functionalized TODO
-  partialData = {
-    'features':{},
-    'response':{}
-  }
-  for feature in pi:
-    currKey = 'X' + str(feature)
-    partialData['features'][currKey] = data['features'][currKey]
-  ##### This has to be functionalized
+  partialData = selectData(data, pi) 
   
   # Design Matrix
   X = constructDesignMatrix(partialData, numSamples)
@@ -71,7 +66,7 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
     ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
     # Mean Vector Calculation
     el1 = np.linalg.inv(((1/(lambda_sqr[it])) * np.identity(X_cols)) + np.dot(X.T, X))
-    el2 = ((1/(lambda_sqr[it])) * mu) + np.dot(X.T, y.reshape(100,1))
+    el2 = ((1/(lambda_sqr[it])) * mu) + np.dot(X.T, y.reshape(numSamples, 1))
     curr_mean_vector = np.dot(el1, el2)
     # Sigma vector Calculation
     curr_cov_matrix = sigma_sqr[it + 1] * np.linalg.inv(((1/lambda_sqr[it]) * np.identity(X_cols) + np.dot(X.T, X)))
@@ -97,7 +92,7 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
     func = selectMoveDict(randomInteger)
     # Try catch block for the random move
     try:
-      piStar = func(pi, 10, 3)
+      piStar = func(pi, featureDimensionSpace, fanInRestriction)
       # Construct the new X, mu
       partialData = {
         'features':{},
@@ -120,17 +115,17 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
       # Calculate the probability of response the feature set Pi*
     
     # Calculate the prior probabilites of the move Pi -> Pi*
-    piPrior = calculateFeatureSetPriorProb(pi, 10, 3) # TODO not to hardcode the dims and fanIn
-    piStarPrior = calculateFeatureSetPriorProb(piStar, 10, 3)
+    piPrior = calculateFeatureSetPriorProb(pi, featureDimensionSpace, fanInRestriction) 
+    piStarPrior = calculateFeatureSetPriorProb(piStar, featureDimensionSpace, fanInRestriction)
 
     # Calculate the acceptance/rejection probability of the move given Pi, Pi*
     # First we need to calculate HR given the move we selected
     if randomInteger == 0:
       # Add move
-      hr = (10 - len(pi)) / len(piStar)
+      hr = (featureDimensionSpace - len(pi)) / len(piStar)
     elif randomInteger == 1:
       # Delete Move
-      hr = len(pi) / (10 - len(piStar))
+      hr = len(pi) / (featureDimensionSpace - len(piStar))
     elif randomInteger == 2:
       # Exchange move
       hr = 1
@@ -142,15 +137,9 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
       # if the sample is less than the acceptance ratio we accept the move to Pi*
       pi = piStar
 
-    # Now construct (again the data for calculating everything)
-    partialData = {
-        'features':{},
-        'response':{}
-      }
-    for feature in pi:
-      currKey = 'X' + str(int(feature))
-      partialData['features'][currKey] = data['features'][currKey]
-  
+    # Select the data according to the set Pi or Pi*
+    partialData = selectData(data, pi)
+    
     # Design Matrix
     X = constructDesignMatrix(partialData, numSamples)
     # Mu matrix
@@ -181,12 +170,13 @@ def testAlgorithm():
   np.random.seed(42)
   # Generate data to test our algo
   num_samples = 100
-  data = generateTestDataSecond(num_samples = num_samples, dimensions = 10)
+  dims = 6
+  data = generateTestDataSecond(num_samples = num_samples, dimensions = dims)
 
   # Do the gibbs Sampling
   results = gibbsSamplingWithMoves(data, num_samples)
   print('I have finished running the gibbs sampler!')
-  calculateFeatureScores(results['pi_vector'], 10) # TODO Not hardcode the number of dims
+  calculateFeatureScores(results['pi_vector'], dims) 
 
 if __name__ == '__main__':
   testAlgorithm()

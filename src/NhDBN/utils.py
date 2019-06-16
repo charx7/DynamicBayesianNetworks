@@ -1,6 +1,28 @@
 import numpy as np
 import random
 
+def selectData(data, featureSet):
+  '''
+    Function that selects a portion of your data according to a feature set
+
+    Args:
+      data: A dictionary that contains your full data to be partitioned
+      featureSet: A list that contains the feature set that you want to select
+
+    Returns:
+      selectedData: A dictionary that contains the selected data according to the feature set
+  '''
+  partialData = {
+    'features':{},
+    'response':{}
+  }
+
+  for feature in featureSet:
+    currKey = 'X' + str(int(feature))
+    partialData['features'][currKey] = data['features'][currKey]
+  
+  return partialData
+
 def constructMuMatrix(featureSet):
   # Set the number of vars in the featureSet
   numFeatures = len(featureSet) + 1 # +1 because of the intercept?
@@ -53,6 +75,17 @@ def generateData(num_samples = 100, dimensions = 3, dependent = 1):
   return data
 
 def constructDesignMatrix(data, num_samples):
+  '''
+    Constructs a design matrix with an a column of ones as the first column of the output.
+
+    Args:
+      data: A dictionary containing the features as keys.
+      num_samples: The total number of data points
+
+    Returns:
+      designMatrix: A (num_samples x dimensions of your data) numpy array 
+  '''
+
   # Construct the ones vector for the intercept
   ones_vector = np.ones(num_samples)
   
@@ -77,9 +110,10 @@ def deleteMove(featureSet, numFeatures, fanInRestriction):
     Args:
         featureSet: The set of features that is going to have an element deletion.
         numFeatures: Argument to have the same args in each func type
+
     Returns:
         A set without a random element from the inputed featureSet.
-
+    
     Raises:
         Exception: You cannot delete a feature when the given set just contains one element.
   '''
