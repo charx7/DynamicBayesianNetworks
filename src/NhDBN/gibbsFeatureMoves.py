@@ -9,7 +9,7 @@ from priors import calculateFeatureSetPriorProb
 from plotData import plotTrace, plotHistogram, plotScatter
 from generateTestData import generateTestDataSecond
 
-def gibbsSamplingWithMoves(data, numSamples, numIter = 9000):
+def gibbsSamplingWithMoves(data, numSamples, numIter = 7000):
   # Initialization of the Gibbs Sampling
   # Uncomment if you want random initialization
   #pi = generateInitialFeatureSet(len(data['features']) + 1, 3)
@@ -176,7 +176,7 @@ def testAlgorithm():
   # Do the gibbs Sampling
   results = gibbsSamplingWithMoves(data, num_samples)
   print('I have finished running the gibbs sampler!')
-  calculateFeatureScores(results['pi_vector'], dims) 
+  calculateFeatureScores(results['pi_vector'][2001:], dims) 
 
 if __name__ == '__main__':
   testAlgorithm()

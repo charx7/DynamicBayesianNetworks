@@ -17,7 +17,7 @@ def calculateFeatureSetPriorProb(featureSet, featuresDimensions, fanInRestrictio
     return 0
 
   c = 0
-  for i in range(len(featureSet) + 1):
+  for i in range(fanInRestriction + 1):
     currC = comb(featuresDimensions, i)
     c = c + currC
   
