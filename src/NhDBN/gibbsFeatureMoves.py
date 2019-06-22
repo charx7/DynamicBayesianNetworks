@@ -3,13 +3,13 @@ from scipy.stats import invgamma
 from random import randint
 from tqdm import tqdm
 from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, deleteMove, addMove, exchangeMove, selectData
-from scores import calculateFeatureScores
+from scores import calculateFeatureScores, drawRoc
 from marginalLikelihood import calculateMarginalLikelihood
 from priors import calculateFeatureSetPriorProb
 from plotData import plotTrace, plotHistogram, plotScatter
 from generateTestData import generateTestDataSecond
 
-def gibbsSamplingWithMoves(data, numSamples, numIter = 7000):
+def gibbsSamplingWithMoves(data, numSamples, numIter = 5000):
   # Initialization of the Gibbs Sampling
   # Uncomment if you want random initialization
   #pi = generateInitialFeatureSet(len(data['features']) + 1, 3)
@@ -176,7 +176,21 @@ def testAlgorithm():
   # Do the gibbs Sampling
   results = gibbsSamplingWithMoves(data, num_samples)
   print('I have finished running the gibbs sampler!')
-  calculateFeatureScores(results['pi_vector'][2001:], dims) 
+  res = calculateFeatureScores(results['pi_vector'], dims) 
+  # Draw the RoC curve
+  realEdges = {
+    'X1': 0,
+    'X2': 1,
+    'X3': 0,
+    'X4': 0,
+    'X5': 1,
+    'X6': 0
+  }
+
+  y_score = list(res.values())
+  y_real = list(realEdges.values())
+  
+  drawRoc(y_score, y_real)
 
 if __name__ == '__main__':
   testAlgorithm()
