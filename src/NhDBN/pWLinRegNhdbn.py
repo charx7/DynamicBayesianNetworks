@@ -17,6 +17,7 @@ def testAlgorithm():
   dims = 6
   data = generateTestDataSecond(num_samples = num_samples, dimensions = dims)
 
+  print(data)
   # Do the gibbs Sampling
   
 if __name__ == '__main__':
