@@ -8,7 +8,7 @@ def drawRoc(inferredScoreEdges, realEdges):
   roc_auc = auc(fpr, tpr)
   # Plot the RoC curve
   plt.title('Receiver Operating Characteristic')
-  plt.plot(fpr, tpr, '.', label = 'AUC = %0.2f' % roc_auc)
+  plt.plot(fpr, tpr, marker = 'D', label = 'AUC = %0.2f' % roc_auc)
   plt.legend(loc = 'lower right')
   plt.plot([0, 1], [0, 1],'r--')
   #plt.xlim([0, 1])
@@ -30,8 +30,8 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims):
         freqSum = freqSum + 1
     
     # Append to the dictionary of the results
-    results['X' + str(i+1)] = freqSum / len(selectedFeaturesVector)
-  
+    results['X' + str(i + 1)] = freqSum / len(selectedFeaturesVector)
+    print(results['X' + str(i + 1)])
   return results
     #print(freqSum / len(selectedFeaturesVector))
 
