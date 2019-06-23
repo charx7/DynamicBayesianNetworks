@@ -17,6 +17,7 @@ def sigmaSqrSampler(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, beta_gamma_sigm
   return curr_sigma_sqr
 
 def betaSampler(y, X, mu, lambda_sqr, sigma_sqr, X_cols, numSamples, T, it):
+  ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
   # Mean Vector Calculation
   el1 = np.linalg.inv(((1/(lambda_sqr[it])) * np.identity(X_cols)) + np.dot(X.T, X))
   el2 = ((1/(lambda_sqr[it])) * mu) + np.dot(X.T, y.reshape(numSamples, 1))
@@ -28,6 +29,7 @@ def betaSampler(y, X, mu, lambda_sqr, sigma_sqr, X_cols, numSamples, T, it):
   return sample
 
 def lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it):
+  ################ 3(a) Get a sample of lambda square from a Gamma distribution
   el1 = np.dot((beta[it + 1] - mu.flatten()).reshape(X_cols,1).T, (beta[it + 1] - mu.flatten()).reshape(X_cols,1))  
   el2 = ((1/2) * (1/sigma_sqr[1]))
   a_gamma = alpha_gamma_lambda_sqr + ((X.shape[1])/2)

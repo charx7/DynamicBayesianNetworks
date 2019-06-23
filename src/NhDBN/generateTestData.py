@@ -62,7 +62,34 @@ def generateTestDataThird(num_samples = 100, dimensions = 3):
      currCoefs[0] * data['changepoints'][str(i)]['features']['X1'][0:currSampleLen] + \
      currCoefs[1] * data['changepoints'][str(i)]['features']['X2'][0:currSampleLen] + \
      epsilon[0:currSampleLen]
-     
+  
+  # Also save the unified dataset for future partitioning
+  data['unified'] = {
+    'features': {},
+    'response': {}
+  }
+
+  for cp in data['changepoints']:
+    currCpData = data['changepoints'][cp]
+    # Get the current response if we have one
+    try:
+      accumulated = data['unified']['response']['y']
+    except:
+      accumulated = []
+    # Concat with the current one inside the cp
+    concat = np.append(accumulated, currCpData['response']['y'])
+    data['unified']['response']['y'] = concat 
+    
+    for feature in currCpData['features']:
+      # Get the current data if it exists
+      try:
+        accumulated = data['unified']['features'][feature]
+      except:
+        accumulated = []
+      # Concatenate with the current one inside the cp
+      concat = np.append(accumulated, currCpData['features'][feature])
+      data['unified']['features'][feature] = concat
+      
   return data
 
 def generateTestDataSecond(num_samples = 100, dimensions = 3):
