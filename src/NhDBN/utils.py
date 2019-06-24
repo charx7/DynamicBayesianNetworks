@@ -167,13 +167,7 @@ def testPiGeneration():
   print('Executing pi test generation...')
   rndSet = generateInitialFeatureSet(6, 3)
   print(rndSet)
-  # Test delete Move
-  #print(deleteMove(rndSet))
-  # Test add Move
-  #print(addMove(rndSet, 10))
-  # Test element Move
-  #print(exchangeMove(rndSet, 10))
-
+  
 if __name__ == '__main__':
   testDataGeneration()
   testPiGeneration()
