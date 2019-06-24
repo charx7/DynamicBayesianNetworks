@@ -40,3 +40,4 @@ def lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr, bet
 
 if __name__ == '__main__':
   print('Test')
+  
