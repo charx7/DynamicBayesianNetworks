@@ -1,13 +1,14 @@
 import numpy as np
 import random
 
-def generateNetwork(num_features, independent_features, num_samples, verbose = 'false'):
+def generateNetwork(num_features, independent_features, parsed_coefs, num_samples, verbose = 'false'):
   if verbose:
     print('Generating network data with:')
     print(num_features, 'features.')
     print(independent_features, 'independent feature(s).')
     print(num_samples, 'samples.\n')
   
+  adjMatrix = [] # Adj matrix that will save the real config of our data
   data = np.array([])
   indep_features = []
   # Generate the independent features
@@ -17,7 +18,9 @@ def generateNetwork(num_features, independent_features, num_samples, verbose = '
     # Append on the data
     data = np.vstack([data, currFeature]) if data.size else currFeature
     indep_features.append(idx)
-  
+    # Append info the the adj matrix
+    adjMatrix.append([0 for idx in range(num_features)])
+
   # Transpose because the vstack generates everything transposed
   data = data.T
 
@@ -32,22 +35,30 @@ def generateNetwork(num_features, independent_features, num_samples, verbose = '
     # Select by how many indep features the feat is going to be generated
     generated_by_num = np.random.choice(indep_features) + 1 # we +1 because the min is 0
     # Select the indep features
-    generated_by_feats = np.random.choice(indep_features, generated_by_num) 
-    
+    generated_by_feats = np.random.choice(indep_features, generated_by_num, replace = False) 
+    # Data for the adj matrix
+    currAdjMatrixInfo = [0 for idx in range(num_features)]
+
     coefs.append([])
     for feat in generated_by_feats:
-      # Randomly specify a coef between 0 and 1 TODO load the coefs from a file
-      currCoef = np.random.uniform(-1, 1)
+      # Randomly specify a coef between 0 and 1 
+      #currCoef = np.random.uniform(-1, 1)
+      # New get the coefficients from the parsed coefs.txt file
+      currCoef = parsed_coefs[idx][feat]
       # Multiply by the indep feature
       lin_comb_element = currCoef * data[:,feat]
       currDepFeat = currDepFeat + lin_comb_element
       # Track the coefs vector
       coefs[idx].append(currCoef)
+      # Add to the adj matrix
+      currAdjMatrixInfo[feat] = currCoef
 
+    # Append curr Info to the adj matrix
+    adjMatrix.append(currAdjMatrixInfo)
     # Append the generated feature to the data
     data = np.append(data, currDepFeat.reshape(num_samples, 1), axis = 1)
-
-  return data, coefs
+    
+  return data, coefs, adjMatrix
     
 def generateTestDataThird(num_samples = 100, dimensions = 3):
   # Define where the changepoint is located
@@ -160,7 +171,6 @@ def generateTestDataSecond(num_samples = 100, dimensions = 3):
 
 def testArgParse():
   generateNetwork()
-
 
 def testGenerateThirdAlgo():
   print('Testing data generation...')

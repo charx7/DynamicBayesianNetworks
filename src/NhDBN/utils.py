@@ -1,5 +1,43 @@
 import numpy as np
 import random
+import pathlib
+
+def parseCoefs(coefs_file):
+  '''
+    Function that parses the coefficients that are going to be used for data generation
+
+    Args:
+      coefs_file: name of the text file that contains the coefs
+
+    Returns:
+      ceofs: A list with coefficients to be read
+  '''
+  coefs = []
+  path = pathlib.Path.cwd()
+  # Path handling with the debugger
+  clPath = path.joinpath('src', 'NhDBN')
+  # parse the coefficients file
+  try:
+    with open(path.joinpath(coefs_file)) as file:
+      lines = file.readlines()
+      for line in lines:
+        # Append into the coefs list
+        regularizedLine = line.strip('[]\n').replace(',', '').split(' ')
+        floatifiedLine = [float(x) for x in regularizedLine] # Parse into floats
+        
+        coefs.append(floatifiedLine) 
+  except:
+    with(open(clPath.joinpath(coefs_file))) as file:
+      lines = file.readlines()
+      for line in lines:
+        # Append into the coefs list
+        regularizedLine = line.strip('[]\n').replace(',', '').split(' ')
+        floatifiedLine = [float(x) for x in regularizedLine] # Parse into floats
+        
+        coefs.append(floatifiedLine)
+  
+  # Cast into floats
+  return coefs
 
 def selectData(data, featureSet):
   '''
