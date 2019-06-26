@@ -4,6 +4,8 @@ from bayesianLinRegWMoves import gibbsSamplingWithMoves
 from generateTestData import generateNetwork
 from utils import parseCoefs
 from scores import calculateFeatureScores, drawRoc
+from pprint import pprint
+
 np.random.seed(41) # Set seed for reproducibility
 
 # Define the arg parset of the generate func
@@ -71,8 +73,12 @@ def main():
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
   adjMatrixProp, trueAdjMatrix = testBayesianLinRegWithMoves(coefs)
-  print('The true adj matrix is: \n', trueAdjMatrix)
-  print('The proposed adj matrix is: \n', adjMatrixProp)
+  
+  if args.verbose:
+    print('\nThe true adj matrix is: \n')
+    pprint(trueAdjMatrix)
+    print('\nThe proposed adj matrix is: \n')
+    pprint(adjMatrixProp)
   # Remove the diagonal that is allways going to be right
   trueAdjMatrixNoDiag = []
   idxToRemove = 0
@@ -97,7 +103,6 @@ def main():
   flattened_scores = [item for sublist in adjMatrixProp for item in sublist]
   
   drawRoc(flattened_scores, flattened_true) # Draw the RoC curve
-  print('You have to do the ROC man!')
-
+  
 if __name__ == "__main__":
   main()

@@ -67,7 +67,14 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
     currDepFeat = currDepFeat[:num_samples] # Eleminate the last one
     # Append the generated feature to the data
     data = np.append(data, currDepFeat.reshape(num_samples, 1), axis = 1)
-    
+
+    # For console display info
+    if verbose:
+      featName = independent_features + idx
+      print('\nThe feature X{0} was generated {1} feature(s): '.format(featName + 1, len(generated_by_feats)))
+      for feat in zip(generated_by_feats, coefs[idx]):
+        print('X{0} with coefficient {1}'.format(feat[0] + 1, feat[1]))
+
   return data, coefs, adjMatrix
     
 def generateTestDataThird(num_samples = 100, dimensions = 3):

@@ -1,6 +1,6 @@
 import numpy as np
-from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
 
 def drawRoc(inferredScoreEdges, realEdges):
   # Calculate false positive rate and true positive rate
