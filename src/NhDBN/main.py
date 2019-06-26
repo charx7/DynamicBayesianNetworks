@@ -3,6 +3,7 @@ import numpy as np
 from bayesianLinRegWMoves import gibbsSamplingWithMoves
 from generateTestData import generateNetwork
 from utils import parseCoefs
+from scores import calculateFeatureScores, drawRoc
 np.random.seed(42) # Set seed for reproducibility
 
 # Define the arg parset of the generate func
@@ -30,6 +31,7 @@ def testBayesianLinRegWithMoves(coefs):
   dimsVector = [x for x in range(dims)]
 
   # Set the ith as the response the rest as features
+  proposedAdjMatrix = [] # Proposed adj matrix that will be populated by the algo (edge score matrix)
   for configuration in dimsVector:
     data = {
       'features': {},
@@ -41,18 +43,21 @@ def testBayesianLinRegWithMoves(coefs):
     currFeatures = list(filter(lambda x: x != configuration, dimsVector))
     
     # Add the features to the dict
-    idx = 1
     for el in currFeatures:
-      col_name = 'X' + str(idx)
+      col_name = 'X' + str(el)
       data['features'][col_name] = network[:,el]
-      idx = idx + 1
 
     # Add the response to the dict
     data['response']['y'] = network[:, currResponse]
   
     # Do the gibbs Sampling
-    results = gibbsSamplingWithMoves(data, args.num_samples)
-      
+    results = gibbsSamplingWithMoves(data, args.num_samples, 5000)
+    res = calculateFeatureScores(results['pi_vector'][:1000], dims, currFeatures, currResponse)
+    proposedAdjMatrix.append(res)
+
+  # Return the proposed adj matrix
+  return proposedAdjMatrix, adjMatrix
+
 def main():
   if args.verbose:
     print('Generating network data with:')
@@ -61,7 +66,34 @@ def main():
     print(args.num_samples, 'samples.\n')
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
-  testBayesianLinRegWithMoves(coefs)
+  adjMatrixProp, trueAdjMatrix = testBayesianLinRegWithMoves(coefs)
+  print('The true adj matrix is: \n', trueAdjMatrix)
+  print('The proposed adj matrix is: \n', adjMatrixProp)
+  # Remove the diagonal that is allways going to be right
+  trueAdjMatrixNoDiag = []
+  idxToRemove = 0
+  for row in trueAdjMatrix:
+    row.pop(idxToRemove)
+    trueAdjMatrixNoDiag.append(row)
+    idxToRemove + 1
+  # Now for the inferred matrix  
+  adjMatrixPropNoDiag = []
+  idxToRemove = 0
+  for row in adjMatrixProp:
+    row.pop(idxToRemove)
+    adjMatrixPropNoDiag.append(row)
+    idxToRemove + 1
+  # Re-assign them
+  trueAdjMatrix = trueAdjMatrixNoDiag
+  adjMatrixProp = adjMatrixPropNoDiag
+
+  # Flatten the adj matrix to pass to the RoC
+  flattened_true = [item for sublist in trueAdjMatrix for item in sublist]
+  flattened_true = [1 if item else 0 for item in flattened_true] # convert to binary response vector
+  flattened_scores = [item for sublist in adjMatrixProp for item in sublist]
+  
+  drawRoc(flattened_scores, flattened_true) # Draw the RoC curve
+  print('You have to do the ROC man!')
 
 if __name__ == "__main__":
   main()

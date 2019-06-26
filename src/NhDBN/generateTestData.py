@@ -25,15 +25,21 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
   data = data.T
 
   # Generate a response as a func on the features
-  epsilon = np.random.normal(0, 1, num_samples) 
+  epsilon = np.random.normal(0, 0.5, num_samples) 
   
   coefs = []
   for idx in range(num_features - independent_features):
     # Generate a vector of zeros
-    currDepFeat = np.zeros(num_samples)
+    currDepFeat = epsilon#np.zeros(num_samples)
 
     # Select by how many indep features the feat is going to be generated
-    generated_by_num = np.random.choice(indep_features) + 1 # we +1 because the min is 0
+    #generated_by_num = np.random.choice(indep_features) + 1 # we +1 because the min is 0
+    generated_by_num = np.random.choice([0 ,1, 2]) + 1 # New just between the fan in rest
+    
+    # limit the fan-in restriction
+    if generated_by_num > 3:
+      generated_by_num = 3
+    
     # Select the indep features
     generated_by_feats = np.random.choice(indep_features, generated_by_num, replace = False) 
     # Data for the adj matrix

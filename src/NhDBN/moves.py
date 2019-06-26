@@ -16,6 +16,9 @@ def selectMoveDict(selectedFunc):
 
 def featureSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples, it):
+  # The the possible features set
+  possibleFeaturesSet = list(data['features'].keys())
+  possibleFeaturesSet = [int(x.replace('X', '')) for x in possibleFeaturesSet]
   # Calculate the probability of response given the feature set Pi (marginal likelihood)
   marginalPi = calculateMarginalLikelihood(X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples)    
   # Select a random add, delete or exchange move
@@ -24,7 +27,7 @@ def featureSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   func = selectMoveDict(randomInteger)
   # Try catch block for the random move
   try:
-    piStar = func(pi, featureDimensionSpace, fanInRestriction)
+    piStar = func(pi, featureDimensionSpace, fanInRestriction, possibleFeaturesSet)
     # Construct the new X, mu
     partialData = {
       'features':{},

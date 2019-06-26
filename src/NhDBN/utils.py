@@ -141,7 +141,7 @@ def constructDesignMatrix(data, num_samples):
   # Return the transpose num_samples x features
   return designMatrix.T
 
-def deleteMove(featureSet, numFeatures, fanInRestriction):
+def deleteMove(featureSet, numFeatures, fanInRestriction, possibleFeaturesSet):
   '''
     Deletes a random feature form the set of features pi.
 
@@ -155,37 +155,39 @@ def deleteMove(featureSet, numFeatures, fanInRestriction):
     Raises:
         Exception: You cannot delete a feature when the given set just contains one element.
   '''
-  if len(featureSet) < 2:
-    raise ValueError('You cannot delete an element when the card(Pi) is <2.')
+  if len(featureSet) < 1:
+    raise ValueError('You cannot delete an element when the card(Pi) is <1.')
   
   # Randomly select one of the elements of Pi
   elToDel = np.random.choice(featureSet) # Need to set seed to change
   withoutDeleted = np.setdiff1d(featureSet, elToDel)
   return withoutDeleted
 
-def addMove(featureSet, numFeatures, fanInRestriction):
+def addMove(featureSet, numFeatures, fanInRestriction, possibleFeaturesSet):
   if len(featureSet) > fanInRestriction - 1:
     raise ValueError('The cardinality of the feature set cannot be more than the fan-in restriction.')
     
   # Construct a set that contains all features idx
-  allFeatures = np.add(np.arange(numFeatures), 1)
+  #allFeatures = np.add(np.arange(numFeatures), 1) OLD use now possibleFeaturesSet
+
   # Construct the set where we are going to sample one feature to add randomly
-  candidateFeatureSet = np.setdiff1d(allFeatures, featureSet)
+  candidateFeatureSet = np.setdiff1d(possibleFeaturesSet, featureSet)
   # Select randomly an element fron the set
   featureToAdd = np.random.choice(candidateFeatureSet)
   # Append the randonly chosen feature and return
   return np.append(featureSet, featureToAdd)
 
-def exchangeMove(featureSet, numFeatures, fanInRestriction):
+def exchangeMove(featureSet, numFeatures, fanInRestriction, possibleFeaturesSet):
   if len(featureSet) < 1:
     raise ValueError('You must have at least one element on the feature set to be able to exchange it.')
   # Construct a set that contains all features idx
-  allFeatures = allFeatures = np.add(np.arange(numFeatures), 1)
+  #allFeatures = allFeatures = np.add(np.arange(numFeatures), 1) #OLD
+  
   # Randomly select one element to exchange from Pi
   elToExchange = np.random.choice(featureSet)
   #print('The element to exchange is: ', elToExchange)
   # Remove the element from numFeatures and featureSet
-  allFeaturesNoExchange = np.setdiff1d(allFeatures, elToExchange)
+  allFeaturesNoExchange = np.setdiff1d(possibleFeaturesSet, elToExchange)
   featureSet = np.setdiff1d(featureSet, elToExchange)
   # Select randomly a element to add to the feature set
   elToAdd = np.random.choice(allFeaturesNoExchange)

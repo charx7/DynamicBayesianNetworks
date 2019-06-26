@@ -17,24 +17,26 @@ def drawRoc(inferredScoreEdges, realEdges):
   plt.xlabel('False Positive Rate')
   plt.show()
 
-def calculateFeatureScores(selectedFeaturesVector, totalDims):
+def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, currentResponse):
+  adjRow = [0 for x in range(totalDims)]
+  print('The current response feature is: X{0}'.format(currentResponse + 1))
   results = {}
-  for i in range(totalDims):
-    print('Calculating score for {0}'.format(i+1))
-    currentFeature = i + 1 
-
+  for feat in currentFeatures:
+    print('Calculating score for X{0}'.format(feat + 1)) 
     freqSum = 0
     # Calculate the % of apperance
     for currentPi in selectedFeaturesVector:
-      if currentFeature in currentPi:
+      if feat in currentPi:
         freqSum = freqSum + 1
     
     # Append to the dictionary of the results
-    results['X' + str(i + 1)] = freqSum / len(selectedFeaturesVector)
-    print(results['X' + str(i + 1)])
-  return results
-    #print(freqSum / len(selectedFeaturesVector))
+    results['X' + str(feat + 1)] = freqSum / len(selectedFeaturesVector)
+    print(results['X' + str(feat + 1)])
+    # Better return a row on the proposed adj matrix
+    adjRow[feat] = freqSum / len(selectedFeaturesVector)
 
+  return adjRow
+    
 def testFeatureScores():
   dummyData = [
     np.array([1, 3, 6]),
