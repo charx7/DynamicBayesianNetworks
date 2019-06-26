@@ -30,7 +30,7 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
   coefs = []
   for idx in range(num_features - independent_features):
     # Generate a vector of zeros
-    currDepFeat = epsilon#np.zeros(num_samples)
+    currDepFeat = epsilon 
 
     # Select by how many indep features the feat is going to be generated
     #generated_by_num = np.random.choice(indep_features) + 1 # we +1 because the min is 0
@@ -61,6 +61,10 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
 
     # Append curr Info to the adj matrix
     adjMatrix.append(currAdjMatrixInfo)
+    # Generate a random number as the first data point
+    noise = np.random.normal(0, 1)
+    currDepFeat = np.insert(currDepFeat, 0, noise) # Append at the beggining
+    currDepFeat = currDepFeat[:num_samples] # Eleminate the last one
     # Append the generated feature to the data
     data = np.append(data, currDepFeat.reshape(num_samples, 1), axis = 1)
     

@@ -4,7 +4,7 @@ from bayesianLinRegWMoves import gibbsSamplingWithMoves
 from generateTestData import generateNetwork
 from utils import parseCoefs
 from scores import calculateFeatureScores, drawRoc
-np.random.seed(42) # Set seed for reproducibility
+np.random.seed(41) # Set seed for reproducibility
 
 # Define the arg parset of the generate func
 parser = argparse.ArgumentParser(description = 'Specify the type of data to be generated.')
@@ -16,6 +16,10 @@ parser.add_argument('-n_i', '--num_indep', metavar='', type = int, default = 1,
   help = 'Number of independent features.')
 parser.add_argument('-c_f', '--coefs_file', metavar='', type = str, default='coefs.txt',
   help = 'filename of the coefficients for the network data generation.')
+parser.add_argument('-c_l', '--chain_length', metavar='', type = int, default = 5000,
+  help = 'amount of iterations for the MCMC algorithm.')
+parser.add_argument('-b_i', '--burn_in', metavar='', type= int, default = 1000,
+  help = 'burn in period for the MCMC chain.')
 # Mutually exclusive arguments
 group  = parser.add_mutually_exclusive_group()
 group.add_argument('-v', '--verbose', action='store_true', help = 'Print verbose.')
@@ -45,14 +49,14 @@ def testBayesianLinRegWithMoves(coefs):
     # Add the features to the dict
     for el in currFeatures:
       col_name = 'X' + str(el)
-      data['features'][col_name] = network[:,el]
+      data['features'][col_name] = network[:args.num_samples - 1,el]
 
     # Add the response to the dict
-    data['response']['y'] = network[:, currResponse]
+    data['response']['y'] = network[1:, currResponse]
   
     # Do the gibbs Sampling
-    results = gibbsSamplingWithMoves(data, args.num_samples, 5000)
-    res = calculateFeatureScores(results['pi_vector'][:1000], dims, currFeatures, currResponse)
+    results = gibbsSamplingWithMoves(data, args.num_samples - 1, args.chain_length)
+    res = calculateFeatureScores(results['pi_vector'][:args.burn_in], dims, currFeatures, currResponse)
     proposedAdjMatrix.append(res)
 
   # Return the proposed adj matrix
