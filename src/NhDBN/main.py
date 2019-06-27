@@ -111,7 +111,7 @@ def testTestPwBlrWMoves():
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
   # Generate data to test our algo
-  network, coefs, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
+  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
    args.change_points, args.verbose)
   
 def main():
