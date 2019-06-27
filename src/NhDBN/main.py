@@ -22,6 +22,8 @@ parser.add_argument('-c_l', '--chain_length', metavar='', type = int, default = 
   help = 'amount of iterations for the MCMC algorithm.')
 parser.add_argument('-b_i', '--burn_in', metavar='', type= int, default = 1000,
   help = 'burn in period for the MCMC chain.')
+parser.add_argument('-c_p', '--change_points', metavar='', type = int, default = 0, nargs='+',
+  help = 'a series of change points that will be generated. ')
 # Mutually exclusive arguments
 group  = parser.add_mutually_exclusive_group()
 group.add_argument('-v', '--verbose', action='store_true', help = 'Print verbose.')
@@ -30,7 +32,8 @@ args = parser.parse_args()
 def testBayesianLinRegWithMoves(coefs):
   print('Testing Bayesian Lin Reg with moves.')
   # Generate data to test our algo
-  network, coefs, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples, args.verbose)
+  network, coefs, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
+  args.change_points, args.verbose)
   
   # Get the dimensions of the data
   dims = network.shape[1]
@@ -64,7 +67,7 @@ def testBayesianLinRegWithMoves(coefs):
   # Return the proposed adj matrix
   return proposedAdjMatrix, adjMatrix
 
-def main():
+def testNoCps():
   if args.verbose:
     print('Generating network data with:')
     print(args.num_features, 'features.')
@@ -103,6 +106,17 @@ def main():
   flattened_scores = [item for sublist in adjMatrixProp for item in sublist]
   
   drawRoc(flattened_scores, flattened_true) # Draw the RoC curve
+
+def testTestPwBlrWMoves():
+  # The coefficients that will be used to generate the random data
+  coefs = parseCoefs(args.coefs_file)
+  # Generate data to test our algo
+  network, coefs, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
+   args.change_points, args.verbose)
   
+def main():
+  #testNoCps() # Uncomment for testing the second algo on a network
+  testTestPwBlrWMoves() # Uncomment to test the third algo on a network
+
 if __name__ == "__main__":
   main()
