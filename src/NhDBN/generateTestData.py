@@ -28,13 +28,17 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
   data = data.T
 
   # Populate the adjMatrix for each cp
-  for _ in range(len(change_points) + 1):
+  if change_points == 0: # Handle the case where we have no changepoints
+    change_points = []
+
+  totalCps = len(change_points) + 1
+  for _ in range(totalCps):
     # You have to copy otherwise it will create just x references to a single object
     nonReferenceList = indep_feats_adj_matrix.copy() 
     adjMatrix.append(nonReferenceList)
 
   # Generate a response as a func on the features
-  epsilon = np.random.normal(0, 0.5, num_samples) 
+  epsilon = np.random.normal(0, 1, num_samples) 
   coefs = []
   change_points.append(num_samples + 2) # Append the last (artificial) change point +2 because of the bound correction 
   for idx in range(num_features - independent_features):
@@ -100,8 +104,8 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
     #adjMatrix[idx].append(currAdjMatrixInfo)
     # Generate a random number as the first data point
     noise = np.random.normal(0, 1)
-    currDepFeat = np.insert(accCurrDepFeat, 0, noise) # Append at the beggining
-    currDepFeat = accCurrDepFeat[:num_samples] # Eliminate the last one
+    accCurrDepFeat = np.insert(accCurrDepFeat, 0, noise) # Append at the beggining
+    accCurrDepFeat = accCurrDepFeat[:num_samples] # Eliminate the last one
     # Append the generated feature to the data
     data = np.append(data, accCurrDepFeat.reshape(num_samples, 1), axis = 1)
 
@@ -115,102 +119,9 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
         displayCoefs = adjMatrix[kdx][-1]
         for feat in generated_by_feats:
           print('X{0} with coefficient {1}'.format(feat + 1, displayCoefs[feat]))
-      #for feat in zip(generated_by_feats, coefs[idx]):
-      #  print('X{0} with coefficient {1}'.format(feat[0] + 1, feat[1]))
 
-  return data, coefs, adjMatrix
+  return data, coefs, adjMatrix #TODO remove the return of coefs (redundant since they are on adjMatrix)
     
-def generateTestDataThird(num_samples = 100, dimensions = 3):
-  # Define where the changepoint is located
-  change_points = [25, 50] # for now is just one segment
-
-  data = {
-    'changepoints': {}
-  }
-  
-  # Populate with empty dicts
-  for idx in range(len(change_points) + 1):
-    data['changepoints'][str(idx)] = {}
-    data['changepoints'][str(idx)] = {
-      'features':{},
-      'response':{}
-    }
-
-  # Generate independent data using the changepoings
-  idxSample = 1
-  for i in range(len(change_points) + 1):
-    try:
-      currCp = change_points[i]
-    except:
-      # There is no next changepoint so we set the num_samples as the uppper limit
-      currCp = num_samples + 1 # TODO not sure about this + 1 at the end to fill num_samples
-    if i == 0:
-      lastCp = idxSample
-    else:
-      lastCp = change_points[i - 1]
-    currSampleLen =  currCp - lastCp
-
-    for j in range(dimensions):
-      col_name = 'X' + str(j + 1)
-      data['changepoints'][str(i)]['features'][col_name] = np.random.normal(0, 1, currSampleLen)
-
-  # Generate the response Y as a func of the features
-  coefs = [
-    [2.8, -1.3],
-    [1.8, -0.5],
-    [3.4, -0,2]
-  ]
-  # Generate the random noise that will be added to all the samples
-  epsilon = np.random.normal(0, 0.1, num_samples)   
-  for i in range(len(change_points) + 1):
-    # Get the cp length
-    try:
-      currCp = change_points[i]
-    except:
-      # There is no next changepoint so we set the num_samples as the uppper limit
-      currCp = num_samples + 1 # TODO not sure about this + 1 at the end to fill num_samples
-    if i == 0:
-      lastCp = idxSample
-    else:
-      lastCp = change_points[i - 1]
-    currSampleLen =  currCp - lastCp
-
-    # Create the response vector y
-    currCoefs = coefs[i]
-    data['changepoints'][str(i)]['response']['y'] = 0.5 + \
-     currCoefs[0] * data['changepoints'][str(i)]['features']['X1'][0:currSampleLen] + \
-     currCoefs[1] * data['changepoints'][str(i)]['features']['X2'][0:currSampleLen] + \
-     epsilon[0:currSampleLen]
-  
-  # Also save the unified dataset for future partitioning
-  data['unified'] = {
-    'features': {},
-    'response': {}
-  }
-
-  for cp in data['changepoints']:
-    currCpData = data['changepoints'][cp]
-    # Get the current response if we have one
-    try:
-      accumulated = data['unified']['response']['y']
-    except:
-      accumulated = []
-    # Concat with the current one inside the cp
-    concat = np.append(accumulated, currCpData['response']['y'])
-    data['unified']['response']['y'] = concat 
-    
-    for feature in currCpData['features']:
-      # Get the current data if it exists
-      try:
-        accumulated = data['unified']['features'][feature]
-      except:
-        accumulated = []
-      # Concatenate with the current one inside the cp
-      concat = np.append(accumulated, currCpData['features'][feature])
-      data['unified']['features'][feature] = concat
-      
-  return data
-
 def generateTestDataSecond(num_samples = 100, dimensions = 3):
   data = {
     'features': {},

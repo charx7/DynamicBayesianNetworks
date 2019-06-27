@@ -32,9 +32,10 @@ args = parser.parse_args()
 def testBayesianLinRegWithMoves(coefs):
   print('Testing Bayesian Lin Reg with moves.')
   # Generate data to test our algo
-  network, coefs, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
+  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
   args.change_points, args.verbose)
-  
+  # Since we are testing with no cps get the single adjMatrix
+  adjMatrix = adjMatrix[0]
   # Get the dimensions of the data
   dims = network.shape[1]
   dimsVector = [x for x in range(dims)]
@@ -68,11 +69,6 @@ def testBayesianLinRegWithMoves(coefs):
   return proposedAdjMatrix, adjMatrix
 
 def testNoCps():
-  if args.verbose:
-    print('Generating network data with:')
-    print(args.num_features, 'features.')
-    print(args.num_indep, 'independent feature(s).')
-    print(args.num_samples, 'samples.\n')
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
   adjMatrixProp, trueAdjMatrix = testBayesianLinRegWithMoves(coefs)
@@ -115,8 +111,8 @@ def testTestPwBlrWMoves():
    args.change_points, args.verbose)
   
 def main():
-  #testNoCps() # Uncomment for testing the second algo on a network
-  testTestPwBlrWMoves() # Uncomment to test the third algo on a network
+  testNoCps() # Uncomment for testing the second algo on a network
+  #testTestPwBlrWMoves() # Uncomment to test the third algo on a network
 
 if __name__ == "__main__":
   main()
