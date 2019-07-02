@@ -141,6 +141,52 @@ def constructDesignMatrix(data, num_samples):
   # Return the transpose num_samples x features
   return designMatrix.T
 
+def constructNdArray(data, num_samples, change_points):
+  # Init empty tensor
+  dataNdArray = []
+  # Substract 1 from the change_points because we only have num_samples - 1 points
+  change_points[-1] = change_points[-1] - 1
+
+  # Loop for each change point
+  cpQueu = []
+  boundCorrection = 2
+  for idx, cp in enumerate(change_points):
+    # Get the length of the current change point
+    try:
+      cpQueu.pop(0)
+    except:
+      cpQueu.append(2) # We are on the beginning
+
+    # The curr len of the cp and bound lengths
+    lenCurrCp = cp - cpQueu[0]
+    lowerBound = cpQueu[0] 
+    upperBound = cp 
+
+    # Construct the ones vector for the intercept
+    ones_vector = np.ones(lenCurrCp)
+    
+    currDesignMatrix = ones_vector
+    currFeatures = list(dict.keys(data['features']))
+    # Stack the vectors to a giant numpy matrix
+    for feature in currFeatures:
+      currFeatureVector = data['features'][feature] \
+        [lowerBound - boundCorrection:cp - boundCorrection] # TODO grab data  until the changepoint
+      currDesignMatrix = np.vstack((currDesignMatrix, currFeatureVector))
+    
+    # If the data is void then we return just the ones vector but reshaped
+    if len(currFeatures) < 1:
+      currDesignMatrix = (currDesignMatrix.T).reshape(lenCurrCp, 1) # TODO handle this case
+
+    # Transpose to get the correct result
+    currDesignMatrix = currDesignMatrix.T
+    # Append past cp to the Q
+    cpQueu.append(cp)
+    # Append to the multi dim array
+    dataNdArray.append(currDesignMatrix)
+
+  # Return the multi dim array
+  return dataNdArray  
+
 def deleteMove(featureSet, numFeatures, fanInRestriction, possibleFeaturesSet):
   '''
     Deletes a random feature form the set of features pi.

@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
 from bayesianLinRegWMoves import gibbsSamplingWithMoves
+from pWLinRegNhdbn import pwGibbsSamplingWithMoves
 from generateTestData import generateNetwork
 from utils import parseCoefs
 from scores import calculateFeatureScores, drawRoc
@@ -28,7 +29,7 @@ parser.add_argument('-c_p', '--change_points', metavar='', type = int, default =
 group  = parser.add_mutually_exclusive_group()
 group.add_argument('-v', '--verbose', action='store_true', help = 'Print verbose.')
 args = parser.parse_args()
-
+  
 def testBayesianLinRegWithMoves(coefs):
   print('Testing Bayesian Lin Reg with moves.')
   # Generate data to test our algo
@@ -106,13 +107,42 @@ def testNoCps():
 def testTestPwBlrWMoves():
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
+  print('Testing Piece-Wise Bayesian Lin Reg with moves.')
+  
   # Generate data to test our algo
   network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
-   args.change_points, args.verbose)
+  args.change_points, args.verbose)
   
+  # Get the dimensions of the data
+  dims = network.shape[1]
+  dimsVector = [x for x in range(dims)]
+
+  # Set the ith as the response the rest as features
+  proposedAdjMatrix = [] # TODO multi dim... Proposed adj matrix that will be populated by the algo (edge score matrix)
+  for configuration in dimsVector:
+    data = {
+      'features': {},
+      'response': {}
+    }
+
+    currResponse = configuration
+    # You have to evaluate because the filter returns an obj
+    currFeatures = list(filter(lambda x: x != configuration, dimsVector))
+
+    # Add the features to the dict
+    for el in currFeatures:
+      col_name = 'X' + str(el)
+      data['features'][col_name] = network[:args.num_samples - 1, el]
+
+    # Add the response to the dict
+    data['response']['y'] = network[1:, currResponse]
+  
+    # Do the gibbs Sampling
+    results = pwGibbsSamplingWithMoves(data, args.change_points, args.num_samples - 1, args.chain_length)
+    
 def main():
-  testNoCps() # Uncomment for testing the second algo on a network
-  #testTestPwBlrWMoves() # Uncomment to test the third algo on a network
+  #testNoCps() # Uncomment for testing the second algo on a network
+  testTestPwBlrWMoves() # Uncomment to test the third algo on a network
 
 if __name__ == "__main__":
   main()

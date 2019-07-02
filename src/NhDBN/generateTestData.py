@@ -38,7 +38,7 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
     adjMatrix.append(nonReferenceList)
 
   # Generate a response as a func on the features
-  epsilon = np.random.normal(0, 1, num_samples) 
+  epsilon = np.random.normal(0, 0.5, num_samples) 
   coefs = []
   change_points.append(num_samples + 2) # Append the last (artificial) change point +2 because of the bound correction 
   for idx in range(num_features - independent_features):

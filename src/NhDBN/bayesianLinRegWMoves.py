@@ -45,7 +45,7 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 5000):
   # Standard choice of hyperparameters for lambda^2
   alpha_gamma_lambda_sqr = 2
   beta_gamma_lambda_sqr = 0.2
-  # Stndard choice of hyperparameters for sigma^2
+  # Standard choice of hyperparameters for sigma^2
   alpha_gamma_sigma_sqr = 0.01
   beta_gamma_sigma_sqr = 0.01
 
@@ -86,34 +86,4 @@ def gibbsSamplingWithMoves(data, numSamples, numIter = 5000):
     'sigma_sqr_vector': sigma_sqr,
     'pi_vector': selectedFeatures
   }
-
-def testAlgorithm():
-  # Set Seed
-  np.random.seed(42)
-  # Generate data to test our algo
-  num_samples = 100
-  dims = 6
-  data = generateTestDataSecond(num_samples = num_samples, dimensions = dims)
-
-  # Do the gibbs Sampling
-  results = gibbsSamplingWithMoves(data, num_samples)
-  print('I have finished running the gibbs sampler!')
-  res = calculateFeatureScores(results['pi_vector'][:3000], dims) 
-  # Draw the RoC curve
-  realEdges = {
-    'X1': 0,
-    'X2': 1,
-    'X3': 0,
-    'X4': 0,
-    'X5': 1,
-    'X6': 0
-  }
-
-  # Get the edge scores and compare
-  y_score = list(res.values())
-  y_real = list(realEdges.values())
-  # Draw the RoC curve
-  drawRoc(y_score, y_real)
-
-if __name__ == '__main__':
-  testAlgorithm()
+  
