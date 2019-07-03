@@ -4,7 +4,7 @@ from bayesianLinRegWMoves import gibbsSamplingWithMoves
 from pWLinRegNhdbn import pwGibbsSamplingWithMoves
 from generateTestData import generateNetwork
 from utils import parseCoefs
-from scores import calculateFeatureScores, drawRoc
+from scores import calculateFeatureScores, adjMatrixRoc
 from pprint import pprint
 
 np.random.seed(41) # Set seed for reproducibility
@@ -73,37 +73,8 @@ def testNoCps():
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
   adjMatrixProp, trueAdjMatrix = testBayesianLinRegWithMoves(coefs)
+  adjMatrixRoc(adjMatrixProp, trueAdjMatrix, args.verbose)
   
-  if args.verbose:
-    print('\nThe true adj matrix is: \n')
-    pprint(trueAdjMatrix)
-    print('\nThe proposed adj matrix is: \n')
-    pprint(adjMatrixProp)
-  # Remove the diagonal that is allways going to be right
-  trueAdjMatrixNoDiag = []
-  idxToRemove = 0
-  for row in trueAdjMatrix:
-    row.pop(idxToRemove)
-    trueAdjMatrixNoDiag.append(row)
-    idxToRemove + 1
-  # Now for the inferred matrix  
-  adjMatrixPropNoDiag = []
-  idxToRemove = 0
-  for row in adjMatrixProp:
-    row.pop(idxToRemove)
-    adjMatrixPropNoDiag.append(row)
-    idxToRemove + 1
-  # Re-assign them
-  trueAdjMatrix = trueAdjMatrixNoDiag
-  adjMatrixProp = adjMatrixPropNoDiag
-
-  # Flatten the adj matrix to pass to the RoC
-  flattened_true = [item for sublist in trueAdjMatrix for item in sublist]
-  flattened_true = [1 if item else 0 for item in flattened_true] # convert to binary response vector
-  flattened_scores = [item for sublist in adjMatrixProp for item in sublist]
-  
-  drawRoc(flattened_scores, flattened_true) # Draw the RoC curve
-
 def testTestPwBlrWMoves():
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
@@ -139,10 +110,18 @@ def testTestPwBlrWMoves():
   
     # Do the gibbs Sampling
     results = pwGibbsSamplingWithMoves(data, args.change_points, args.num_samples - 1, args.chain_length)
-    
+    # Calculate feature Scores  
+    res = calculateFeatureScores(results['pi_vector'][:args.burn_in], dims, currFeatures, currResponse)
+    proposedAdjMatrix.append(res)
+
+  # Return the proposed adj matrix
+  #return proposedAdjMatrix, adjMatrix # uncomment to functionalize
+  trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
+  adjMatrixRoc(proposedAdjMatrix, trueAdjMatrix, args.verbose)
+  
 def main():
-  #testNoCps() # Uncomment for testing the second algo on a network
-  testTestPwBlrWMoves() # Uncomment to test the third algo on a network
+  testNoCps() # Uncomment for testing the second algo on a network
+  #testTestPwBlrWMoves() # Uncomment to test the third algo on a network
 
 if __name__ == "__main__":
   main()
