@@ -145,12 +145,13 @@ def constructNdArray(data, num_samples, change_points):
   # Init empty tensor
   dataNdArray = []
   # Substract 1 from the change_points because we only have num_samples - 1 points
-  change_points[-1] = change_points[-1] - 1
+  tmpChange_points = change_points.copy() # Operate within a copy not to mutate the list
+  tmpChange_points[-1] = tmpChange_points[-1] - 1
 
   # Loop for each change point
   cpQueu = []
   boundCorrection = 2
-  for idx, cp in enumerate(change_points):
+  for idx, cp in enumerate(tmpChange_points):
     # Get the length of the current change point
     try:
       cpQueu.pop(0)
@@ -175,7 +176,7 @@ def constructNdArray(data, num_samples, change_points):
     
     # If the data is void then we return just the ones vector but reshaped
     if len(currFeatures) < 1:
-      currDesignMatrix = (currDesignMatrix.T).reshape(lenCurrCp, 1) # TODO handle this case
+      currDesignMatrix = ((currDesignMatrix).reshape(lenCurrCp, 1)).T # TODO handle this case
 
     # Transpose to get the correct result
     currDesignMatrix = currDesignMatrix.T
@@ -186,6 +187,36 @@ def constructNdArray(data, num_samples, change_points):
 
   # Return the multi dim array
   return dataNdArray  
+
+def constructResponseNdArray(y, change_points):
+  # Init empty tensor
+  responseNdArray = []
+  # Substract 1 from the change_points because we only have num_samples - 1 points
+  #change_points[-1] = change_points[-1] - 1
+
+  # Loop for each change point
+  cpQueu = []
+  boundCorrection = 2
+  for idx, cp in enumerate(change_points):
+    # Get the length of the current change point
+    try:
+      cpQueu.pop(0)
+    except:
+      cpQueu.append(2) # We are on the beginning
+
+    # The curr len of the cp and bound lengths
+    lenCurrCp = cp - cpQueu[0]
+    lowerBound = cpQueu[0] 
+    upperBound = cp 
+    # Select the appropiate data from the whole
+    currResponseVector = y[lowerBound - boundCorrection:cp - boundCorrection]
+
+    # Append the last seen cp
+    cpQueu.append(cp)
+    # Append to the multi dim array
+    responseNdArray.append(currResponseVector)
+
+  return responseNdArray
 
 def deleteMove(featureSet, numFeatures, fanInRestriction, possibleFeaturesSet):
   '''
