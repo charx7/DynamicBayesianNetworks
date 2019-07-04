@@ -1,12 +1,14 @@
 import numpy as np
 import random
 
-def generateNetwork(num_features, independent_features, parsed_coefs, num_samples,  change_points, verbose = 'false'):
+def generateNetwork(num_features, independent_features, parsed_coefs, num_samples,
+  change_points, verbose = 'false', generated_noise_var = 1):
   if verbose:
     print('Generating network data with:')
     print(num_features, 'features.')
     print(independent_features, 'independent feature(s).')
     print(num_samples, 'samples.')
+    print(generated_noise_var, 'agregated noise on the dependent features.')
     print(change_points, 'changepoints.\n')
   
   adjMatrix = [] # Adj matrix that will save the real config of our data
@@ -38,7 +40,7 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
     adjMatrix.append(nonReferenceList)
 
   # Generate a response as a func on the features
-  epsilon = np.random.normal(0, 0.5, num_samples) 
+  epsilon = np.random.normal(0, generated_noise_var, num_samples) 
   coefs = []
   change_points.append(num_samples + 2) # Append the last (artificial) change point +2 because of the bound correction 
   for idx in range(num_features - independent_features):

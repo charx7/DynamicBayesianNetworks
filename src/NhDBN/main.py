@@ -25,6 +25,8 @@ parser.add_argument('-b_i', '--burn_in', metavar='', type= int, default = 1000,
   help = 'burn in period for the MCMC chain.')
 parser.add_argument('-c_p', '--change_points', metavar='', type = int, default = 0, nargs='+',
   help = 'a series of change points that will be generated. ')
+parser.add_argument('-g_n_v', '--generated_noise_var', metavar='', type = float, default = 1,
+  help = 'the variance of the noise that is going to generate the dependent features')
 # Mutually exclusive arguments
 group  = parser.add_mutually_exclusive_group()
 group.add_argument('-v', '--verbose', action='store_true', help = 'Print verbose.')
@@ -34,7 +36,7 @@ def testBayesianLinRegWithMoves(coefs):
   print('Testing Bayesian Lin Reg with moves.')
   # Generate data to test our algo
   network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
-  args.change_points, args.verbose)
+  args.change_points, args.verbose, args.generated_noise_var)
   # Since we are testing with no cps get the single adjMatrix
   adjMatrix = adjMatrix[0]
   # Get the dimensions of the data
@@ -82,7 +84,7 @@ def testTestPwBlrWMoves():
   
   # Generate data to test our algo
   network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
-  args.change_points, args.verbose)
+  args.change_points, args.verbose, args.generated_noise_var)
   
   # Get the dimensions of the data
   dims = network.shape[1]
@@ -120,8 +122,8 @@ def testTestPwBlrWMoves():
   adjMatrixRoc(proposedAdjMatrix, trueAdjMatrix, args.verbose)
   
 def main():
-  testNoCps() # Uncomment for testing the second algo on a network
-  #testTestPwBlrWMoves() # Uncomment to test the third algo on a network
+  #testNoCps() # Uncomment for testing the second algo on a network
+  testTestPwBlrWMoves() # Uncomment to test the third algo on a network
 
 if __name__ == "__main__":
   main()

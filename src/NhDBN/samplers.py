@@ -10,14 +10,14 @@ def sigmaSqrSamplerWithChangePoints(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr,
     X_h = X[idx] # Get the current design matrix
     # TODO do the same logic for the \mu vector
     el1 = (y_h.reshape(currCplen, 1) - np.dot(X_h, mu)).T
-    el2 = np.linalg.inv(np.identity(currCplen) + lambda_sqr[it] + np.dot(X_h, X_h.T))
+    el2 = np.linalg.inv(np.identity(currCplen) + lambda_sqr[it] * np.dot(X_h, X_h.T))
     el3 = (y_h.reshape(currCplen, 1) -  np.dot(X_h, mu))
     
     h_prod_sum =+ np.dot(np.dot(el1, el2), el3) # accumulate the sum 
 
   # Gamma function parameters
   a_gamma = alpha_gamma_sigma_sqr + (T/2)
-  b_gamma = np.asscalar(beta_gamma_sigma_sqr + 0.5 * (np.dot(np.dot(el1, el2), el3)))
+  b_gamma = np.asscalar(beta_gamma_sigma_sqr + 0.5 * (h_prod_sum))
 
   # Sample from the inverse gamma using the parameters and append to the vector of results
   curr_sigma_sqr = 1 / (np.random.gamma(a_gamma, scale = (1 / b_gamma), size = 1))
@@ -81,7 +81,7 @@ def lambdaSqrSamplerWithChangepoints(X, beta, mu, sigma_sqr, X_cols,
     el1 = np.dot((currBeta - mu.flatten()).reshape(X_cols_h, 1).T, (currBeta - mu.flatten()).reshape(X_cols_h, 1))
     accum += el1
   
-  el2 = ((1/2) * (1 / sigma_sqr[1]))
+  el2 = ((1/2) * (1 / sigma_sqr[it + 1]))
   betaMuSum = el2 * accum 
   H = len(change_points)
 
@@ -96,7 +96,7 @@ def lambdaSqrSamplerWithChangepoints(X, beta, mu, sigma_sqr, X_cols,
 def lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it):
   ################ 3(a) Get a sample of lambda square from a Gamma distribution
   el1 = np.dot((beta[it + 1] - mu.flatten()).reshape(X_cols,1).T, (beta[it + 1] - mu.flatten()).reshape(X_cols,1))  
-  el2 = ((1/2) * (1 / sigma_sqr[1]))
+  el2 = ((1/2) * (1 / sigma_sqr[it + 1]))
   a_gamma = alpha_gamma_lambda_sqr + ((X.shape[1])/2)
   b_gamma = beta_gamma_lambda_sqr + el2 * el1
   sample = 1 / (np.random.gamma(a_gamma, scale= (1/ b_gamma)))

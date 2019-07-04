@@ -1,7 +1,8 @@
 import numpy as np
 from marginalLikelihood import calculateMarginalLikelihood, calculateMarginalLikelihoodWithChangepoints
 from priors import calculateFeatureSetPriorProb
-from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, deleteMove, addMove, exchangeMove, selectData
+from utils import constructNdArray, generateInitialFeatureSet, \
+  constructMuMatrix, deleteMove, addMove, exchangeMove, selectData
 from random import randint
 
 # Switcher that defines what random move we are going to make
@@ -39,7 +40,7 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
       partialData['features'][currKey] = data['features'][currKey]
 
     # Design Matrix Design tensor? Design NdArray?
-    XStar = constructDesignMatrix(partialData, numSamples) # TODO verify the construction of piStar
+    XStar = constructNdArray(partialData, numSamples, change_points) # TODO Fix the construction of piStar
     # Mu matrix
     muStar = constructMuMatrix(piStar) # TODO Verify the construction of muStar
     # Calculate marginal likelihook for PiStar

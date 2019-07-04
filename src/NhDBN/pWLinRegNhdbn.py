@@ -21,7 +21,7 @@ def pwGibbsSamplingWithMoves(data, changePoints, numSamples, numIter = 5000):
   # Partition data into each cp
   X = constructNdArray(partialData, numSamples, changePoints)
   # Retrieve the response vector
-  y = data['response']['y'] # TODO we have to partition y for each changepoint as well
+  y = data['response']['y'] # We have to partition y for each changepoint as well
   y = constructResponseNdArray(y, changePoints)
   
   # Get the amount of columns on the current design matrix
