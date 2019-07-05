@@ -142,6 +142,18 @@ def constructDesignMatrix(data, num_samples):
   return designMatrix.T
 
 def constructNdArray(data, num_samples, change_points):
+  '''
+    Constructs a (Design NdArray) that contains partitioned design matrices in each of its entries.
+
+    Args:
+      data (dict): data dictionary that contains a certain features and response configuration
+      num_samples (int): number of samples on the data
+      change_points (list<int>): list containing the changepoints on the Y idx location 
+    
+    Returns:
+      dataNdArray (list<numpy.ndarray>): python multidimensional list that contains a numpy array that is
+      a design matrix for a certain changepoint 
+  '''
   # Init empty tensor
   dataNdArray = []
   # Substract 1 from the change_points because we only have num_samples - 1 points
