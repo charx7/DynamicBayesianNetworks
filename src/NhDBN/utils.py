@@ -162,13 +162,13 @@ def constructNdArray(data, num_samples, change_points):
 
   # Loop for each change point
   cpQueu = []
-  boundCorrection = 2
+  boundCorrection = 1
   for idx, cp in enumerate(tmpChange_points):
     # Get the length of the current change point
     try:
       cpQueu.pop(0)
     except:
-      cpQueu.append(2) # We are on the beginning
+      cpQueu.append(1) # We are on the beginning
 
     # The curr len of the cp and bound lengths
     lenCurrCp = cp - cpQueu[0]
@@ -208,13 +208,13 @@ def constructResponseNdArray(y, change_points):
 
   # Loop for each change point
   cpQueu = []
-  boundCorrection = 2
+  boundCorrection = 1
   for idx, cp in enumerate(change_points):
     # Get the length of the current change point
     try:
       cpQueu.pop(0)
     except:
-      cpQueu.append(2) # We are on the beginning
+      cpQueu.append(1) # We are on the beginning
 
     # The curr len of the cp and bound lengths
     lenCurrCp = cp - cpQueu[0]

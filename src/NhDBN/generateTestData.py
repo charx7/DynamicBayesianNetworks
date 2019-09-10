@@ -42,7 +42,7 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
   # Generate a response as a func on the features
   epsilon = np.random.normal(0, generated_noise_var, num_samples) 
   coefs = []
-  change_points.append(num_samples + 2) # Append the last (artificial) change point +2 because of the bound correction 
+  change_points.append(num_samples + 1) # Append the last (artificial) change point +2 because of the bound correction 
   for idx in range(num_features - independent_features):
     # Generate a vector of zeros
     currDepFeat = epsilon # TODO consider revising this (possibly redundant feature)
@@ -60,7 +60,7 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
     # Loop for everychangepoint
     accCurrDepFeat = np.array([]) # Declare an empty array that will be accumulated with the cps
     cpQueu = []
-    boundCorrection = 2 # Necessary due to numpy indexing
+    boundCorrection = 1 # Necessary due to numpy indexing
     for jdx, cp in enumerate(change_points): # We use jdx to not overwrite idx index
       # Data for the adj matrix now per CP
       currAdjMatrixInfo = [0 for idx in range(num_features)]
@@ -69,7 +69,7 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
       try:
         cpQueu.pop(0)
       except:
-        cpQueu.append(2) # We are on the beginning
+        cpQueu.append(1) # We are on the beginning
 
       lowerBound = cpQueu[0] 
       upperBound = cp
