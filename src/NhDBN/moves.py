@@ -1,9 +1,73 @@
 import numpy as np
 from marginalLikelihood import calculateMarginalLikelihood, calculateMarginalLikelihoodWithChangepoints
-from priors import calculateFeatureSetPriorProb
+from priors import calculateFeatureSetPriorProb, calculateChangePointsSetPrior
 from utils import constructNdArray, generateInitialFeatureSet, \
   constructMuMatrix, deleteMove, addMove, exchangeMove, selectData
+from changepointMoves import cpBirthMove, cpRellocationMove, cpDeathMove
 from random import randint
+
+
+# This will propose and either accept or reject the move for the changepoints
+def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
+  lambda_sqr, pi, numSamples, it, change_points): 
+  '''
+    Function that proposes a move to a new changepoint set and either accepts
+    it or rejects it based on a Metropolis Hashtings move
+
+    Args:
+      tdb: <2many>
+        needs argument cleaning
+    Returns:
+      change_points : list<int>
+        a list of integers containing the changepoints 
+
+  '''
+  # Calculate the marginal likelihood of the current cps set
+  marginalTau = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
+   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points)
+  
+  # Select a random birth, death or recllocate move
+  randomInteger = randint(0,2)
+
+  # Changepoint moves selection
+  if randomInteger == 0: # If the random integer is 0 then do a birth move
+    newChangePoints = cpBirthMove(change_points, numSamples)
+    # Hashting ratio calculation
+    hr = (numSamples - 1 - len(change_points)) / len(newChangePoints)
+
+  elif randomInteger == 1: # do the death move
+    try:
+      newChangePoints = cpDeathMove(change_points)
+    except ValueError: # If the func fail then we stay the same
+      newChangePoints = change_points 
+    # Hashtings ratio calculation
+    hr = len(change_points) / (numSamples - 1 - len(newChangePoints))
+    
+  else: # do the rellocation move
+    try:
+      newChangePoints = cpRellocationMove(change_points)
+    except ValueError: # If the func fail then we stay the same
+      newChangePoints = change_points
+    # Hashtings ratio calculation
+    hr = 1
+
+  # Calculate the marginal likelihood of the new cps set
+  marginalTauStar = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
+   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, newChangePoints)
+  
+  # Prior calculations
+  tauPrior = calculateChangePointsSetPrior(change_points)
+  tauStarPrior = calculateChangePointsSetPrior(newChangePoints)
+
+  # Get the threshhold of the probability of acceptance of the move
+  acceptanceRatio = min(1, (marginalTauStar/marginalTau) * (tauStarPrior / tauPrior) * hr)
+  # Get a sample from the U(0,1) to compare the acceptance ratio
+  u = np.random.uniform(0,1)
+  if u < acceptanceRatio:
+    # if the sample is less than the acceptance ratio we accept the move to Tau* (the new cps)
+    change_points = newChangePoints
+
+  return change_points
 
 # Switcher that defines what random move we are going to make
 def selectMoveDict(selectedFunc):
@@ -100,7 +164,7 @@ def featureSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
       partialData['features'][currKey] = data['features'][currKey]
 
     # Design Matrix
-    XStar = constructDesignMatrix(partialData, numSamples)
+    XStar = constructDesignMatrix(partialData, numSamples) #TODO correct so this works again
     # Mu matrix
     muStar = constructMuMatrix(piStar)
     # Calculate marginal likelihook for PiStar

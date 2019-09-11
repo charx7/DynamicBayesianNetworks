@@ -1,7 +1,7 @@
 import argparse
 import numpy as np
 from bayesianLinRegWMoves import gibbsSamplingWithMoves
-from pWLinRegNhdbn import pwGibbsSamplingWithMoves
+from pWLinRegNhdbn import pwGibbsSamplingWithMoves, pwGibbsSamplingWithCpsParentsMoves
 from generateTestData import generateNetwork
 from utils import parseCoefs
 from scores import calculateFeatureScores, adjMatrixRoc
@@ -121,9 +121,56 @@ def testTestPwBlrWMoves():
   trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   adjMatrixRoc(proposedAdjMatrix, trueAdjMatrix, args.verbose)
   
+def testPwBlrWithCpsParentsMoves():
+  # The coefficients that will be used to generate the random data
+  coefs = parseCoefs(args.coefs_file)
+  print('Testing Piece-Wise Bayesian Lin Reg with moves on Cps and Parent sets.')
+  
+  # Generate data to test our algo
+  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
+  args.change_points, args.verbose, args.generated_noise_var)
+  
+  # Get the dimensions of the data
+  dims = network.shape[1]
+  dimsVector = [x for x in range(dims)]
+
+  # Set the ith as the response the rest as features
+  proposedAdjMatrix = [] # TODO multi dim... Proposed adj matrix that will be populated by the algo (edge score matrix)
+  for configuration in dimsVector:
+    data = {
+      'features': {},
+      'response': {}
+    }
+
+    currResponse = configuration
+    # You have to evaluate because the filter returns an obj
+    currFeatures = list(filter(lambda x: x != configuration, dimsVector))
+
+    # Add the features to the dict
+    for el in currFeatures:
+      col_name = 'X' + str(el)
+      data['features'][col_name] = network[:args.num_samples - 1, el]
+
+    # Add the response to the dict
+    data['response']['y'] = network[1:, currResponse]
+  
+    # Do the gibbs Sampling
+    results = pwGibbsSamplingWithCpsParentsMoves(data, args.change_points,
+     args.num_samples - 1, args.chain_length)
+
+    # Calculate feature Scores  
+    res = calculateFeatureScores(results['pi_vector'][:args.burn_in], dims, currFeatures, currResponse)
+    proposedAdjMatrix.append(res)
+
+  # Return the proposed adj matrix
+  #return proposedAdjMatrix, adjMatrix # uncomment to functionalize
+  trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
+  adjMatrixRoc(proposedAdjMatrix, trueAdjMatrix, args.verbose)
+
 def main():
   #testNoCps() # Uncomment for testing the second algo on a network
-  testTestPwBlrWMoves() # Uncomment to test the third algo on a network
+  #testTestPwBlrWMoves() # Uncomment to test the third algo on a network
+  testPwBlrWithCpsParentsMoves()
 
 if __name__ == "__main__":
   main()
