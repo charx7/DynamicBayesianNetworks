@@ -15,8 +15,9 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
     it or rejects it based on a Metropolis Hashtings move
 
     Args:
-      tdb: <2many>
+      tdb : <2many>
         needs argument cleaning
+        
     Returns:
       change_points : list<int>
         a list of integers containing the changepoints 

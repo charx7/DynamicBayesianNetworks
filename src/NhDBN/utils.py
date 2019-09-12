@@ -201,6 +201,21 @@ def constructNdArray(data, num_samples, change_points):
   return dataNdArray  
 
 def constructResponseNdArray(y, change_points):
+  '''
+    Transforms the vector of response variables into an ndArray per
+    segment
+
+    Args:
+      y : numpy.ndarray <int>
+        a list that contains the response vectors
+      change_points : list<int>
+        list of changepoints 
+
+    Returns:
+      responseNdArray : list<numpy.ndarray>
+        ndim list that contains a numpy array segmented according to
+        the changepoints that were given
+  '''
   # Init empty tensor
   responseNdArray = []
   # Substract 1 from the change_points because we only have num_samples - 1 points
