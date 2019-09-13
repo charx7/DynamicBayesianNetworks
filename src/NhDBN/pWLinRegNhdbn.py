@@ -37,7 +37,8 @@ def pwGibbsSamplingWithCpsParentsMoves(data, changePoints, numSamples, numIter =
   alpha_gamma_sigma_sqr = 0.01
   beta_gamma_sigma_sqr = 0.01
   
-  selectedFeatures = []
+  selectedFeatures = [] # Empty initial parent set
+  selectedChangepoints = [] # Empty initial changepoints set
   beta = []
   sigma_sqr = [] # noise variance parameter
   lambda_sqr = []
@@ -93,7 +94,8 @@ def pwGibbsSamplingWithCpsParentsMoves(data, changePoints, numSamples, numIter =
   return {
     'lambda_sqr_vector': lambda_sqr,
     'sigma_sqr_vector': sigma_sqr,
-    'pi_vector': selectedFeatures
+    'pi_vector': selectedFeatures,
+    'tau_vector': selectedChangepoints
   }
       
 def pwGibbsSamplingWithMoves(data, changePoints, numSamples, numIter = 5000):
@@ -127,7 +129,7 @@ def pwGibbsSamplingWithMoves(data, changePoints, numSamples, numIter = 5000):
   beta = []
   sigma_sqr = [] # noise variance parameter
   lambda_sqr = []
-  
+
   # Append the initial values of the vectors
   selectedFeatures.append(pi)
   beta.append(np.zeros(len(pi) + 1)) # TODO this beta should be a dict

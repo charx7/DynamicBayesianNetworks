@@ -155,9 +155,9 @@ def testPwBlrWithCpsParentsMoves():
     data['response']['y'] = network[1:, currResponse]
   
     # Do the gibbs Sampling
-    results = pwGibbsSamplingWithCpsParentsMoves(data, args.change_points,
+    results = pwGibbsSamplingWithCpsParentsMoves(data, [args.num_samples + 1],
      args.num_samples - 1, args.chain_length)
-
+    
     # Calculate feature Scores  
     res = calculateFeatureScores(results['pi_vector'][:args.burn_in], dims, currFeatures, currResponse)
     proposedAdjMatrix.append(res)
@@ -170,7 +170,7 @@ def testPwBlrWithCpsParentsMoves():
 def main():
   #testNoCps() # Uncomment for testing the second algo on a network
   #testTestPwBlrWMoves() # Uncomment to test the third algo on a network
-  testPwBlrWithCpsParentsMoves()
+  testPwBlrWithCpsParentsMoves() # Uncomment to test the fourth algo on a network
 
 if __name__ == "__main__":
   main()
