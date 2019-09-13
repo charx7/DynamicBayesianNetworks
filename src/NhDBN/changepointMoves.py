@@ -15,7 +15,7 @@ def cpRellocationMove(cpSet):
     Raises:
       ValueError
         When you try to rellocate a non-existing changepoint.
-        Or when the randomly selected cp had 2 consicutive left and right neighbors.
+        Or when the randomly selected cp had 2 consecutive left and right neighbors.
   '''
   
   if len(cpSet) < 2:
@@ -23,7 +23,7 @@ def cpRellocationMove(cpSet):
 
   cpSetCopy = cpSet.copy() # Copy in case of mutability
   # TODO improve this
-  cpSetCopy[-1] = cpSetCopy[-1] - 3 # Change the last cp to be compatible with new setpoint generation
+  cpSetCopy[-1] = cpSetCopy[-1] - 2 # Change the last cp to be compatible with new setpoint generation
 
   indexes = [idx[0] for idx in enumerate(cpSet)] # idx[0] because enumrate() returns a tuple
   indexes.pop(-1) # Remove the last one because that is allways the num_samples
@@ -36,7 +36,7 @@ def cpRellocationMove(cpSet):
   else:
     cpLeft = cpSetCopy[left] # Get the cp to the left
 
-  right = idxToRellocate + 1 # You canno go past the last cp
+  right = idxToRellocate + 1 # You cannot go past the last cp
   if right == len(cpSet) - 1:
     cpRight = cpSetCopy[-1]  # set at the max - 1 because we do not want the max to be selected twice
   else:
@@ -50,13 +50,13 @@ def cpRellocationMove(cpSet):
   if cpCandidates == []: # Check for consecutive right and left ie, 24, 25, 26 cannot rellocate 25
     raise ValueError('Randomly selected changepoint had 2 consecutive right and left neighbors.')
 
-  print('the changepoint removed was: ', cpSet[idxToRellocate])
+  #print('the changepoint removed was: ', cpSet[idxToRellocate]) # uncomment for debug
   # Choose one randomly form the candidate list
   newCp = np.random.choice(cpCandidates) # Select one randomly
   cpSetCopy.append(newCp) # Append the new random cp
   cpSetCopy = sorted(cpSetCopy) # Sort the list
-  cpSetCopy[-1] = cpSetCopy[-1] + 3 # Add again the 3 so the rest of the algo works TODO improve this
-  print('the changepoint added was: ', newCp)
+  cpSetCopy[-1] = cpSetCopy[-1] + 2 # Add again the 2 so the rest of the algo works TODO improve this
+  #print('the changepoint added was: ', newCp) # uncomment for debug
   
   return(cpSetCopy)
 
