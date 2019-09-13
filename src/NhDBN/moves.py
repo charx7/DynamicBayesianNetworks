@@ -2,10 +2,10 @@ import numpy as np
 from marginalLikelihood import calculateMarginalLikelihood, calculateMarginalLikelihoodWithChangepoints
 from priors import calculateFeatureSetPriorProb, calculateChangePointsSetPrior
 from utils import constructNdArray, generateInitialFeatureSet, \
-  constructMuMatrix, deleteMove, addMove, exchangeMove, selectData
+  constructMuMatrix, deleteMove, addMove, exchangeMove, selectData, \
+  constructNdArray, constructMuMatrix, constructResponseNdArray
 from changepointMoves import cpBirthMove, cpRellocationMove, cpDeathMove
 from random import randint
-
 
 # This will propose and either accept or reject the move for the changepoints
 def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
@@ -52,10 +52,21 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
     # Hashtings ratio calculation
     hr = 1
 
+  # ---> Reconstruct the design ndArray, mu vector and parameters for the marg likelihook calc
+  # Select the data according to the set Pi
+  partialData = selectData(data, pi)
+  # Design ndArray
+  XStar = constructNdArray(partialData, numSamples, newChangePoints)
+  respVector = data['response']['y'] # We have to partition y for each changepoint as well
+  yStar = constructResponseNdArray(respVector, newChangePoints)
+  # Mu matrix
+  muStar = constructMuMatrix(pi) 
+
   # Calculate the marginal likelihood of the new cps set
-  marginalTauStar = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
-   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, newChangePoints)
-  
+  marginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
+   alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+   newChangePoints)
+
   # Prior calculations
   tauPrior = calculateChangePointsSetPrior(change_points)
   tauStarPrior = calculateChangePointsSetPrior(newChangePoints)

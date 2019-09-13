@@ -21,8 +21,8 @@ def pwGibbsSamplingWithCpsParentsMoves(data, changePoints, numSamples, numIter =
   # Partition data into each cp
   X = constructNdArray(partialData, numSamples, changePoints)
   # Retrieve the response vector
-  y = data['response']['y'] # We have to partition y for each changepoint as well
-  y = constructResponseNdArray(y, changePoints)
+  respVector = data['response']['y'] # We have to partition y for each changepoint as well
+  y = constructResponseNdArray(respVector, changePoints)
   
   # Get the amount of columns on the current design matrix
   X_cols = [cp.shape[1] for cp in X] # This is now a vector of shapes
@@ -78,11 +78,13 @@ def pwGibbsSamplingWithCpsParentsMoves(data, changePoints, numSamples, numIter =
     changePoints = changepointsSetMove(data, X, y, mu, alpha_gamma_lambda_sqr, beta_gamma_sigma_sqr,
       lambda_sqr, pi, numSamples, it, changePoints)
 
-    ################ Reconstruct the design ndArray, mu vector and parameters for the next iteration
+    # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration
     # Select the data according to the set Pi or Pi*
     partialData = selectData(data, pi)
     # Design ndArray
     X = constructNdArray(partialData, numSamples, changePoints)
+    respVector = data['response']['y'] # We have to partition y for each changepoint as well
+    y = constructResponseNdArray(respVector, changePoints)
     # Mu matrix
     mu = constructMuMatrix(pi)
     # Get the new column size of the design matrix
