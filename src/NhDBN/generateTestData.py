@@ -1,16 +1,20 @@
 import numpy as np
 import random
+from systemUtils import writeOutputFile
 
 def generateNetwork(num_features, independent_features, parsed_coefs, num_samples,
   change_points, verbose = 'false', generated_noise_var = 1):
   if verbose:
-    print('Generating network data with:')
-    print(num_features, 'features.')
-    print(independent_features, 'independent feature(s).')
-    print(num_samples, 'samples.')
-    print(generated_noise_var, 'agregated noise on the dependent features.')
-    print(change_points, 'changepoints.\n')
-  
+    # Output file write
+    output_line =  (
+      '>> Generating a network data with\n' +
+      str(num_features) + ' features.\n' +
+      str(independent_features) + ' independent feature(s).\n' +
+      str(num_samples) + ' samples.\n' +
+      str(generated_noise_var) + ' agregated noise on the dependent features.\n' +
+      str(change_points) + ' changepoints.\n')
+    print(output_line) ; writeOutputFile(output_line) # write output str to the file
+
   adjMatrix = [] # Adj matrix that will save the real config of our data
 
   data = np.array([])
@@ -114,13 +118,26 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
     # For console display info TODO display info per cp
     if verbose:
       featName = independent_features + idx
-      print('\nFeature X{0} was generated {1} feature(s): '.format(featName + 1, len(generated_by_feats)))
+      # print to the console and save to the output file
+      output_line = (
+        '>> \n'
+        'Feature X{0} was generated using {1} feature(s): '.format(featName + 1, len(generated_by_feats))
+      )
+      print(output_line) ; writeOutputFile(output_line)
+      # Print for each changepoint
       accumCoefs = []
       for kdx in range(len(change_points)):
-        print('\nOn the changepoint {0} located on {1}'.format(kdx + 1, change_points[kdx]))
+        # print and write
+        output_line = (
+          '\nOn the changepoint {0} located on {1}\n'.format(kdx + 1, change_points[kdx])
+        )
+        print(output_line) ; writeOutputFile(output_line)
+        
         displayCoefs = adjMatrix[kdx][-1]
         for feat in generated_by_feats:
-          print('X{0} with coefficient {1}'.format(feat + 1, displayCoefs[feat]))
+          # print and write
+          output_line = ('X{0} with coefficient {1}\n'.format(feat + 1, displayCoefs[feat]))
+          print(output_line) ; writeOutputFile(output_line)
 
   return data, coefs, adjMatrix #TODO remove the return of coefs (redundant since they are on adjMatrix)
     

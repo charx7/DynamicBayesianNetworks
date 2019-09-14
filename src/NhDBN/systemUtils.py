@@ -35,7 +35,7 @@ def cleanOutput():
   # Make the output directory again
   os.mkdir('output/')  
 
-def writeOutputFile(text):
+def writeOutputFile(text = ''):
   '''
     Saves the output to a text file containing the results.
       

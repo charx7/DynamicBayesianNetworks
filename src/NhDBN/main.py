@@ -4,6 +4,7 @@ from bayesianLinRegWMoves import gibbsSamplingWithMoves
 from pWLinRegNhdbn import pwGibbsSamplingWithMoves, pwGibbsSamplingWithCpsParentsMoves
 from generateTestData import generateNetwork
 from utils import parseCoefs
+from systemUtils import cleanOutput, writeOutputFile
 from scores import calculateFeatureScores, adjMatrixRoc
 from pprint import pprint
 
@@ -122,10 +123,19 @@ def testTestPwBlrWMoves():
   adjMatrixRoc(proposedAdjMatrix, trueAdjMatrix, args.verbose)
   
 def testPwBlrWithCpsParentsMoves():
+  cleanOutput() # clean output folder
+  writeOutputFile('') # create a new outputfile TODO maybe dont call twice?
+
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
-  print('Testing Piece-Wise Bayesian Lin Reg with moves on Cps and Parent sets.')
-  
+  output_line = (
+    'Bayesian Piece-Wise Linear Regression with moves on' +
+    'change-points and parent sets. \n'
+  )
+  print(output_line)
+  # Wite to the output file
+  writeOutputFile(output_line)
+
   # Generate data to test our algo
   network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
   args.change_points, args.verbose, args.generated_noise_var)

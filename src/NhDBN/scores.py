@@ -3,13 +3,14 @@ import matplotlib.pyplot as plt
 from systemUtils import clean_figures_folder
 from pprint import pprint
 from sklearn.metrics import roc_curve, auc
+from systemUtils import writeOutputFile
 
 def adjMatrixRoc(adjMatrixProp, trueAdjMatrix, verbose):
   if verbose:
-    print('\nThe true adj matrix is: \n')
-    pprint(trueAdjMatrix)
-    print('\nThe proposed adj matrix is: \n')
-    pprint(adjMatrixProp)
+    print('\nThe true adj matrix is: \n') ; writeOutputFile('\nThe true adj matrix is: \n')
+    pprint(trueAdjMatrix) ; writeOutputFile(str(trueAdjMatrix))
+    print('\nThe proposed adj matrix is: \n') ; writeOutputFile('\nThe proposed adj matrix is: \n')
+    pprint(adjMatrixProp) ; writeOutputFile(str(adjMatrixProp))
   # Remove the diagonal that is allways going to be right
   trueAdjMatrixNoDiag = []
   idxToRemove = 0
@@ -55,10 +56,19 @@ def drawRoc(inferredScoreEdges, realEdges):
 
 def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, currentResponse):
   adjRow = [0 for x in range(totalDims)]
-  print('The current response feature is: X{0}'.format(currentResponse + 1))
+  
+  # Print and write the output
+  output_line = (
+    '\n>> The current response feature is: X{0}\n'.format(currentResponse + 1)
+  )
+  print(output_line) ; writeOutputFile(output_line)
+
   results = {}
   for feat in currentFeatures:
-    print('Calculating score for X{0}'.format(feat + 1)) 
+    output_line = (
+      '  Edge score for X{0}: '.format(feat + 1)
+    )
+    print(output_line) ; writeOutputFile(output_line)
     freqSum = 0
     # Calculate the % of apperance
     for currentPi in selectedFeaturesVector:
@@ -67,7 +77,10 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
     
     # Append to the dictionary of the results
     results['X' + str(feat + 1)] = freqSum / len(selectedFeaturesVector)
-    print(results['X' + str(feat + 1)])
+    output_line = (
+      str(results['X' + str(feat + 1)]) + '\n'
+    )
+    print(output_line) ; writeOutputFile(output_line)
     # Better return a row on the proposed adj matrix
     adjRow[feat] = freqSum / len(selectedFeaturesVector)
 
