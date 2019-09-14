@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from systemUtils import clean_figures_folder
 from pprint import pprint
 from sklearn.metrics import roc_curve, auc
 
@@ -47,7 +48,10 @@ def drawRoc(inferredScoreEdges, realEdges):
   #plt.ylim([0, 1])
   plt.ylabel('True Positive Rate')
   plt.xlabel('False Positive Rate')
-  plt.show()
+  #plt.show() #uncomment to show the figure on finish
+  clean_figures_folder('figures/')
+  figure_route = 'figures/roc'
+  plt.savefig(figure_route, bbox_inches='tight')
 
 def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, currentResponse):
   adjRow = [0 for x in range(totalDims)]
