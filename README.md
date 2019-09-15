@@ -16,3 +16,12 @@ Or
   pip install -e .
 ```
 To be able to edit the source code and (hot-reload) updates?
+
+To run the python profiler use the bash script:
+```
+  sh algorithm_profiling.sh
+```
+In order to be able to see the profiler results you need to have 'kcachegrind'
+```
+   sudo apt-get install -y kcachegrind 
+```

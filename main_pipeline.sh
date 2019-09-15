@@ -1,5 +1,5 @@
 #! /bin/sh
-# Will run the profiler for the current algorithm
+# Will run the algorithm
 export ARGS='
   --num_features 6
   --num_indep 4 
@@ -11,6 +11,4 @@ export ARGS='
   -v --coefs_file coefs.txt
   '
 # Execute with profiler
-python -m cProfile -o ./output/algorithm_profiling.cprof -s cumulative ./src/NhDBN/main.py $ARGS
-# open the profiler
-pyprof2calltree -k -i ./output/algorithm_profiling.cprof
+python ./src/NhDBN/main.py $ARGS
