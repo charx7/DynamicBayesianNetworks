@@ -177,3 +177,4 @@ def pwGibbsSamplingWithMoves(data, changePoints, numSamples, numIter = 5000):
     'sigma_sqr_vector': sigma_sqr,
     'pi_vector': selectedFeatures
   }
+  

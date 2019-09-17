@@ -102,7 +102,3 @@ def lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr, bet
   sample = 1 / (np.random.gamma(a_gamma, scale= (1/ b_gamma)))
   
   return sample
-
-if __name__ == '__main__':
-  print('Test')
-  

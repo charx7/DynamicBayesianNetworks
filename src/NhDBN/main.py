@@ -6,6 +6,7 @@ from generateTestData import generateNetwork
 from utils import parseCoefs
 from systemUtils import cleanOutput, writeOutputFile
 from scores import calculateFeatureScores, adjMatrixRoc
+from network import Network
 from pprint import pprint
 
 np.random.seed(41) # Set seed for reproducibility
@@ -177,10 +178,33 @@ def testPwBlrWithCpsParentsMoves():
   trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   adjMatrixRoc(proposedAdjMatrix, trueAdjMatrix, args.verbose)
 
+def testWithClass():
+  # The coefficients that will be used to generate the random data
+  coefs = parseCoefs(args.coefs_file)
+  output_line = (
+    'Bayesian Piece-Wise Linear Regression with moves on' +
+    'change-points and parent sets. \n'
+  )
+  print(output_line)
+  # Wite to the output file
+  writeOutputFile(output_line)
+
+  # Generate data to test our algo
+  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
+  args.change_points, args.verbose, args.generated_noise_var)
+
+  baNet = Network(network, args.chain_length, args.burn_in)
+  baNet.infer_network()
+
+  trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
+  adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
+
 def main():
   #testNoCps() # Uncomment for testing the second algo on a network
   #testTestPwBlrWMoves() # Uncomment to test the third algo on a network
-  testPwBlrWithCpsParentsMoves() # Uncomment to test the fourth algo on a network
+  #testPwBlrWithCpsParentsMoves() # Uncomment to test the fourth algo on a network
+  testWithClass()
 
 if __name__ == "__main__":
   main()
+  
