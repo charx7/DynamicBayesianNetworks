@@ -1,5 +1,6 @@
 from pWLinRegNhdbn import pwGibbsSamplingWithMoves, pwGibbsSamplingWithCpsParentsMoves
 from scores import calculateFeatureScores, adjMatrixRoc
+from bayesian_pw_Lin_reg import BayesianPwLinearRegression
 
 class Network():
   def __init__(self, data, chain_length, burn_in):
@@ -42,12 +43,14 @@ class Network():
     num_samples = self.data.shape[0] # Number of data points
 
     if self.method == 'nh_dbn':
-      self.chain_results = pwGibbsSamplingWithCpsParentsMoves(
-        self.network_configuration,
+      baReg = BayesianPwLinearRegression(
+        self.network_configuration, 
         [num_samples + 1],
-        num_samples - 1, 
+        num_samples - 1,
         self.chain_length
       )
+      baReg.fit() # Call the fit method of the regressor
+      self.chain_results = baReg.results
     
   def score_edges(self, currResponse):
     dims = self.data.shape[1] # Get the number of features (dimensions of the data)
