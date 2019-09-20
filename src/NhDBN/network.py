@@ -15,8 +15,9 @@ class Network():
       burn_in : int
         integer that determines the burn_in interval of the MCMC chain 
   '''
-  def __init__(self, data, chain_length, burn_in):
+  def __init__(self, data, chain_length, burn_in, change_points = []):
     self.data = data
+    self.change_points = change_points
     self.network_configuration = None
     self.chain_length = chain_length 
     self.burn_in = burn_in
@@ -79,17 +80,28 @@ class Network():
     '''
     num_samples = self.data.shape[0] # Number of data points
 
-    if method == 'nh_dbn':
+    if method == 'varying_nh_dbn':
       baReg = BayesianPieceWiseLinearRegression(
         self.network_configuration,  # Current data config
-        'nh',                        # non-homogeneous
+        'varying_nh',                # varying changepoints non-homogeneous
         num_samples - 1,             # number of data points
         self.chain_length,           # len of chain
-        [num_samples + 1]            # just the las pseudo cp []
+        [num_samples + 1]            # just the last pseudo cp []
       )
       baReg.fit() # Call the fit method of the regressor
-      self.chain_results = baReg.results
-    
+      self.chain_results = baReg.results # Set the results
+
+    elif method == 'fixed_nh_dbn':
+      baReg = BayesianPieceWiseLinearRegression(
+        self.network_configuration,  # Current data config
+        'fixed_nh',                  # fixed cps non-homogeneous
+        num_samples - 1,             # number of data points
+        self.chain_length,           # len of chain
+        self.change_points           # predefined cps 
+      )
+      baReg.fit() # Call the fit method of the regressor
+      self.chain_results = baReg.results # set the results
+
   def score_edges(self, currResponse):
     '''
       Calculates de edge score for the current configuration of the network 

@@ -109,7 +109,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
       selectedFeatures.append(pi)
 
       # Check if the type is non-homgeneous to do inference over all possible cps
-      if self._type == 'nh':  
+      if self._type == 'varying_nh':  
         ################ 5(c) This step will propose a change in the changepoints from tau to tau*
         changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_lambda_sqr,
           beta_gamma_sigma_sqr, lambda_sqr, pi, self.num_samples, it, changePoints)

@@ -87,56 +87,23 @@ def testBayesianLinRegWithMoves(coefs):
   # Return the proposed adj matrix
   return proposedAdjMatrix, adjMatrix
 
-def testNoCps():
-  # The coefficients that will be used to generate the random data
-  coefs = parseCoefs(args.coefs_file)
-  adjMatrixProp, trueAdjMatrix = testBayesianLinRegWithMoves(coefs)
-  adjMatrixRoc(adjMatrixProp, trueAdjMatrix, args.verbose)
-  
-def testTestPwBlrWMoves():
-  # The coefficients that will be used to generate the random data
-  coefs = parseCoefs(args.coefs_file)
-  print('Testing Piece-Wise Bayesian Lin Reg with moves.')
-  
+def testPwBlrWithParentMoves(coefs):
+  output_line = (
+    'Bayesian Piece-Wise Linear Regression with moves on' +
+    'the parent set only. \n'
+  )
+  print(output_line) ; logger.info(output_line) # Print and write output
+
   # Generate data to test our algo
   network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
   args.change_points, args.verbose, args.generated_noise_var)
-  
-  # Get the dimensions of the data
-  dims = network.shape[1]
-  dimsVector = [x for x in range(dims)]
 
-  # Set the ith as the response the rest as features
-  proposedAdjMatrix = [] # TODO multi dim... Proposed adj matrix that will be populated by the algo (edge score matrix)
-  for configuration in dimsVector:
-    data = {
-      'features': {},
-      'response': {}
-    }
+  baNet = Network(network, args.chain_length, args.burn_in, args.change_points) # Create theh BN obj
+  baNet.infer_network('fixed_nh_dbn') # Do the fixed parents version of the DBN algo
 
-    currResponse = configuration
-    # You have to evaluate because the filter returns an obj
-    currFeatures = list(filter(lambda x: x != configuration, dimsVector))
-
-    # Add the features to the dict
-    for el in currFeatures:
-      col_name = 'X' + str(el)
-      data['features'][col_name] = network[:args.num_samples - 1, el]
-
-    # Add the response to the dict
-    data['response']['y'] = network[1:, currResponse]
-  
-    # Do the gibbs Sampling
-    results = pwGibbsSamplingWithMoves(data, args.change_points, args.num_samples - 1, args.chain_length)
-    # Calculate feature Scores  
-    res = calculateFeatureScores(results['pi_vector'][:args.burn_in], dims, currFeatures, currResponse)
-    proposedAdjMatrix.append(res)
-
-  # Return the proposed adj matrix
-  #return proposedAdjMatrix, adjMatrix # uncomment to functionalize
   trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
-  adjMatrixRoc(proposedAdjMatrix, trueAdjMatrix, args.verbose)
-  
+  adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
+
 def testPwBlrWithCpsParentMoves(coefs):
   output_line = (
     'Bayesian Piece-Wise Linear Regression with moves on' +
@@ -149,7 +116,7 @@ def testPwBlrWithCpsParentMoves(coefs):
   coefs, args.num_samples, args.change_points, args.verbose, args.generated_noise_var)
 
   baNet = Network(network, args.chain_length, args.burn_in)
-  baNet.infer_network('nh_dbn')
+  baNet.infer_network('varying_nh_dbn')
 
   trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
@@ -161,9 +128,8 @@ def main():
   coefs = parseCoefs(args.coefs_file)
 
   #testNoCps() # Uncomment for testing the second algo on a network
-  #testTestPwBlrWMoves() # Uncomment to test the third algo on a network
-  #testPwBlrWithCpsParentsMoves() # Uncomment to test the fourth algo on a network
-  testPwBlrWithCpsParentMoves(coefs)
+  #testPwBlrWithParentMoves(coefs) # Uncomment to test the third algo on a network
+  testPwBlrWithCpsParentMoves(coefs) # Test the fourth algorithm
 
 if __name__ == "__main__":
   main()
