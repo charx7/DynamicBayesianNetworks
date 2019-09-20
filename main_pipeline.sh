@@ -10,5 +10,5 @@ export ARGS='
   --change_points 10 25 
   -v --coefs_file coefs.txt
   '
-# Execute with profiler
+# Execute without profiler
 python ./src/NhDBN/main.py $ARGS

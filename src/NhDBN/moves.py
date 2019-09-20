@@ -3,7 +3,8 @@ from marginalLikelihood import calculateMarginalLikelihood, calculateMarginalLik
 from priors import calculateFeatureSetPriorProb, calculateChangePointsSetPrior
 from utils import constructNdArray, generateInitialFeatureSet, \
   constructMuMatrix, deleteMove, addMove, exchangeMove, selectData, \
-  constructNdArray, constructMuMatrix, constructResponseNdArray
+  constructNdArray, constructMuMatrix, constructResponseNdArray, \
+  constructDesignMatrix
 from changepointMoves import cpBirthMove, cpRellocationMove, cpDeathMove
 from random import randint
 
@@ -93,6 +94,9 @@ def selectMoveDict(selectedFunc):
 
 def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples, it, change_points):
+  '''
+    Documentation is missing for this function
+  '''
   # The the possible features set
   possibleFeaturesSet = list(data['features'].keys())
   possibleFeaturesSet = [int(x.replace('X', '')) for x in possibleFeaturesSet]
@@ -154,6 +158,9 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
   
 def featureSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples, it):
+  '''
+    Documentation is missing for this function
+  '''
   # The the possible features set
   possibleFeaturesSet = list(data['features'].keys())
   possibleFeaturesSet = [int(x.replace('X', '')) for x in possibleFeaturesSet]

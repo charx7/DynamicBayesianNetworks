@@ -45,47 +45,23 @@ file_handler = logging.FileHandler('output.log', mode='w') # The file output nam
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-#logging.basicConfig(filename= 'output.log', filemode='w', level=logging.INFO, 
-#  format='%(levelname)s:%(name)s:%(message)s')
+def test_h_dbn(coefs):
+  output_line = (
+    'Bayesian Linear Regression with moves on' +
+    'the parent set only. \n'
+  )
+  print(output_line) ; logger.info(output_line) # Print and write output
 
-def testBayesianLinRegWithMoves(coefs):
-  print('Testing Bayesian Lin Reg with moves.')
+  change_points = [] # set the cps empty list because this is the homegeneous version
   # Generate data to test our algo
-  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
-  args.change_points, args.verbose, args.generated_noise_var)
-  # Since we are testing with no cps get the single adjMatrix
-  adjMatrix = adjMatrix[0]
-  # Get the dimensions of the data
-  dims = network.shape[1]
-  dimsVector = [x for x in range(dims)]
+  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
+  coefs, args.num_samples, change_points, args.verbose, args.generated_noise_var)
 
-  # Set the ith as the response the rest as features
-  proposedAdjMatrix = [] # Proposed adj matrix that will be populated by the algo (edge score matrix)
-  for configuration in dimsVector:
-    data = {
-      'features': {},
-      'response': {}
-    }
-
-    currResponse = configuration
-    # You have to evaluate because the filter returns an obj
-    currFeatures = list(filter(lambda x: x != configuration, dimsVector))
-    
-    # Add the features to the dict
-    for el in currFeatures:
-      col_name = 'X' + str(el)
-      data['features'][col_name] = network[:args.num_samples - 1,el]
-
-    # Add the response to the dict
-    data['response']['y'] = network[1:, currResponse]
+  baNet = Network(network, args.chain_length, args.burn_in, args.change_points) # Create theh BN obj
+  baNet.infer_network('h_dbn') # Do the fixed parents version of the DBN algo
   
-    # Do the gibbs Sampling
-    results = gibbsSamplingWithMoves(data, args.num_samples - 1, args.chain_length)
-    res = calculateFeatureScores(results['pi_vector'][:args.burn_in], dims, currFeatures, currResponse)
-    proposedAdjMatrix.append(res)
-
-  # Return the proposed adj matrix
-  return proposedAdjMatrix, adjMatrix
+  trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
+  adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
 
 def testPwBlrWithParentMoves(coefs):
   output_line = (
@@ -127,9 +103,9 @@ def main():
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
 
-  #testNoCps() # Uncomment for testing the second algo on a network
+  test_h_dbn(coefs) # Uncomment for testing the second algo on a network
   #testPwBlrWithParentMoves(coefs) # Uncomment to test the third algo on a network
-  testPwBlrWithCpsParentMoves(coefs) # Test the fourth algorithm
+  #testPwBlrWithCpsParentMoves(coefs) # Test the fourth algorithm
 
 if __name__ == "__main__":
   main()

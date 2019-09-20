@@ -1,6 +1,6 @@
-from pWLinRegNhdbn import pwGibbsSamplingWithMoves, pwGibbsSamplingWithCpsParentsMoves
-from scores import calculateFeatureScores, adjMatrixRoc
 from bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
+from bayesianLinearRegression import BayesianLinearRegression
+from scores import calculateFeatureScores, adjMatrixRoc
 
 class Network():
   '''
@@ -80,7 +80,7 @@ class Network():
     '''
     num_samples = self.data.shape[0] # Number of data points
 
-    if method == 'varying_nh_dbn':
+    if method == 'varying_nh_dbn':   # call the nh-dbn with varying cps
       baReg = BayesianPieceWiseLinearRegression(
         self.network_configuration,  # Current data config
         'varying_nh',                # varying changepoints non-homogeneous
@@ -91,17 +91,25 @@ class Network():
       baReg.fit() # Call the fit method of the regressor
       self.chain_results = baReg.results # Set the results
 
-    elif method == 'fixed_nh_dbn':
+    elif method == 'fixed_nh_dbn':   # call the nh-dbn with fixed cps
       baReg = BayesianPieceWiseLinearRegression(
-        self.network_configuration,  # Current data config
+        self.network_configuration,  # Current data config of the network
         'fixed_nh',                  # fixed cps non-homogeneous
         num_samples - 1,             # number of data points
-        self.chain_length,           # len of chain
+        self.chain_length,           # length of the MCMC
         self.change_points           # predefined cps 
       )
-      baReg.fit() # Call the fit method of the regressor
+      baReg.fit() # call the fit method of the regressor
       self.chain_results = baReg.results # set the results
-
+    elif method == 'h_dbn':          # call the h-dbn
+      baReg = BayesianLinearRegression(
+        self.network_configuration,                   # current data config of the network
+        num_samples,                 # number of samples
+        self.chain_length            # length of the MCMC chain
+      )
+      baReg.fit() # call to the fit method of the regressor
+      self.chain_results = baReg.results # set the results
+      
   def score_edges(self, currResponse):
     '''
       Calculates de edge score for the current configuration of the network 
