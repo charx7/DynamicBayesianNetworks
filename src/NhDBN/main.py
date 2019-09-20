@@ -1,4 +1,5 @@
 import argparse
+import logging
 import numpy as np
 from bayesianLinRegWMoves import gibbsSamplingWithMoves
 from pWLinRegNhdbn import pwGibbsSamplingWithMoves, pwGibbsSamplingWithCpsParentsMoves
@@ -33,7 +34,20 @@ parser.add_argument('-g_n_v', '--generated_noise_var', metavar='', type = float,
 group  = parser.add_mutually_exclusive_group()
 group.add_argument('-v', '--verbose', action='store_true', help = 'Print verbose.')
 args = parser.parse_args()
-  
+
+# logging cofiguration
+logger = logging.getLogger(__name__) # create a logger obj
+logger.setLevel(logging.INFO) # establish logging level
+# Establish the display of the logger
+formatter = logging.Formatter('%(levelname)s:%(name)s:%(message)s') 
+file_handler = logging.FileHandler('output.log', mode='w') # The file output name
+# Add the formatter to the logger
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+#logging.basicConfig(filename= 'output.log', filemode='w', level=logging.INFO, 
+#  format='%(levelname)s:%(name)s:%(message)s')
+
 def testBayesianLinRegWithMoves(coefs):
   print('Testing Bayesian Lin Reg with moves.')
   # Generate data to test our algo
@@ -123,75 +137,16 @@ def testTestPwBlrWMoves():
   trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   adjMatrixRoc(proposedAdjMatrix, trueAdjMatrix, args.verbose)
   
-def testPwBlrWithCpsParentsMoves():
-  cleanOutput() # clean output folder
-  writeOutputFile('') # create a new outputfile TODO maybe dont call twice?
-
-  # The coefficients that will be used to generate the random data
-  coefs = parseCoefs(args.coefs_file)
+def testPwBlrWithCpsParentMoves(coefs):
   output_line = (
     'Bayesian Piece-Wise Linear Regression with moves on' +
     'change-points and parent sets. \n'
   )
-  print(output_line)
-  # Wite to the output file
-  writeOutputFile(output_line)
+  print(output_line) ; logger.info(output_line) # Print and write output
 
   # Generate data to test our algo
-  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
-  args.change_points, args.verbose, args.generated_noise_var)
-  
-  # Get the dimensions of the data
-  dims = network.shape[1]
-  dimsVector = [x for x in range(dims)]
-
-  # Set the ith as the response the rest as features
-  proposedAdjMatrix = [] # TODO multi dim... Proposed adj matrix that will be populated by the algo (edge score matrix)
-  for configuration in dimsVector:
-    data = {
-      'features': {},
-      'response': {}
-    }
-
-    currResponse = configuration
-    # You have to evaluate because the filter returns an obj
-    currFeatures = list(filter(lambda x: x != configuration, dimsVector))
-
-    # Add the features to the dict
-    for el in currFeatures:
-      col_name = 'X' + str(el)
-      data['features'][col_name] = network[:args.num_samples - 1, el]
-
-    # Add the response to the dict
-    data['response']['y'] = network[1:, currResponse]
-  
-    # Do the gibbs Sampling
-    results = pwGibbsSamplingWithCpsParentsMoves(data, [args.num_samples + 1],
-     args.num_samples - 1, args.chain_length)
-    
-    # Calculate feature Scores  
-    res = calculateFeatureScores(results['pi_vector'][:args.burn_in], dims, currFeatures, currResponse)
-    proposedAdjMatrix.append(res)
-
-  # Return the proposed adj matrix
-  #return proposedAdjMatrix, adjMatrix # uncomment to functionalize
-  trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
-  adjMatrixRoc(proposedAdjMatrix, trueAdjMatrix, args.verbose)
-
-def testWithClass():
-  # The coefficients that will be used to generate the random data
-  coefs = parseCoefs(args.coefs_file)
-  output_line = (
-    'Bayesian Piece-Wise Linear Regression with moves on' +
-    'change-points and parent sets. \n'
-  )
-  print(output_line)
-  # Wite to the output file
-  writeOutputFile(output_line)
-
-  # Generate data to test our algo
-  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
-  args.change_points, args.verbose, args.generated_noise_var)
+  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
+  coefs, args.num_samples, args.change_points, args.verbose, args.generated_noise_var)
 
   baNet = Network(network, args.chain_length, args.burn_in)
   baNet.infer_network('nh_dbn')
@@ -200,10 +155,15 @@ def testWithClass():
   adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
 
 def main():
+  cleanOutput() # clean output folder
+  writeOutputFile('') # create a new outputfile TODO maybe dont call twice?
+  # The coefficients that will be used to generate the random data
+  coefs = parseCoefs(args.coefs_file)
+
   #testNoCps() # Uncomment for testing the second algo on a network
   #testTestPwBlrWMoves() # Uncomment to test the third algo on a network
   #testPwBlrWithCpsParentsMoves() # Uncomment to test the fourth algo on a network
-  testWithClass()
+  testPwBlrWithCpsParentMoves(coefs)
 
 if __name__ == "__main__":
   main()

@@ -10,7 +10,7 @@ def parseCoefs(coefs_file):
       coefs_file: name of the text file that contains the coefs
 
     Returns:
-      ceofs: A list with coefficients to be read
+      coefs: A list with coefficients to be read
   '''
   coefs = []
   path = pathlib.Path.cwd()

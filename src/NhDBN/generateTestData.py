@@ -1,19 +1,30 @@
 import numpy as np
 import random
+import logging
 from systemUtils import writeOutputFile
+
+# Logger configuration TODO move this into a config file
+logger = logging.getLogger(__name__) # create a logger obj
+logger.setLevel(logging.INFO) # establish logging level
+# Establish the display of the logger
+formatter = logging.Formatter('%(levelname)s:%(name)s:%(message)s') 
+file_handler = logging.FileHandler('output.log', mode='a') # The file output name
+# Add the formatter to the logger
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 def generateNetwork(num_features, independent_features, parsed_coefs, num_samples,
   change_points, verbose = 'false', generated_noise_var = 1):
   if verbose:
     # Output file write
     output_line =  (
-      '>> Generating a network data with\n' +
+      'Generating a network data with\n' +
       str(num_features) + ' features.\n' +
       str(independent_features) + ' independent feature(s).\n' +
       str(num_samples) + ' samples.\n' +
       str(generated_noise_var) + ' agregated noise on the dependent features.\n' +
       str(change_points) + ' changepoints.\n')
-    print(output_line) ; writeOutputFile(output_line) # write output str to the file
+    print(output_line) ; logger.info(output_line) # write output str to the file
 
   adjMatrix = [] # Adj matrix that will save the real config of our data
 
@@ -123,7 +134,7 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
         '>> \n'
         'Feature X{0} was generated using {1} feature(s): '.format(featName + 1, len(generated_by_feats))
       )
-      print(output_line) ; writeOutputFile(output_line)
+      print(output_line) ; logger.info(output_line)
       # Print for each changepoint
       accumCoefs = []
       for kdx in range(len(change_points)):
@@ -131,13 +142,13 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
         output_line = (
           '\nOn the changepoint {0} located on {1}\n'.format(kdx + 1, change_points[kdx])
         )
-        print(output_line) ; writeOutputFile(output_line)
+        print(output_line) ; logger.info(output_line)
         
         displayCoefs = adjMatrix[kdx][-1]
         for feat in generated_by_feats:
           # print and write
           output_line = ('X{0} with coefficient {1}\n'.format(feat + 1, displayCoefs[feat]))
-          print(output_line) ; writeOutputFile(output_line)
+          print(output_line) ; logger.info(output_line)
 
   return data, coefs, adjMatrix #TODO remove the return of coefs (redundant since they are on adjMatrix)
     
@@ -158,15 +169,3 @@ def generateTestDataSecond(num_samples = 100, dimensions = 3):
   data['response']['y'] = 0.5 - 1.0 * data['features']['X2'] - 1.0 * data['features']['X5']  +  3 * epsilon
 
   return data
-
-def testArgParse():
-  generateNetwork()
-
-def testGenerateThirdAlgo():
-  print('Testing data generation...')
-  dat = generateTestDataThird(100, 3)
-  print('The dimensions of the response vector are: ')
-  print(len(dat['changepoints']['0']['features']['X1']))
-  
-if __name__ == '__main__':
-  testArgParse()

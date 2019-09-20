@@ -1,16 +1,27 @@
 import numpy as np
+import logging
 import matplotlib.pyplot as plt
 from systemUtils import clean_figures_folder
 from pprint import pprint
 from sklearn.metrics import roc_curve, auc
 from systemUtils import writeOutputFile
 
+# Logger configuration TODO move this into a config file
+logger = logging.getLogger(__name__) # create a logger obj
+logger.setLevel(logging.INFO) # establish logging level
+# Establish the display of the logger
+formatter = logging.Formatter('%(levelname)s:%(name)s:%(message)s') 
+file_handler = logging.FileHandler('output.log', mode='a') # The file output name
+# Add the formatter to the logger
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
 def adjMatrixRoc(adjMatrixProp, trueAdjMatrix, verbose):
   if verbose:
-    print('\nThe true adj matrix is: \n') ; writeOutputFile('\nThe true adj matrix is: \n')
-    pprint(trueAdjMatrix) ; writeOutputFile(str(trueAdjMatrix))
-    print('\nThe proposed adj matrix is: \n') ; writeOutputFile('\nThe proposed adj matrix is: \n')
-    pprint(adjMatrixProp) ; writeOutputFile(str(adjMatrixProp))
+    print('\nThe true adj matrix is: \n') ; logger.info('\nThe true adj matrix is: \n')
+    pprint(trueAdjMatrix) ; logger.info(str(trueAdjMatrix))
+    print('\nThe proposed adj matrix is: \n') ; logger.info('\nThe proposed adj matrix is: \n')
+    pprint(adjMatrixProp) ; logger.info(str(adjMatrixProp))
   # Remove the diagonal that is allways going to be right
   trueAdjMatrixNoDiag = []
   idxToRemove = 0
@@ -61,14 +72,14 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
   output_line = (
     '\n>> The current response feature is: X{0}\n'.format(currentResponse + 1)
   )
-  print(output_line) ; writeOutputFile(output_line)
+  print(output_line) ; logger.info(output_line)
 
   results = {}
   for feat in currentFeatures:
     output_line = (
       '  Edge score for X{0}: '.format(feat + 1)
     )
-    print(output_line) ; writeOutputFile(output_line)
+    print(output_line) ; logger.info(output_line)
     freqSum = 0
     # Calculate the % of apperance
     for currentPi in selectedFeaturesVector:
@@ -80,47 +91,9 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
     output_line = (
       str(results['X' + str(feat + 1)]) + '\n'
     )
-    print(output_line) ; writeOutputFile(output_line)
+    print(output_line) ; logger.info(output_line)
     # Better return a row on the proposed adj matrix
     adjRow[feat] = freqSum / len(selectedFeaturesVector)
 
   return adjRow
     
-def testFeatureScores():
-  dummyData = [
-    np.array([1, 3, 6]),
-    np.array([1, 3]),
-    np.array([8]),
-    np.array([9 , 10])
-  ]
-  
-  calculateFeatureScores(dummyData, 10)
-
-def testRocDraw():
-  dummyData = {
-    'X1': 0.11,
-    'X2': 0.99,
-    'X3': 0.10,
-    'X4': 0.50,
-    'X5': 0.99,
-    'X6': 0.10
-  }
-
-  realEdges = {
-    'X1': 0,
-    'X2': 1,
-    'X3': 0,
-    'X4': 0,
-    'X5': 1,
-    'X6': 0
-  }
-
-  y_score = np.array(list(dummyData.values()))
-  y_real = np.array(list(realEdges.values()))
-  # Test func
-  drawRoc(y_score, y_real)
-
-if __name__ == '__main__':
-  #testFeatureScores()
-  testRocDraw()
-  
