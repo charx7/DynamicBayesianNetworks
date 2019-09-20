@@ -66,20 +66,3 @@ def calculateFeatureSetPriorProb(featureSet, featuresDimensions, fanInRestrictio
     c = c + currC
   
   return (1 / c) 
-
-def testFeaturesPriorProb():
-  print('Executing test for calculation prior probs for a feature set...')
-  dummyData = np.array([1, 3, 6])
-  prob = calculateFeatureSetPriorProb(dummyData, 10, 3)
-  print(prob)
-
-def testChangepointsSetPriorsProb():
-  print('Executing test for the calculation of the prior probs of the cps...')
-  #dummyData = [10, 25, 51]
-  dummyData = [51]
-  prob = calculateChangePointsSetPrior(dummyData)
-  print(prob)
-
-if __name__ == '__main__':
-  #testFeaturesPriorProb()
-  testChangepointsSetPriorsProb()

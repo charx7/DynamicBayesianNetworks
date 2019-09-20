@@ -15,6 +15,9 @@ logger.addHandler(file_handler)
 
 def generateNetwork(num_features, independent_features, parsed_coefs, num_samples,
   change_points, verbose = 'false', generated_noise_var = 1):
+  '''
+    Documentation is missing for the function
+  '''
   if verbose:
     # Output file write
     output_line =  (
@@ -131,7 +134,6 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
       featName = independent_features + idx
       # print to the console and save to the output file
       output_line = (
-        '>> \n'
         'Feature X{0} was generated using {1} feature(s): '.format(featName + 1, len(generated_by_feats))
       )
       print(output_line) ; logger.info(output_line)
@@ -152,20 +154,3 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
 
   return data, coefs, adjMatrix #TODO remove the return of coefs (redundant since they are on adjMatrix)
     
-def generateTestDataSecond(num_samples = 100, dimensions = 3):
-  data = {
-    'features': {},
-    'response': {}
-  }
-
-  # Generate independent data from a N(0,1)
-  for i in range(dimensions):
-    col_name = 'X' + str(i + 1)
-    data['features'][col_name] = np.random.normal(0, 1, num_samples)
-
-  # Generate a response as a func on the features
-  epsilon = np.random.normal(0, 1, num_samples) 
-  # Create the response vector y
-  data['response']['y'] = 0.5 - 1.0 * data['features']['X2'] - 1.0 * data['features']['X5']  +  3 * epsilon
-
-  return data

@@ -4,7 +4,9 @@ import math
 
 def calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
   beta_sigma, lambda_sqr, num_samples, change_points):
-  
+  '''
+    Missing Documentation for this function
+  '''
   T = num_samples
   # Now the C Matrix needs to be calculated as a part of a product
   accumProd = 1 # Initialize the accumulator
@@ -57,12 +59,4 @@ def calculateMarginalLikelihood(X, y, mu, alpha_sigma, beta_sigma, lambda_sqr, n
   res = el1 * el2 * el3
 
   return res
-
-def testFeaturesPriorProb():
-  print('Executing test for calculation of marginal likelihood probs for a feature set...')
-  dummyData = np.array([1, 3, 6])
-  calculateMarginalLikelihood()
-
-if __name__ == '__main__':
-  testFeaturesPriorProb()
   

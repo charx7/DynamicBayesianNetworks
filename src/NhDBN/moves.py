@@ -219,6 +219,3 @@ def featureSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
 
   return pi
   
-if __name__ == '__main__':
-  print('Test')
-  

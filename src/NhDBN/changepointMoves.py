@@ -122,17 +122,3 @@ def cpBirthMove(cpSet, numSamples):
   cpSetCopy = sorted(cpSetCopy) # Sort the list
 
   return cpSetCopy
-
-def testCps():
-  numSamples = 49
-  change_points = [24, 25, 26, 52]
-  #print(cpBirthMove(change_points, numSamples))
-  #print(cpDeathMove(change_points))
-  print(cpRellocationMove(change_points))
-
-def main():
-  print('Executing move test...')
-  testCps()
-
-if __name__ == '__main__':
-  main()

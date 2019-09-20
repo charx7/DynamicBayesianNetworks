@@ -1,8 +1,6 @@
 import argparse
 import logging
 import numpy as np
-from bayesianLinRegWMoves import gibbsSamplingWithMoves
-from pWLinRegNhdbn import pwGibbsSamplingWithMoves, pwGibbsSamplingWithCpsParentsMoves
 from generateTestData import generateNetwork
 from utils import parseCoefs
 from systemUtils import cleanOutput, writeOutputFile
@@ -103,9 +101,9 @@ def main():
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
 
-  test_h_dbn(coefs) # Uncomment for testing the second algo on a network
+  #test_h_dbn(coefs) # Uncomment for testing the second algo on a network
   #testPwBlrWithParentMoves(coefs) # Uncomment to test the third algo on a network
-  #testPwBlrWithCpsParentMoves(coefs) # Test the fourth algorithm
+  testPwBlrWithCpsParentMoves(coefs) # Test the fourth algorithm
 
 if __name__ == "__main__":
   main()
