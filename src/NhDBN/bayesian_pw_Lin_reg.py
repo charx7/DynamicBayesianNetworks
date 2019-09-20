@@ -10,6 +10,7 @@ from moves import featureSetMoveWithChangePoints, changepointsSetMove
 class BayesianPwLinearRegression:
   def __init__(self, data, change_points, num_samples, num_iter = 5000):
     self.data = data
+    self.type = None
     self.change_points = change_points
     self.num_samples = num_samples
     self.num_iter = num_iter

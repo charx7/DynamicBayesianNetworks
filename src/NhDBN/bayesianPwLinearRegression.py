@@ -32,9 +32,10 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
       results : dict of string: list<float>
         dictionary containing the results of the sampled chain
   '''
-  def __init__(self, data, num_samples, num_iter, change_points):
+  def __init__(self, data, _type, num_samples, num_iter, change_points):
     # Call the contructor of the base class BayesianLinearRegression
     super().__init__(data, num_samples, num_iter)
+    self._type = _type
     self.change_points = change_points
   
   def fit(self):
@@ -107,9 +108,11 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
       # Append to the vector of results
       selectedFeatures.append(pi)
 
-      ################ 5(c) This step will propose a change in the changepoints from tau to tau*
-      changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_lambda_sqr, beta_gamma_sigma_sqr,
-        lambda_sqr, pi, self.num_samples, it, changePoints)
+      # Check if the type is non-homgeneous to do inference over all possible cps
+      if self._type == 'nh':  
+        ################ 5(c) This step will propose a change in the changepoints from tau to tau*
+        changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_lambda_sqr,
+          beta_gamma_sigma_sqr, lambda_sqr, pi, self.num_samples, it, changePoints)
 
       # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration
       # Select the data according to the set Pi or Pi*

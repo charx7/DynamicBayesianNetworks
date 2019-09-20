@@ -194,7 +194,7 @@ def testWithClass():
   args.change_points, args.verbose, args.generated_noise_var)
 
   baNet = Network(network, args.chain_length, args.burn_in)
-  baNet.infer_network()
+  baNet.infer_network('nh_dbn')
 
   trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
