@@ -9,13 +9,38 @@ from samplers import sigmaSqrSamplerWithChangePoints, betaSamplerWithChangepoint
 from moves import featureSetMoveWithChangePoints, changepointsSetMove
 
 class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
+  '''
+    Bayesian Piece-wise Linear Regression algorithm with 
+    varying changepoints and parent sets
+
+    Attributes:
+      data : dict of the current configuration of the data
+        {
+          'features':{
+            'X1': numpy.ndarray,
+          }
+          'response':{
+            'y': numpy.ndarray
+          }
+        }
+      num_samples : int
+        number of data points
+      num_iter : int
+        number of iterations of the MCMC algorithm
+      change_points : list of int
+        list containing the marked initial change points
+      results : dict of string: list<float>
+        dictionary containing the results of the sampled chain
+  '''
   def __init__(self, data, num_samples, num_iter, change_points):
+    # Call the contructor of the base class BayesianLinearRegression
     super().__init__(data, num_samples, num_iter)
     self.change_points = change_points
   
   def fit(self):
     '''
-      Abstract method that needs to be implemented while instanciating from base class
+      Method that will Produce the output of the chain of mcmc samples from 
+      the posterior distribution using an MCMC
     '''
     # Initialization of the Gibbs Sampling
     fanInRestriction = 3

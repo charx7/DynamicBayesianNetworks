@@ -41,14 +41,16 @@ def parseCoefs(coefs_file):
 
 def selectData(data, featureSet):
   '''
-    Function that selects a portion of your data according to a feature set
+    Selects a part of your data according to a feature set
 
     Args:
-      data: A dictionary that contains your full data to be partitioned
-      featureSet: A list that contains the feature set that you want to select
+      data : dict of str: numpy.ndarray 
+        dictionary that contains your full data to be partitioned
+        featureSet: A list that contains the feature set that you want to select
 
     Returns:
-      selectedData: A dictionary that contains the selected data according to the feature set
+      selectedData : dict of str: numpy.ndarray
+       dictionary that contains the selected data according to the feature set
   '''
   partialData = {
     'features':{},
@@ -62,6 +64,17 @@ def selectData(data, featureSet):
   return partialData
 
 def constructMuMatrix(featureSet):
+  '''
+    Constructs the Mean matrix 'Mu' of the beta vector that
+    depends on the parent sets plus one extra parameter for 
+    the intercept  
+
+    Args:
+      featureSet : list<int>
+        list of the parent sets 
+    Returns:
+      numpy array with the mean vector sized accordingly
+  '''
   # Set the number of vars in the featureSet
   numFeatures = len(featureSet) + 1 # +1 because of the intercept?
   # Prior expectation is the zero vector

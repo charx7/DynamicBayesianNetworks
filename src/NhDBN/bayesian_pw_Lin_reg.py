@@ -20,7 +20,7 @@ class BayesianPwLinearRegression:
     fanInRestriction = 3
     T = self.num_samples # T is the number of data points
     featureDimensionSpace = len(dict.keys(self.data['features']))
-    pi = [] # Start with an empty feature set TODO remove the [1] ...was for testing
+    pi = [] # Start with an empty feature set 
     partialData = selectData(self.data, pi) # Select just the columns according to the feature-set 
     
     # Partition data into each cp
@@ -44,7 +44,7 @@ class BayesianPwLinearRegression:
     
     selectedFeatures = [] # Empty initial parent set
     selectedChangepoints = [] # Empty initial changepoints set
-    beta = []
+    beta = [] # Mean vector of the gaussian
     sigma_sqr = [] # noise variance parameter
     lambda_sqr = []
     changePoints = self.change_points
