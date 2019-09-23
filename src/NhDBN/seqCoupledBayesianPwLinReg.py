@@ -2,8 +2,8 @@ import numpy as np
 from tqdm import tqdm 
 from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, \
   deleteMove, addMove, exchangeMove, selectData, constructNdArray, constructResponseNdArray
-from samplers import sigmaSqrSamplerWithChangePoints, betaSamplerWithChangepoints, \
-  lambdaSqrSamplerWithChangepoints, sigmaSqrSamplerWithChangePointsSeqCop
+from samplers import sigmaSqrSamplerWithChangePointsSeqCop, betaSamplerWithChangepointsSeqCoup, \
+  lambdaSqrSamplerWithChangepoints
 from moves import featureSetMoveWithChangePoints, changepointsSetMove
 
 from bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
@@ -69,8 +69,8 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
       sigma_sqr.append(np.asscalar(curr_sigma_sqr))
 
       ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
-      sample = betaSamplerWithChangepoints(y, X, mu, 
-        lambda_sqr, sigma_sqr, X_cols, self.num_samples, T, it, changePoints)
+      sample = betaSamplerWithChangepointsSeqCoup(y, X, mu, 
+        lambda_sqr, sigma_sqr, delta_sqr, X_cols, self.num_samples, T, it, changePoints)
       # Append the sample
       beta.append(sample)
 

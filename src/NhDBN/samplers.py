@@ -126,6 +126,30 @@ def sigmaSqrSampler(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, beta_gamma_sigm
   
   return curr_sigma_sqr
 
+def betaSamplerWithChangepointsSeqCoup(
+  y, X, mu, lambda_sqr, sigma_sqr, delta_sqr, X_cols, numSamples, T, it, change_points):
+  betasVector = [] # start with an empty betas vector
+  # get the betas posterior expectations
+  betasTilde = betaTildeSampler(y, X, mu, change_points, lambda_sqr[it], delta_sqr[it])
+
+  for idx, _ in enumerate(change_points):
+    currCplen = y[idx].shape[0] # length of the segment
+    y_h = y[idx] # Get the current sub y vector
+    X_h = X[idx] # Get the current design matrix
+    X_cols_h = X_cols[idx] # Get the current cols of the current cp
+    mu = betasTilde[idx] # Get the current betas posterior expectation
+    
+    if idx == 0: # we are on the first cp so we use the lambda hyperparam
+      currSample = betaSampler(y_h, X_h, mu, lambda_sqr, 
+        sigma_sqr, X_cols_h, currCplen, T, it)
+    else: # on the next cps we use delta_sqr hyper param (coupling param)
+      currSample = betaSampler(y_h, X_h, mu, delta_sqr,
+        sigma_sqr, X_cols_h, currCplen, T, it)
+    
+    betasVector.append(currSample) # append to the betas vector
+
+    return betasVector # return the constructed betas vector
+
 def betaSamplerWithChangepoints(y, X, mu, lambda_sqr, sigma_sqr, X_cols, numSamples, T, it, change_points):
   betasVector = []
   ################ 2(b) Get a sample form the beta multivaratiate Normal for each cp
