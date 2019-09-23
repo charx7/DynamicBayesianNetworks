@@ -95,6 +95,23 @@ def testPwBlrWithCpsParentMoves(coefs):
   trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
 
+def testSeqCoupPwBlrWithCpsParentMoves(coefs):
+  output_line = (
+    'Sequentially Coupled Bayesian Piece-Wise Linear Regression with moves on' +
+    'change-points and parent sets. \n'
+  )
+  print(output_line) ; logger.info(output_line) # Print and write output
+
+  # Generate data to test our algo
+  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
+  coefs, args.num_samples, args.change_points, args.verbose, args.generated_noise_var)
+
+  baNet = Network(network, args.chain_length, args.burn_in)
+  baNet.infer_network('seq_coup_nh_dbn')
+
+  trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
+  adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
+
 def main():
   cleanOutput() # clean output folder
   writeOutputFile('') # create a new outputfile TODO maybe dont call twice?
@@ -103,7 +120,8 @@ def main():
 
   #test_h_dbn(coefs) # Uncomment for testing the second algo on a network
   #testPwBlrWithParentMoves(coefs) # Uncomment to test the third algo on a network
-  testPwBlrWithCpsParentMoves(coefs) # Test the fourth algorithm
+  #testPwBlrWithCpsParentMoves(coefs) # Test the fourth algorithm
+  testSeqCoupPwBlrWithCpsParentMoves(coefs) # test the fifth algorithm
 
 if __name__ == "__main__":
   main()

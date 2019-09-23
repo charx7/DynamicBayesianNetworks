@@ -1,5 +1,91 @@
 import numpy as np
 
+def betaTildeSampler(y, X, mu, change_points, lambda_sqr, delta_sqr):
+  '''
+    Returns a vector of Posterior Beta expectations according to the segmentation
+    of the data
+
+    Args:
+      y : list(numpy.ndarray(float))
+       response list by changepoint
+      X : list(numpy.ndarray(float))
+        The whole data in a list by changepoint
+      change_points : list(int)
+        list of changepoints
+      lambda_sqr : float
+        signal to noise ratio hyper-parameter
+      delta_sqr : float
+        coupling strength hyper-parameter
+    
+    Returns:
+      betaTilde : list(numpy.ndarray(float))
+        vector of the sampled beta Tildes
+  '''
+
+  betaTilde = []
+  X_h_before = None
+  y_h_before = None
+  cpLenBefore = None
+  # Loop through all cps 
+  for idx, _ in enumerate(change_points):
+    currCplen = y[idx].shape[0] # Get the length of the cp
+    y_h = y[idx] # Get the current sub y vector
+    X_h = X[idx] # Get the current design matrix
+
+    if idx == 1: # we are on the second cp
+      el1 = np.linalg.inv((1 / lambda_sqr * np.identity(X_h.shape[1])) + np.dot(X_h.T, X_h))   
+      el2 = np.dot(X_h.T, y_h.reshape(currCplen, 1))
+      betaTilde.append(np.dot(el1, el2))
+    elif idx > 1: # we are beyond the second cp
+      el1 = np.linalg.inv((1 / delta_sqr * np.identity(X_h_before.shape[1])) \
+        + np.dot(X_h_before.T, X_h_before))   
+      el2 = delta_sqr * betaTilde[idx - 1] \
+        + np.dot(X_h_before.T, y_h_before.reshape(cpLenBefore))
+      betaTilde.append(np.dot(el1, el2))
+    else: # we are on the first cp
+      betaTilde.append(mu)
+    # Save the prev segments for later use
+    X_h_before = X_h
+    y_h_before = y_h
+    cpLenBefore = currCplen
+
+  return betaTilde 
+
+
+def sigmaSqrSamplerWithChangePointsSeqCop(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, 
+   beta_gamma_sigma_sqr, numSamples, T, it, change_points, 
+   delta_sqr):
+  # construct the betas obj posterior expectation for each cp
+  betas = betaTildeSampler(y, X, mu, change_points, lambda_sqr[it], delta_sqr[it])
+
+  ################# 1(b) Get a sample from sigma square
+  h_prod_sum = 0 # The sum that will accumulate between each changepoint
+  for idx, cp in enumerate(change_points):
+    currCplen = y[idx].shape[0]
+    y_h = y[idx] # Get the current sub y vector
+    X_h = X[idx] # Get the current design matrix
+    mu = betas[it]
+
+    # seq-coupled schema for the calculation of the C matrix
+    if idx == 0: # We are on the first cp so the prior exp is 0
+      el2 = np.linalg.inv(np.identity(currCplen) + lambda_sqr[it] * np.dot(X_h, X_h.T))
+    else:
+      el2 = np.linalg.inv(np.identity(currCplen) + delta_sqr[it] * np.dot(X_h, X_h.T))
+    
+    el1 = (y_h.reshape(currCplen, 1) - np.dot(X_h, mu)).T
+    el3 = (y_h.reshape(currCplen, 1) -  np.dot(X_h, mu))
+
+    h_prod_sum =+ np.dot(np.dot(el1, el2), el3) # accumulate the sum 
+
+  # Gamma function parameters
+  a_gamma = alpha_gamma_sigma_sqr + (T/2)
+  b_gamma = np.asscalar(beta_gamma_sigma_sqr + 0.5 * (h_prod_sum))
+
+  # Sample from the inverse gamma using the parameters and append to the vector of results
+  curr_sigma_sqr = 1 / (np.random.gamma(a_gamma, scale = (1 / b_gamma), size = 1))
+
+  return curr_sigma_sqr
+
 def sigmaSqrSamplerWithChangePoints(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, \
    beta_gamma_sigma_sqr, numSamples, T, it, change_points):
   ################# 1(b) Get a sample from sigma square

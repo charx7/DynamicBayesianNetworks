@@ -1,5 +1,6 @@
 from bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
 from bayesianLinearRegression import BayesianLinearRegression
+from seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegression
 from scores import calculateFeatureScores, adjMatrixRoc
 
 class Network():
@@ -103,12 +104,21 @@ class Network():
       self.chain_results = baReg.results # set the results
     elif method == 'h_dbn':          # call the h-dbn
       baReg = BayesianLinearRegression(
-        self.network_configuration,                   # current data config of the network
+        self.network_configuration,  # current data config of the network
         num_samples,                 # number of samples
         self.chain_length            # length of the MCMC chain
       )
       baReg.fit() # call to the fit method of the regressor
       self.chain_results = baReg.results # set the results
+    elif method == 'seq_coup_nh_dbn':
+      baReg = SeqCoupledBayesianPieceWiseLinearRegression(
+        self.network_configuration,  # Current data config
+        'seq_coup_nh',               # varying changepoints non-homogeneous seq coupled
+        num_samples - 1,             # number of data points
+        self.chain_length,           # len of chain
+        [num_samples + 1]            # just the last pseudo cp []
+      )
+      baReg.fit() # call the fit method of the regressor
       
   def score_edges(self, currResponse):
     '''
