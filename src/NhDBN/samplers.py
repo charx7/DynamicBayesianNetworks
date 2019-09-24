@@ -33,14 +33,15 @@ def betaTildeSampler(y, X, mu, change_points, lambda_sqr, delta_sqr):
     X_h = X[idx] # Get the current design matrix
 
     if idx == 1: # we are on the second cp
-      el1 = np.linalg.inv((1 / lambda_sqr * np.identity(X_h.shape[1])) + np.dot(X_h.T, X_h))   
+      el1 = np.linalg.inv(((1 / lambda_sqr) * np.identity(X_h.shape[1])) + np.dot(X_h.T, X_h))   
       el2 = np.dot(X_h.T, y_h.reshape(currCplen, 1))
       betaTilde.append(np.dot(el1, el2))
     elif idx > 1: # we are beyond the second cp
-      el1 = np.linalg.inv((1 / delta_sqr * np.identity(X_h_before.shape[1])) \
-        + np.dot(X_h_before.T, X_h_before))   
-      el2 = delta_sqr * betaTilde[idx - 1] \
-        + np.dot(X_h_before.T, y_h_before.reshape(cpLenBefore))
+      el1 = np.linalg.inv(((1 / delta_sqr) * np.identity(X_h_before.shape[1])) \
+        + np.dot(X_h_before.T, X_h_before))
+      # TODO check the idx - 2 or 1 with marco   
+      el2 = (1 / delta_sqr) * betaTilde[idx - 1] + np.dot(
+        X_h_before.T, y_h_before.reshape(cpLenBefore, 1))
       betaTilde.append(np.dot(el1, el2))
     else: # we are on the first cp
       betaTilde.append(mu)
@@ -50,7 +51,6 @@ def betaTildeSampler(y, X, mu, change_points, lambda_sqr, delta_sqr):
     cpLenBefore = currCplen
 
   return betaTilde 
-
 
 def sigmaSqrSamplerWithChangePointsSeqCop(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, 
    beta_gamma_sigma_sqr, numSamples, T, it, change_points, 
@@ -64,7 +64,7 @@ def sigmaSqrSamplerWithChangePointsSeqCop(y, X, mu, lambda_sqr, alpha_gamma_sigm
     currCplen = y[idx].shape[0]
     y_h = y[idx] # Get the current sub y vector
     X_h = X[idx] # Get the current design matrix
-    mu = betas[it]
+    mu = betas[idx]
 
     # seq-coupled schema for the calculation of the C matrix
     if idx == 0: # We are on the first cp so the prior exp is 0
@@ -148,7 +148,7 @@ def betaSamplerWithChangepointsSeqCoup(
     
     betasVector.append(currSample) # append to the betas vector
 
-    return betasVector # return the constructed betas vector
+  return betasVector # return the constructed betas vector
 
 def betaSamplerWithChangepoints(y, X, mu, lambda_sqr, sigma_sqr, X_cols, numSamples, T, it, change_points):
   betasVector = []
@@ -180,6 +180,52 @@ def betaSampler(y, X, mu, lambda_sqr, sigma_sqr, X_cols, numSamples, T, it):
   
   return sample
 
+def deltaSqrSampleSeqCoup(X, y, beta, mu, lambda_sqr, sigma_sqr, delta_sqr,
+  X_cols, alpha_gamma_delta_sqr, beta_gamma_delta_sqr, it, change_points):
+  # Get the posterior expectations of beta
+  betasTilde = betaTildeSampler(y, X, mu, change_points, lambda_sqr[it], delta_sqr[it])
+
+  accum = 0 # define the product accumulator
+  for idx, cp in enumerate(change_points):
+    if idx > 0: # the sum will take a value
+      mu = betasTilde[idx] # Get the posterior of the last segment
+      currBeta = beta[it + 1][idx] # Get the betas vector from the segment
+      X_cols_h = X_cols[idx] # Get the current cols of the current cp 
+      el1 = np.dot(
+        (currBeta - mu.flatten()).reshape(X_cols_h, 1).T,
+        (currBeta - mu.flatten()).reshape(X_cols_h, 1)
+      )
+      accum += el1
+  
+  el2 = ((1/2) * (1 / sigma_sqr[it + 1]))
+  betaMuSum = el2 * accum 
+  H = len(change_points)
+
+  # Calculate the parameters of the gamma
+  a_gamma = alpha_gamma_delta_sqr + (H - 1) * (X_cols[0] / 2) 
+  b_gamma = beta_gamma_delta_sqr + betaMuSum
+  # Sample from the dist
+  sample = 1 / (np.random.gamma(a_gamma, scale= (1/ b_gamma)))
+
+  return sample
+
+def lambdaSqrSamplerWithChangepointsSeqCoup(beta, sigma_sqr, X_cols, 
+  alpha_gamma_lambda_sqr, beta_gamma_sigma_sqr, it, change_points):
+  
+  X_chols_h = X_cols[0] # columns for the first segment
+  currBeta = beta[it + 1][0] # betas vector for the first segment
+  currSigma = 1 / sigma_sqr[it + 1] # get the current sigma sqr value
+  #H = len(change_points) # TODO change with marcos answer
+  el = np.dot(currBeta.T, currBeta)
+  a_gamma = alpha_gamma_lambda_sqr + ((len(beta[0]) + 1) / 2)
+  b_gamma = beta_gamma_sigma_sqr + ((1/2) * currSigma * el)
+
+  # Sample from the dist
+  sample = 1 / (np.random.gamma(a_gamma, scale= (1/ b_gamma)))
+  
+  return sample # return the sampled value
+
+  # sample from the proposed dist
 def lambdaSqrSamplerWithChangepoints(X, beta, mu, sigma_sqr, X_cols,
   alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it, change_points):
   ################ 3(b) Get a sample of lambda square from a Gamma distribution
@@ -203,7 +249,8 @@ def lambdaSqrSamplerWithChangepoints(X, beta, mu, sigma_sqr, X_cols,
   
   return sample
 
-def lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it):
+def lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr,
+  beta_gamma_lambda_sqr, it):
   ################ 3(a) Get a sample of lambda square from a Gamma distribution
   el1 = np.dot((beta[it + 1] - mu.flatten()).reshape(X_cols,1).T, (beta[it + 1] - mu.flatten()).reshape(X_cols,1))  
   el2 = ((1/2) * (1 / sigma_sqr[it + 1]))

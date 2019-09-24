@@ -10,7 +10,7 @@ from random import randint
 
 # This will propose and either accept or reject the move for the changepoints
 def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
-  lambda_sqr, pi, numSamples, it, change_points): 
+  lambda_sqr, pi, numSamples, it, change_points, method = '', delta_sqr = []): 
   '''
     Function that proposes a move to a new changepoint set and either accepts
     it or rejects it based on a Metropolis Hashtings move
@@ -26,7 +26,8 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
   '''
   # Calculate the marginal likelihood of the current cps set
   marginalTau = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
-   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points)
+   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+   change_points, method, delta_sqr[it + 1])
   
   # Select a random birth, death or recllocate move
   randomInteger = randint(0,2)
@@ -66,7 +67,7 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
   # Calculate the marginal likelihood of the new cps set
   marginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
    alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
-   newChangePoints)
+   newChangePoints, method, delta_sqr[it + 1])
 
   # Prior calculations
   tauPrior = calculateChangePointsSetPrior(change_points)
@@ -93,7 +94,8 @@ def selectMoveDict(selectedFunc):
   return switcher.get(selectedFunc)
 
 def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
-  lambda_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples, it, change_points):
+  lambda_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples,
+  it, change_points, method = '', delta_sqr = []):
   '''
     Documentation is missing for this function
   '''
@@ -102,7 +104,7 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
   possibleFeaturesSet = [int(x.replace('X', '')) for x in possibleFeaturesSet]
   
   marginalPi = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
-   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points)
+   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points, method, delta_sqr[it + 1])
   
   # Select a random add, delete or exchange move
   randomInteger = randint(0,2)
@@ -125,7 +127,8 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
     muStar = constructMuMatrix(piStar) # TODO Verify the construction of muStar
     # Calculate marginal likelihook for PiStar
     marginalPiStar = calculateMarginalLikelihoodWithChangepoints(XStar, y, muStar,
-     alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points) 
+     alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples,
+     change_points, method, delta_sqr[it + 1]) 
     
   except ValueError:
     piStar = pi
