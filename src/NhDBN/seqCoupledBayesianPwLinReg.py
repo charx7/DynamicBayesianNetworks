@@ -79,7 +79,7 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
 
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
       sample = lambdaSqrSamplerWithChangepointsSeqCoup(beta, sigma_sqr, X_cols,
-       alpha_gamma_lambda_sqr, beta_gamma_sigma_sqr, it, changePoints)
+       alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it, changePoints)
       # Append the sampled value
       lambda_sqr.append(sample)
 

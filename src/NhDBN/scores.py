@@ -18,9 +18,9 @@ logger.addHandler(file_handler)
 
 def adjMatrixRoc(adjMatrixProp, trueAdjMatrix, verbose):
   if verbose:
-    print('\nThe true adj matrix is: \n') ; logger.info('\nThe true adj matrix is: \n')
+    print('The true adj matrix is: ') ; logger.info('The true adj matrix is: ')
     pprint(trueAdjMatrix) ; logger.info(str(trueAdjMatrix))
-    print('\nThe proposed adj matrix is: \n') ; logger.info('\nThe proposed adj matrix is: \n')
+    print('The proposed adj matrix is: ') ; logger.info('The proposed adj matrix is: ')
     pprint(adjMatrixProp) ; logger.info(str(adjMatrixProp))
   # Remove the diagonal that is allways going to be right
   trueAdjMatrixNoDiag = []
@@ -70,14 +70,14 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
   
   # Print and write the output
   output_line = (
-    '\n>> The current response feature is: X{0}\n'.format(currentResponse + 1)
+    '>> The current response feature is: X{0}'.format(currentResponse + 1)
   )
   print(output_line) ; logger.info(output_line)
 
   results = {}
   for feat in currentFeatures:
     output_line = (
-      '  Edge score for X{0}: '.format(feat + 1)
+      'Edge score for X{0}: '.format(feat + 1)
     )
     print(output_line) ; logger.info(output_line)
     freqSum = 0

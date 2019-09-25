@@ -119,6 +119,7 @@ class Network():
         [num_samples + 1]            # just the last pseudo cp []
       )
       baReg.fit() # call the fit method of the regressor
+      self.chain_results = baReg.results # set the results
       
   def score_edges(self, currResponse):
     '''

@@ -81,7 +81,7 @@ def testPwBlrWithParentMoves(coefs):
 def testPwBlrWithCpsParentMoves(coefs):
   output_line = (
     'Bayesian Piece-Wise Linear Regression with moves on' +
-    'change-points and parent sets. \n'
+    'change-points and parent sets.'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
 
@@ -98,7 +98,7 @@ def testPwBlrWithCpsParentMoves(coefs):
 def testSeqCoupPwBlrWithCpsParentMoves(coefs):
   output_line = (
     'Sequentially Coupled Bayesian Piece-Wise Linear Regression with moves on' +
-    'change-points and parent sets. \n'
+    'change-points and parent sets.'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
 
