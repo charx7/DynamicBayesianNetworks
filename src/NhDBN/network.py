@@ -1,6 +1,7 @@
 from bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
 from bayesianLinearRegression import BayesianLinearRegression
 from seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegression
+from globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegression
 from scores import calculateFeatureScores, adjMatrixRoc
 
 class Network():
@@ -120,7 +121,18 @@ class Network():
       )
       baReg.fit() # call the fit method of the regressor
       self.chain_results = baReg.results # set the results
-      
+    elif method == 'glob_coup_nh_dbn':
+      print('Create the class')
+      baReg = GlobCoupledBayesianPieceWiseLinearRegression(
+        self.network_configuration,
+        'glob_coup_nh',
+        num_samples - 1,
+        self.chain_length,
+        [num_samples + 1]
+      )
+      baReg.fit() # call to the fit method of the glob coup regressor
+      self.chain_results = baReg.results
+
   def score_edges(self, currResponse):
     '''
       Calculates de edge score for the current configuration of the network 
