@@ -1,4 +1,7 @@
 import numpy as np
+from scipy.stats import multivariate_normal
+from random import randint
+
 from marginalLikelihood import calculateMarginalLikelihood, calculateMarginalLikelihoodWithChangepoints
 from priors import calculateFeatureSetPriorProb, calculateChangePointsSetPrior
 from utils import constructNdArray, generateInitialFeatureSet, \
@@ -6,7 +9,7 @@ from utils import constructNdArray, generateInitialFeatureSet, \
   constructNdArray, constructMuMatrix, constructResponseNdArray, \
   constructDesignMatrix
 from changepointMoves import cpBirthMove, cpRellocationMove, cpDeathMove
-from random import randint
+from samplers import muSampler
 
 # This will propose and either accept or reject the move for the changepoints
 def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
@@ -98,13 +101,111 @@ def selectMoveDict(selectedFunc):
 
   return switcher.get(selectedFunc)
 
+def globCoupFeatureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
+  lambda_sqr, sigma_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples,
+  it, change_points, method = '', delta_sqr = []):
+  '''
+    Documentation is missing for this function
+  '''
+  # TODO fix this redundant code delta param is not used here
+  try: # get the value of the current delta
+    curr_delta_sqr =  delta_sqr[it + 1]
+  except IndexError: # we are not in a method that requires delta^2
+    curr_delta_sqr = [] 
+  
+  # Get the possible features set
+  possibleFeaturesSet = list(data['features'].keys())
+  possibleFeaturesSet = [int(x.replace('X', '')) for x in possibleFeaturesSet]
+  
+  # Select a random add, delete or exchange move
+  randomInteger = randint(0,2)
+  # Do the calculation according to the randomly selected move
+  if randomInteger == 0:
+    # Add move
+    try:
+      piStar = addMove(pi, featureDimensionSpace, fanInRestriction, possibleFeaturesSet)
+      hr = (featureDimensionSpace - len(pi)) / len(piStar) # HR calculation
+    except ValueError:
+      piStar = pi
+      hr = 0
+  elif randomInteger == 1:
+    # Delete Move
+    try:
+      piStar = deleteMove(pi, featureDimensionSpace, fanInRestriction, possibleFeaturesSet)
+      hr = len(pi) / (featureDimensionSpace - len(piStar)) # HR calculation
+    except ValueError:
+      piStar = pi
+      hr = 0
+  elif randomInteger == 2:
+    # Exchange move
+    try:
+      piStar = exchangeMove(pi, featureDimensionSpace, fanInRestriction, possibleFeaturesSet)
+      hr = 1
+    except ValueError:
+      piStar = pi
+      hr = 0
+  
+  # Construct the new X, mu
+  partialData = {
+    'features':{},
+    'response':{}
+  }
+  for feature in piStar:
+    currKey = 'X' + str(int(feature))
+    partialData['features'][currKey] = data['features'][currKey]
+
+  # Design Matrix Design tensor? Design NdArray?
+  XStar = constructNdArray(partialData, numSamples, change_points)
+  muDagger = constructMuMatrix(piStar) 
+  # Mu matrix star matrix (new)
+  muStar, muStarDensity, muDensity = muSampler(muDagger, change_points, 
+    XStar, y, sigma_sqr[it + 1], lambda_sqr[it + 1])
+
+  # Calculate marginal likelihook for PiStar
+  marginalPiStar = calculateMarginalLikelihoodWithChangepoints(XStar, y, muStar,
+    alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples,
+    change_points, method, curr_delta_sqr) 
+  # Calculate marginal likelihood for Pi
+  marginalPi = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
+   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points, method, curr_delta_sqr)
+
+  # Calculate the prior probabilites of the move Pi -> Pi*
+  piPrior = calculateFeatureSetPriorProb(pi, featureDimensionSpace, fanInRestriction) 
+  piStarPrior = calculateFeatureSetPriorProb(piStar, featureDimensionSpace, fanInRestriction)
+
+  # Calculate the prior probabilities for mu and mu*
+  # TODO ask marco about these calculations (densities)
+  muDagger = np.zeros(mu.shape[0])
+  muDaggerPlus = np.zeros(muStar.shape[0]) # we need this in order to calc the density
+  sigmaDagger = np.eye(muDagger.shape[0])
+  sigmaDaggerPlus = np.eye(muDaggerPlus.shape[0])
+  muStarPrior = multivariate_normal.pdf(muStar.flatten(), mean = muDaggerPlus.flatten(),
+    cov = sigmaDaggerPlus)
+  muPrior = multivariate_normal.pdf(mu.flatten(), mean = muDagger.flatten(),
+    cov = sigmaDagger)
+
+  # Calculate the final acceptance probability A(~)
+  acceptanceRatio = min(1,
+   (marginalPiStar / marginalPi) * (piStarPrior / piPrior) * (muDensity / muStarDensity) * \
+   (muStarPrior / muPrior)
+  )
+
+  # Get a sample from the U(0,1) to compare the acceptance ratio
+  u = np.random.uniform(0,1)
+  if u < acceptanceRatio:
+    # if the sample is less than the acceptance ratio we accept the move to Pi*
+    pi = piStar
+    mu = muStar
+
+  return pi, mu 
+
 def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples,
   it, change_points, method = '', delta_sqr = []):
   '''
     Documentation is missing for this function
   '''
-  # The the possible features set
+  # The possible features set
   possibleFeaturesSet = list(data['features'].keys())
   possibleFeaturesSet = [int(x.replace('X', '')) for x in possibleFeaturesSet]
   

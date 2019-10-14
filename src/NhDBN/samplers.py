@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import multivariate_normal
 
 def betaTildeSampler(y, X, mu, change_points, lambda_sqr, delta_sqr):
   '''
@@ -259,3 +260,47 @@ def lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr,
   sample = 1 / (np.random.gamma(a_gamma, scale= (1/ b_gamma)))
   
   return sample
+
+def muSampler(mu, change_points, X, y, sigma_sqr, lambda_sqr):
+  '''
+    TODO documentation
+  '''
+  # construct the covar matrix
+  cov = np.eye(mu.shape[0])
+  # 1 -> Calculate the the sigma dagger dagger matrix
+  acc = 0
+  for idx, cp in enumerate(change_points):
+    X_h = X[idx] # get the current X_h
+    
+    el1 = (sigma_sqr * np.eye(X_h.shape[0])) + sigma_sqr * lambda_sqr * np.dot(X_h, X_h.T)
+    el1 = np.linalg.inv(el1)
+
+    el2 = np.dot(np.dot(X_h.T, el1), X_h)
+    acc = el2 + acc
+
+  sigmaDaggerDagger = np.linalg.inv(acc + cov) # in this case we dont need to invert cov since its eye
+  
+  acc = 0
+  for idx, cp in enumerate(change_points):
+    X_h = X[idx]
+    y_h = y[idx]
+
+    el1 = (sigma_sqr * np.eye(X_h.shape[0])) + sigma_sqr * lambda_sqr * np.dot(X_h, X_h.T)
+    el1 = np.linalg.inv(el1)
+    el2 = np.dot(np.dot(X_h.T, el1), y_h.reshape(y_h.shape[0],1))
+    acc = el2 + acc
+
+  el3 = acc + np.dot(cov, mu) #TODO check mu
+  muDaggerDagger = np.dot(sigmaDaggerDagger, el3)
+  # Get the sample
+  sample = np.random.multivariate_normal(muDaggerDagger.flatten(), sigmaDaggerDagger)
+  # Calculate the density
+  density = multivariate_normal.pdf(sample.flatten(), mean = muDaggerDagger.flatten(),
+    cov = sigmaDaggerDagger)
+  densityBefore  = multivariate_normal.pdf(mu.flatten(), mean = muDaggerDagger.flatten(),
+    cov = sigmaDaggerDagger)
+
+  # reshape mu to avoid trouble later
+  sample = sample.reshape(sample.shape[0], 1)
+  
+  return sample, density, densityBefore

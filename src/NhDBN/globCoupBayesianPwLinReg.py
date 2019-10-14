@@ -2,8 +2,9 @@ import numpy as np
 from tqdm import tqdm 
 from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, \
   deleteMove, addMove, exchangeMove, selectData, constructNdArray, constructResponseNdArray
-from samplers import sigmaSqrSamplerWithChangePoints
-from moves import featureSetMoveWithChangePoints, changepointsSetMove
+from samplers import sigmaSqrSamplerWithChangePoints, betaSamplerWithChangepoints, \
+  lambdaSqrSamplerWithChangepoints
+from moves import globCoupFeatureSetMoveWithChangePoints, changepointsSetMove
 
 from bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
 
@@ -76,8 +77,11 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
       lambda_sqr.append(np.asscalar(sample))
 
       ################ 4(b) This step proposes a change on the feature set Pi to Pi*
-      pi = featureSetMoveWithChangePoints(self.data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
-        lambda_sqr, pi, fanInRestriction, featureDimensionSpace, self.num_samples, it, changePoints)
+      ################ alongside a muve from \mu to \mu*
+      pi, muVec = globCoupFeatureSetMoveWithChangePoints(self.data, X, y, mu,
+       alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
+      lambda_sqr, sigma_sqr, pi, fanInRestriction, featureDimensionSpace,
+      self.num_samples, it, changePoints)
       # Append to the vector of results
       selectedFeatures.append(pi)
 

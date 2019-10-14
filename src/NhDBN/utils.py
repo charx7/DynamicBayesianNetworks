@@ -79,7 +79,7 @@ def constructMuMatrix(featureSet):
   numFeatures = len(featureSet) + 1 # +1 because of the intercept?
   # Prior expectation is the zero vector
   return(np.zeros(numFeatures).reshape(numFeatures, 1)) 
-  
+
 def generateInitialFeatureSet(numFeatures, fanInRestriction):
   '''
     Function that initializes the feature set Pi.
