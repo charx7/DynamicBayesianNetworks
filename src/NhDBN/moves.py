@@ -121,62 +121,92 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
   except IndexError: # we are in a method that does not require delta^2
     curr_delta_sqr = []
 
-  # Calculate the marginal likelihood of the current cps set
-  marginalTau = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
-   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
-   change_points, method, curr_delta_sqr)
-  
   # Select a random birth, death or recllocate move
   randomInteger = randint(0,2)
 
   # Changepoint moves selection
+  validMove = True
   if randomInteger == 0: # If the random integer is 0 then do a birth move
     newChangePoints = cpBirthMove(change_points, numSamples)
     # Hashting ratio calculation
     hr = (numSamples - 1 - len(change_points)) / len(newChangePoints)
-
   elif randomInteger == 1: # do the death move
     try:
       newChangePoints = cpDeathMove(change_points)
+      hr = len(change_points) / (numSamples - 1 - len(newChangePoints))
     except ValueError: # If the func fail then we stay the same
-      newChangePoints = change_points 
-    # Hashtings ratio calculation
-    hr = len(change_points) / (numSamples - 1 - len(newChangePoints))
-    
+      newChangePoints = change_points
+      validMove = False # not a valid move
+      hr = 0
   else: # do the rellocation move
     try:
       newChangePoints = cpRellocationMove(change_points)
+      hr = 1
     except ValueError: # If the func fail then we stay the same
       newChangePoints = change_points
-    # Hashtings ratio calculation
-    hr = 1
+      validMove = False
+      hr = 0
 
-  # ---> Reconstruct the design ndArray, mu vector and parameters for the marg likelihook calc
-  # Select the data according to the set Pi
-  partialData = selectData(data, pi)
-  # Design ndArray
-  XStar = constructNdArray(partialData, numSamples, newChangePoints)
-  respVector = data['response']['y'] # We have to partition y for each changepoint as well
-  yStar = constructResponseNdArray(respVector, newChangePoints)
-  # Mu matrix
-  muStar = constructMuMatrix(pi) 
+  # Do the computations only if the changepoint move was a valid move
+  if validMove:
+    # Calculate the marginal likelihood of the current cps set
+    marginalTau = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
+    beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+    change_points, method, curr_delta_sqr)
+    
+    # ---> Reconstruct the design ndArray, mu vector and parameters for the marg likelihook calc
+    # Select the data according to the set Pi
+    partialData = selectData(data, pi)
+    # Design ndArray
+    XStar = constructNdArray(partialData, numSamples, newChangePoints)
+    respVector = data['response']['y'] # We have to partition y for each changepoint as well
+    yStar = constructResponseNdArray(respVector, newChangePoints)
+    # Mu matrix
+    muStar = constructMuMatrix(pi) 
 
-  # Calculate the marginal likelihood of the new cps set
-  marginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
-   alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
-   newChangePoints, method, curr_delta_sqr)
+    # Calculate the marginal likelihood of the new cps set
+    marginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
+    alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+    newChangePoints, method, curr_delta_sqr)
 
-  # Prior calculations
-  tauPrior = calculateChangePointsSetPrior(change_points)
-  tauStarPrior = calculateChangePointsSetPrior(newChangePoints)
+    # Prior calculations
+    tauPrior = calculateChangePointsSetPrior(change_points)
+    tauStarPrior = calculateChangePointsSetPrior(newChangePoints)
+  
+    # ---> Reconstruct the design ndArray, mu vector and parameters for the marg likelihook calc
+    # Select the data according to the set Pi
+    partialData = selectData(data, pi)
+    # Design ndArray
+    XStar = constructNdArray(partialData, numSamples, newChangePoints)
+    respVector = data['response']['y'] # We have to partition y for each changepoint as well
+    yStar = constructResponseNdArray(respVector, newChangePoints)
+    # Mu matrix
+    muStar = constructMuMatrix(pi) 
 
-  # Get the threshhold of the probability of acceptance of the move
-  acceptanceRatio = min(1, (marginalTauStar/marginalTau) * (tauStarPrior / tauPrior) * hr)
-  # Get a sample from the U(0,1) to compare the acceptance ratio
-  u = np.random.uniform(0,1)
-  if u < acceptanceRatio:
-    # if the sample is less than the acceptance ratio we accept the move to Tau* (the new cps)
-    change_points = newChangePoints
+    # Calculate the marginal likelihood of the new cps set
+    marginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
+    alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+    newChangePoints, method, curr_delta_sqr)
+
+    # Prior calculations
+    tauPrior = calculateChangePointsSetPrior(change_points)
+    tauStarPrior = calculateChangePointsSetPrior(newChangePoints)
+
+    # Get the threshhold of the probability of acceptance of the move
+    acceptanceRatio = min(1, (marginalTauStar/marginalTau) * (tauStarPrior / tauPrior) * hr)
+    # Get a sample from the U(0,1) to compare the acceptance ratio
+    u = np.random.uniform(0,1)
+    if u < acceptanceRatio:
+      # if the sample is less than the acceptance ratio we accept the move to Tau* (the new cps)
+      change_points = newChangePoints
+
+    # Get the threshhold of the probability of acceptance of the move
+    acceptanceRatio = min(1, (marginalTauStar/marginalTau) * (tauStarPrior / tauPrior) * hr)
+    # Get a sample from the U(0,1) to compare the acceptance ratio
+    u = np.random.uniform(0,1)
+    if u < acceptanceRatio:
+      # if the sample is less than the acceptance ratio we accept the move to Tau* (the new cps)
+      change_points = newChangePoints
 
   return change_points
 
@@ -304,9 +334,6 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
   except IndexError: # we are not in a method that requires delta^2
     curr_delta_sqr = [] 
       
-  marginalPi = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
-   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points, method, curr_delta_sqr)
-  
   # Select a random add, delete or exchange move
   randomInteger = randint(0,2)
   func = selectMoveDict(randomInteger)
@@ -330,15 +357,27 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
     marginalPiStar = calculateMarginalLikelihoodWithChangepoints(XStar, y, muStar,
      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples,
      change_points, method, curr_delta_sqr) 
-    
+    validMove = True # the selected move was valid
   except ValueError:
     piStar = pi
-    marginalPiStar = marginalPi
+    marginalPiStar = 0
+    validMove = False # we had a invalid move
 
-  # Calculate the prior probabilites of the move Pi -> Pi*
-  piPrior = calculateFeatureSetPriorProb(pi, featureDimensionSpace, fanInRestriction) 
-  piStarPrior = calculateFeatureSetPriorProb(piStar, featureDimensionSpace, fanInRestriction)
+  # for efficiency we will only do the computations when we selected a valid move
+  if validMove:
+    # marginal likelihood computation with pi
+    marginalPi = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
+    beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points, method, curr_delta_sqr)
 
+    # Calculate the prior probabilites of the move Pi -> Pi*
+    piPrior = calculateFeatureSetPriorProb(pi, featureDimensionSpace, fanInRestriction) 
+    piStarPrior = calculateFeatureSetPriorProb(piStar, featureDimensionSpace, fanInRestriction)
+
+  else:
+    marginalPi = 1 # can be any value (will evaluate to 0 on the acceptance)
+    piPrior = 1
+    piStarPrior = 1
+  
   # Calculate the acceptance/rejection probability of the move given Pi, Pi*
   # First we need to calculate HR given the move we selected
   if randomInteger == 0:
@@ -368,12 +407,12 @@ def featureSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   # The the possible features set
   possibleFeaturesSet = list(data['features'].keys())
   possibleFeaturesSet = [int(x.replace('X', '')) for x in possibleFeaturesSet]
-  # Calculate the probability of response given the feature set Pi (marginal likelihood)
-  marginalPi = calculateMarginalLikelihood(X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples)    
+  
   # Select a random add, delete or exchange move
   randomInteger = randint(0,2)
   
   func = selectMoveDict(randomInteger)
+  validMove = True
   # Try catch block for the random move
   try:
     piStar = func(pi, featureDimensionSpace, fanInRestriction, possibleFeaturesSet)
@@ -395,31 +434,35 @@ def featureSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
     
   except ValueError:
     piStar = pi
-    marginalPiStar = marginalPi
-    # Calculate the probability of response the feature set Pi*
+    validMove = False
   
-  # Calculate the prior probabilites of the move Pi -> Pi*
-  piPrior = calculateFeatureSetPriorProb(pi, featureDimensionSpace, fanInRestriction) 
-  piStarPrior = calculateFeatureSetPriorProb(piStar, featureDimensionSpace, fanInRestriction)
+  # Do the computations only if the selected move was valid
+  if validMove:  
+    # Calculate the probability of response given the feature set Pi (marginal likelihood)
+    marginalPi = calculateMarginalLikelihood(X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples)    
+    
+    # Calculate the prior probabilites of the move Pi -> Pi*
+    piPrior = calculateFeatureSetPriorProb(pi, featureDimensionSpace, fanInRestriction) 
+    piStarPrior = calculateFeatureSetPriorProb(piStar, featureDimensionSpace, fanInRestriction)
 
-  # Calculate the acceptance/rejection probability of the move given Pi, Pi*
-  # First we need to calculate HR given the move we selected
-  if randomInteger == 0:
-    # Add move
-    hr = (featureDimensionSpace - len(pi)) / len(piStar)
-  elif randomInteger == 1:
-    # Delete Move
-    hr = len(pi) / (featureDimensionSpace - len(piStar))
-  elif randomInteger == 2:
-    # Exchange move
-    hr = 1
-  # Get the threshhold of the probability of acceptance of the move
-  acceptanceRatio = min(1, (marginalPiStar/marginalPi) * (piStarPrior/ piPrior) * hr)
-  # Get a sample from the U(0,1) to compare the acceptance ratio
-  u = np.random.uniform(0,1)
-  if u < acceptanceRatio:
-    # if the sample is less than the acceptance ratio we accept the move to Pi*
-    pi = piStar
+    # Calculate the acceptance/rejection probability of the move given Pi, Pi*
+    # First we need to calculate HR given the move we selected
+    if randomInteger == 0:
+      # Add move
+      hr = (featureDimensionSpace - len(pi)) / len(piStar)
+    elif randomInteger == 1:
+      # Delete Move
+      hr = len(pi) / (featureDimensionSpace - len(piStar))
+    elif randomInteger == 2:
+      # Exchange move
+      hr = 1
+    # Get the threshhold of the probability of acceptance of the move
+    acceptanceRatio = min(1, (marginalPiStar/marginalPi) * (piStarPrior/ piPrior) * hr)
+    # Get a sample from the U(0,1) to compare the acceptance ratio
+    u = np.random.uniform(0,1)
+    if u < acceptanceRatio:
+      # if the sample is less than the acceptance ratio we accept the move to Pi*
+      pi = piStar
 
   return pi
   
