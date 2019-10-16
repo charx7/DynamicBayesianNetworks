@@ -11,6 +11,95 @@ from utils import constructNdArray, generateInitialFeatureSet, \
 from changepointMoves import cpBirthMove, cpRellocationMove, cpDeathMove
 from samplers import muSampler
 
+def globCoupChangepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
+  lambda_sqr, sigma_sqr, pi, numSamples, it, change_points, method = '', delta_sqr = []):
+  '''
+    Documentation TODO
+  '''
+  try: # get the value of delta sqr
+    curr_delta_sqr = delta_sqr[it + 1]
+  except IndexError: # we are in a method that does not require delta^2
+    curr_delta_sqr = []
+
+  # Select a random birth, death or rellocate move
+  randomInteger = randint(0,2)
+
+  # Changepoint moves selection
+  if randomInteger == 0: # If the random integer is 0 then do a birth move
+    newChangePoints = cpBirthMove(change_points, numSamples)
+    # Hashting ratio calculation
+    hr = (numSamples - 1 - len(change_points)) / len(newChangePoints)
+
+  elif randomInteger == 1: # do the death move
+    try:
+      newChangePoints = cpDeathMove(change_points)
+    except ValueError: # If the func fail then we stay the same
+      newChangePoints = change_points 
+    # Hashtings ratio calculation
+    hr = len(change_points) / (numSamples - 1 - len(newChangePoints))
+    
+  else: # do the rellocation move
+    try:
+      newChangePoints = cpRellocationMove(change_points)
+    except ValueError: # If the func fail then we stay the same
+      newChangePoints = change_points
+    # Hashtings ratio calculation
+    hr = 1
+
+  # Calculate the marginal likelihood of the current cps set
+  marginalTau = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
+   beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+   change_points, method, curr_delta_sqr)
+  
+  # ---> Reconstruct the design ndArray, mu vector and parameters for the marg likelihook calc
+  # Select the data according to the set Pi
+  partialData = selectData(data, pi)
+  # Design ndArray
+  XStar = constructNdArray(partialData, numSamples, newChangePoints)
+  respVector = data['response']['y'] # We have to partition y for each changepoint as well
+  yStar = constructResponseNdArray(respVector, newChangePoints)
+  # Mu matrix 
+  muDagger = constructMuMatrix(pi) 
+ 
+  # Mu matrix star matrix (new)
+  muStar, muStarDensity, muDensity = muSampler(muDagger, newChangePoints, 
+    XStar, yStar, sigma_sqr[it + 1], lambda_sqr[it + 1])
+
+  # After changes on the design matrix now we can calculate the modified marg likelihood
+  # Calculate the marginal likelihood of the new cps set and new mu star
+  marginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
+   alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+   newChangePoints, method, curr_delta_sqr)
+
+  # Prior calculations for tau, tau*, mu, mu*
+  # >>>>>>>>>>>>>>>>>>
+  tauPrior = calculateChangePointsSetPrior(change_points)
+  tauStarPrior = calculateChangePointsSetPrior(newChangePoints)
+
+  # Calculate the prior probabilities for mu and mu*
+  # TODO functionalize this calculations
+  muDagger = np.zeros(mu.shape[0])
+  muDaggerPlus = np.zeros(muStar.shape[0]) # we need this in order to calc the density
+  sigmaDagger = np.eye(muDagger.shape[0])
+  sigmaDaggerPlus = np.eye(muDaggerPlus.shape[0])
+  muStarPrior = multivariate_normal.pdf(muStar.flatten(), mean = muDaggerPlus.flatten(),
+    cov = sigmaDaggerPlus)
+  muPrior = multivariate_normal.pdf(mu.flatten(), mean = muDagger.flatten(),
+    cov = sigmaDagger)
+
+  # Get the threshhold of the probability of acceptance of the move
+  acceptanceRatio = min(1, (marginalTauStar/marginalTau) * \
+    (tauStarPrior / tauPrior) * (muStarPrior / muPrior) * (muDensity / muStarDensity) * hr)
+  # Get a sample from the U(0,1) to compare the acceptance ratio
+  u = np.random.uniform(0,1)
+  if u < acceptanceRatio:
+    # if the sample is less than the acceptance ratio we accept the move to Tau* (the new cps)
+    change_points = newChangePoints
+    # also move to mu*
+    mu = muStar
+
+  return change_points, mu
+
 # This will propose and either accept or reject the move for the changepoints
 def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, pi, numSamples, it, change_points, method = '', delta_sqr = []): 
@@ -174,7 +263,7 @@ def globCoupFeatureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr
   piStarPrior = calculateFeatureSetPriorProb(piStar, featureDimensionSpace, fanInRestriction)
 
   # Calculate the prior probabilities for mu and mu*
-  # TODO ask marco about these calculations (densities)
+  # TODO functionalize this calculations
   muDagger = np.zeros(mu.shape[0])
   muDaggerPlus = np.zeros(muStar.shape[0]) # we need this in order to calc the density
   sigmaDagger = np.eye(muDagger.shape[0])
@@ -184,10 +273,11 @@ def globCoupFeatureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr
   muPrior = multivariate_normal.pdf(mu.flatten(), mean = muDagger.flatten(),
     cov = sigmaDagger)
 
-  # Calculate the final acceptance probability A(~)
+  # Calculate the final acceptance probability A(~) TODO this should be in log 
+  # terms to avoid underflow with very low densities!!!
   acceptanceRatio = min(1,
    (marginalPiStar / marginalPi) * (piStarPrior / piPrior) * (muDensity / muStarDensity) * \
-   (muStarPrior / muPrior)
+   (muStarPrior / muPrior) * (hr)
   )
 
   # Get a sample from the U(0,1) to compare the acceptance ratio

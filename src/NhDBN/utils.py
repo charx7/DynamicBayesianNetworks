@@ -304,7 +304,7 @@ def exchangeMove(featureSet, numFeatures, fanInRestriction, possibleFeaturesSet)
   elToExchange = np.random.choice(featureSet)
   #print('The element to exchange is: ', elToExchange)
   # Remove the element from numFeatures and featureSet
-  allFeaturesNoExchange = np.setdiff1d(possibleFeaturesSet, elToExchange)
+  allFeaturesNoExchange = np.setdiff1d(possibleFeaturesSet, featureSet)
   featureSet = np.setdiff1d(featureSet, elToExchange)
   # Select randomly a element to add to the feature set
   elToAdd = np.random.choice(allFeaturesNoExchange)
@@ -326,5 +326,9 @@ def testPiGeneration():
   print(rndSet)
   
 if __name__ == '__main__':
-  testDataGeneration()
-  testPiGeneration()
+  #testDataGeneration()
+  #testPiGeneration()
+  pi = np.array([4, 5])
+  featureDimensionSpace = 5
+  possibleFeaturesSet = [1, 2, 3, 4, 5]
+  exchangeMove(pi, featureDimensionSpace, 3, possibleFeaturesSet)
