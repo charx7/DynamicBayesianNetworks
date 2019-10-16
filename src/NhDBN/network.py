@@ -147,7 +147,7 @@ class Network():
     currFeatures = [int(string[1]) for string in list(self.network_configuration['features'])]
 
     self.edge_scores = calculateFeatureScores(
-        self.chain_results['pi_vector'][:self.burn_in],
+        self.chain_results['pi_vector'][self.burn_in:],
         dims, 
         currFeatures,
         currResponse)

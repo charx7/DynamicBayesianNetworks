@@ -64,7 +64,7 @@ def test_h_dbn(coefs):
 def testPwBlrWithParentMoves(coefs):
   output_line = (
     'Bayesian Piece-Wise Linear Regression with moves on' +
-    'the parent set only. \n'
+    'the parent set only with fixed changepoints. \n'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
 

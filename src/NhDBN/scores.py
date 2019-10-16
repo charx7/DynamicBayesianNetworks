@@ -86,14 +86,15 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
       if feat in currentPi:
         freqSum = freqSum + 1
     
+    denom = len([x for x in selectedFeaturesVector if x.size != 0])
     # Append to the dictionary of the results
-    results['X' + str(feat + 1)] = freqSum / len(selectedFeaturesVector)
+    results['X' + str(feat + 1)] = freqSum / denom
     output_line = (
       str(results['X' + str(feat + 1)]) + '\n'
     )
     print(output_line) ; logger.info(output_line)
     # Better return a row on the proposed adj matrix
-    adjRow[feat] = freqSum / len(selectedFeaturesVector)
+    adjRow[feat] = freqSum / denom
 
   return adjRow
     
