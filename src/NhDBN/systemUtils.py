@@ -1,5 +1,20 @@
 import os
 import shutil
+import pathlib
+from numpy import genfromtxt
+
+def data_reader(data_dir):
+  # get the current path
+  path = pathlib.Path.cwd()
+  # Path handling with the debugger
+  clPath = path.joinpath('src', 'NhDBN')
+    
+  # Try catch block to either run on the console or on the debugger/root folder
+  try: # try that we are executing on the same path as the file is
+    np_data = genfromtxt(path.joinpath(data_dir), delimiter=',')
+  except: # we are executing from the root of our project 
+    np_data = genfromtxt(clPath.joinpath(data_dir), delimiter=',')
+  return np_data  # return the data
 
 def clean_figures_folder(figures_folder):
   '''
@@ -55,11 +70,8 @@ def writeOutputFile(text = ''):
         output.write('Output file: \n')
         
 def main():
-  figures_folder = 'figures/'
-  clean_figures_folder(figures_folder)
-  #cleanOutput()
-  writeStr = 'test String!\n'
-  writeOutputFile(writeStr)
+  data = data_reader('./data/datayeastoff.txt')
+  print(data)
 
 if __name__ == '__main__':
   main()
