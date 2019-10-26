@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from scipy.stats import multivariate_normal
 from random import randint
 
@@ -360,7 +361,8 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
     validMove = True # the selected move was valid
   except ValueError:
     piStar = pi
-    marginalPiStar = 0
+    #marginalPiStar = 0
+    marginalPiStar = 1 # we are using the logs
     validMove = False # we had a invalid move
 
   # for efficiency we will only do the computations when we selected a valid move
@@ -373,30 +375,35 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
     piPrior = calculateFeatureSetPriorProb(pi, featureDimensionSpace, fanInRestriction) 
     piStarPrior = calculateFeatureSetPriorProb(piStar, featureDimensionSpace, fanInRestriction)
 
-  else:
-    marginalPi = 1 # can be any value (will evaluate to 0 on the acceptance)
-    piPrior = 1
-    piStarPrior = 1
+    # Calculate the acceptance/rejection probability of the move given Pi, Pi*
+    # First we need to calculate HR given the move we selected
+    if randomInteger == 0:
+      # Add move
+      hr = (featureDimensionSpace - len(pi)) / len(piStar)
+    elif randomInteger == 1:
+      # Delete Move
+      hr = len(pi) / (featureDimensionSpace - len(piStar))
+    elif randomInteger == 2:
+      # Exchange move
+      hr = 1
+    # Get the threshhold of the probability of acceptance of the move
+    acceptanceRatio = min(1, (marginalPiStar/marginalPi) * (piStarPrior/ piPrior) * hr)
+    # Now we do the log to avoid underflow
+    # acceptanceRatio = min( \
+    #   1, \
+    #   math.exp(
+    #     math.log(marginalPiStar) - 
+    #     math.log(marginalPi) +
+    #     math.log(piStarPrior) -
+    #     math.log(piPrior) +
+    #     math.log(hr)
+    # ))
+    # Get a sample from the U(0,1) to compare the acceptance ratio
+    u = np.random.uniform(0,1)
+    if u < acceptanceRatio:
+      # if the sample is less than the acceptance ratio we accept the move to Pi*
+      pi = piStar
   
-  # Calculate the acceptance/rejection probability of the move given Pi, Pi*
-  # First we need to calculate HR given the move we selected
-  if randomInteger == 0:
-    # Add move
-    hr = (featureDimensionSpace - len(pi)) / len(piStar)
-  elif randomInteger == 1:
-    # Delete Move
-    hr = len(pi) / (featureDimensionSpace - len(piStar))
-  elif randomInteger == 2:
-    # Exchange move
-    hr = 1
-  # Get the threshhold of the probability of acceptance of the move
-  acceptanceRatio = min(1, (marginalPiStar/marginalPi) * (piStarPrior/ piPrior) * hr)
-  # Get a sample from the U(0,1) to compare the acceptance ratio
-  u = np.random.uniform(0,1)
-  if u < acceptanceRatio:
-    # if the sample is less than the acceptance ratio we accept the move to Pi*
-    pi = piStar
-
   return pi
   
 def featureSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,

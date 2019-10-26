@@ -43,14 +43,20 @@ def read_yeast():
   merged_data = np.vstack((dataOn, dataOff)) # merge the on + off datasets
 
   # Set the true incidence matrix defined by the literature
+  # true_inc = [
+  #   [0, 1, 0, 0, 0],
+  #   [0, 0, 1, 1, 0],
+  #   [1, 0, 0, 1 ,1],
+  #   [0, 1, 0, 0, 0],
+  #   [1, 0, 0, 0, 0]
+  # ]
   true_inc = [
-    [0, 1, 0, 0, 0],
-    [0, 0, 1, 1, 0],
-    [1, 0, 0, 1 ,1],
-    [0, 1, 0, 0, 0],
-    [1, 0, 0, 0, 0]
+    [0, 0, 1, 0, 1],
+    [1, 0, 0, 1, 0],
+    [0, 1, 0, 0 ,0],
+    [0, 1, 1, 0, 0],
+    [0, 0, 1, 0, 0]
   ]
-
   return(merged_data, true_inc)
 
 def testPwBlrWithParentMoves(data, true_inc):

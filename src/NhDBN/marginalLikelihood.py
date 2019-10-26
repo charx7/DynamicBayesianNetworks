@@ -96,7 +96,7 @@ def calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
     partial = np.dot(np.dot(matrixElement1, matrixElement2), matrixElement3)
     accumSum = accumSum + partial
 
-  el3 = (2 * beta_sigma + accumSum) ** (-T/2 + alpha_sigma)
+  el3 = (2 * beta_sigma + accumSum) ** -(T/2 + alpha_sigma)
   res = el1 * el2 * el3 # Calculate the final result
 
   return res
@@ -111,7 +111,7 @@ def calculateMarginalLikelihood(X, y, mu, alpha_sigma, beta_sigma, lambda_sqr, n
   matrixElement1 = (y.reshape(num_samples, 1) - np.dot(X, mu)).T
   matrixElement2 = np.linalg.inv(cMatrix)
   matrixElement3 = y.reshape(num_samples, 1) - np.dot(X, mu)
-  el3 = (2 * beta_sigma + np.dot(np.dot(matrixElement1, matrixElement2), matrixElement3)) ** (-T/2 + alpha_sigma) 
+  el3 = (2 * beta_sigma + np.dot(np.dot(matrixElement1, matrixElement2), matrixElement3)) ** -(T/2 + alpha_sigma) 
 
   res = el1 * el2 * el3
 
