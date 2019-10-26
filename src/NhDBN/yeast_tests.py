@@ -7,7 +7,7 @@ from scores import calculateFeatureScores, adjMatrixRoc
 from network import Network
 from pprint import pprint
 
-np.random.seed(41) # Set seed for reproducibility
+#np.random.seed(41) # Set seed for reproducibility
 
 # Define the arg parset of the generate func
 parser = argparse.ArgumentParser(description = 'Specify the type of data to be generated.')
@@ -60,10 +60,11 @@ def testPwBlrWithParentMoves(data, true_inc):
     )
   print(output_line) ; logger.info(output_line) # Print and write output
 
+  args.change_points.append(data.shape[0] + 1) # append the len data + 1 so the algo works
   baNet = Network(data, args.chain_length, args.burn_in, args.change_points) # Create theh BN obj
-  baNet.infer_network('fixed_nh_dbn') # Do the fixed parents version of the DBN algo
+  baNet.infer_network('fixed_nh_dbn') # Do the fixed changepoints version of the DBN algo
 
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose) # check the ROC
 
 def test_h_dbn(data, true_inc):
   output_line = (

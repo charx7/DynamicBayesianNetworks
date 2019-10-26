@@ -73,7 +73,7 @@ def testPwBlrWithParentMoves(coefs):
   args.change_points, args.verbose, args.generated_noise_var)
 
   baNet = Network(network, args.chain_length, args.burn_in, args.change_points) # Create theh BN obj
-  baNet.infer_network('fixed_nh_dbn') # Do the fixed parents version of the DBN algo
+  baNet.infer_network('fixed_nh_dbn') # Do the fixed chnagepoints version of the DBN algo
 
   trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
@@ -136,10 +136,10 @@ def main():
   coefs = parseCoefs(args.coefs_file)
 
   #test_h_dbn(coefs) # Uncomment for testing the second algo on a network
-  #testPwBlrWithParentMoves(coefs) # Uncomment to test the third algo on a network
+  testPwBlrWithParentMoves(coefs) # Uncomment to test the third algo on a network
   #testPwBlrWithCpsParentMoves(coefs) # Test the fourth algorithm
   #testSeqCoupPwBlrWithCpsParentMoves(coefs) # test the fifth algorithm
-  testGlobCoupPwBlrWithCpsParentMoves(coefs) # test the sixth algorithm
+  #testGlobCoupPwBlrWithCpsParentMoves(coefs) # test the sixth algorithm
 
 if __name__ == "__main__":
   main()
