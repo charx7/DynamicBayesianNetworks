@@ -74,6 +74,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
     beta = []
     sigma_sqr = [] # noise variance parameter
     lambda_sqr = []
+    changePointsVector = []
     changePoints = self.change_points
     
     # Append the initial values of the vectors
@@ -113,7 +114,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
         ################ 5(c) This step will propose a change in the changepoints from tau to tau*
         changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_lambda_sqr,
           beta_gamma_sigma_sqr, lambda_sqr, pi, self.num_samples, it, changePoints)
-
+        changePointsVector.append(changePoints) # for monitoring
       # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration
       # Select the data according to the set Pi or Pi*
       partialData = selectData(self.data, pi)

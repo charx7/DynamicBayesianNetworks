@@ -43,7 +43,7 @@ def calculateSeqCoupMargLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
     partial = np.dot(np.dot(matrixElement1, matrixElement2), matrixElement3)
     accumSum = accumSum + partial
 
-  el3 = (2 * beta_sigma + accumSum) ** (-T/2 + alpha_sigma)
+  el3 = (2 * beta_sigma + accumSum) ** -(T/2 + alpha_sigma)
   res = el1 * el2 * el3 # Calculate the final result
 
   return res
@@ -96,7 +96,7 @@ def calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
     partial = np.dot(np.dot(matrixElement1, matrixElement2), matrixElement3)
     accumSum = accumSum + partial
 
-  el3 = (2 * beta_sigma + accumSum) ** -(T/2 + alpha_sigma)
+  el3 = (2 * beta_sigma + accumSum) ** (-T/2 + alpha_sigma)
   res = el1 * el2 * el3 # Calculate the final result
 
   return res

@@ -59,10 +59,23 @@ def read_yeast():
   ]
   return(merged_data, true_inc)
 
+def testPwBlrWithCpsParentMoves(data, true_inc):
+  output_line = (
+    'Bayesian Piece-Wise Linear Regression with moves on ' +
+    'change-points and parent sets for the Yeast data.'
+  )
+  print(output_line) ; logger.info(output_line) # Print and write output
+
+  args.change_points.append(data.shape[0] + 1) # append the len data + 1 so the algo works
+  baNet = Network(data, args.chain_length, args.burn_in)
+  baNet.infer_network('varying_nh_dbn')
+
+  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+
 def testPwBlrWithParentMoves(data, true_inc):
   output_line = (
-    'Bayesian Piece-Wise Linear Regression with moves on' +
-    'the parent set only with fixed changepoints. \n'
+    'Bayesian Piece-Wise Linear Regression with moves on ' +
+    'the parent set only with fixed changepoints for the Yeast Data. \n'
     )
   print(output_line) ; logger.info(output_line) # Print and write output
 
@@ -74,7 +87,7 @@ def testPwBlrWithParentMoves(data, true_inc):
 
 def test_h_dbn(data, true_inc):
   output_line = (
-    'Bayesian Linear Regression with moves on' +
+    'Bayesian Linear Regression with moves on ' +
     'the parent set only for the Yeast data. \n'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
@@ -94,7 +107,8 @@ def main():
   
   # Select and call the different training methods
   #test_h_dbn(data, true_inc)
-  testPwBlrWithParentMoves(data, true_inc)
+  #testPwBlrWithParentMoves(data, true_inc)
+  testPwBlrWithCpsParentMoves(data, true_inc)
   
 if __name__ == "__main__":
   main()

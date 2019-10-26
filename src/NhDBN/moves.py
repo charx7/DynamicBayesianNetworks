@@ -129,6 +129,8 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
   validMove = True
   if randomInteger == 0: # If the random integer is 0 then do a birth move
     newChangePoints = cpBirthMove(change_points, numSamples)
+    if len(newChangePoints) == 10: # cannot go beyond 10 cps
+      validMove = False
     # Hashting ratio calculation
     hr = (numSamples - 1 - len(change_points)) / len(newChangePoints)
   elif randomInteger == 1: # do the death move
@@ -174,35 +176,12 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
     tauPrior = calculateChangePointsSetPrior(change_points)
     tauStarPrior = calculateChangePointsSetPrior(newChangePoints)
   
-    # ---> Reconstruct the design ndArray, mu vector and parameters for the marg likelihook calc
-    # Select the data according to the set Pi
-    partialData = selectData(data, pi)
-    # Design ndArray
-    XStar = constructNdArray(partialData, numSamples, newChangePoints)
-    respVector = data['response']['y'] # We have to partition y for each changepoint as well
-    yStar = constructResponseNdArray(respVector, newChangePoints)
-    # Mu matrix
-    muStar = constructMuMatrix(pi) 
-
-    # Calculate the marginal likelihood of the new cps set
-    marginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
-    alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
-    newChangePoints, method, curr_delta_sqr)
-
-    # Prior calculations
-    tauPrior = calculateChangePointsSetPrior(change_points)
-    tauStarPrior = calculateChangePointsSetPrior(newChangePoints)
-
     # Get the threshhold of the probability of acceptance of the move
-    acceptanceRatio = min(1, (marginalTauStar/marginalTau) * (tauStarPrior / tauPrior) * hr)
-    # Get a sample from the U(0,1) to compare the acceptance ratio
-    u = np.random.uniform(0,1)
-    if u < acceptanceRatio:
-      # if the sample is less than the acceptance ratio we accept the move to Tau* (the new cps)
-      change_points = newChangePoints
-
-    # Get the threshhold of the probability of acceptance of the move
-    acceptanceRatio = min(1, (marginalTauStar/marginalTau) * (tauStarPrior / tauPrior) * hr)
+    #acceptanceRatio = min(1, (marginalTauStar/marginalTau) * (tauStarPrior / tauPrior) * hr)
+    acceptanceRatio = min(1, math.exp(
+      math.log(marginalTauStar) - math.log(marginalTau) +
+      math.log(tauStarPrior) - math.log(tauPrior) + math.log(hr)
+    ))
     # Get a sample from the U(0,1) to compare the acceptance ratio
     u = np.random.uniform(0,1)
     if u < acceptanceRatio:

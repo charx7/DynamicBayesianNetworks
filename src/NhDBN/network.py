@@ -3,6 +3,7 @@ from bayesianLinearRegression import BayesianLinearRegression
 from seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegression
 from globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegression
 from scores import calculateFeatureScores, adjMatrixRoc
+import numpy as np
 
 class Network():
   '''
@@ -146,8 +147,13 @@ class Network():
 
     currFeatures = [int(string[1]) for string in list(self.network_configuration['features'])]
 
+    # lets try a thinned out chain
+    burned_chain = self.chain_results['pi_vector'][self.burn_in:]
+    thinned_chain =  [burned_chain[x] for x in range(len(burned_chain)) if x%10!=0]
+
     self.edge_scores = calculateFeatureScores(
-        self.chain_results['pi_vector'][self.burn_in:],
+        #self.chain_results['pi_vector'][self.burn_in:],
+        thinned_chain,
         dims, 
         currFeatures,
         currResponse)
