@@ -59,6 +59,30 @@ def read_yeast():
   ]
   return(merged_data, true_inc)
 
+def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
+  output_line = (
+    'Globally Coupled Bayesian Piece-Wise Linear Regression with moves on ' +
+    'change-points and parent sets on Yeast Data.'
+  )
+  print(output_line) ; logger.info(output_line) # Print and write output
+
+  baNet = Network(data, args.chain_length, args.burn_in)
+  baNet.infer_network('glob_coup_nh_dbn')
+
+  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+
+def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
+  output_line = (
+    'Sequentially Coupled Bayesian Piece-Wise Linear Regression with moves on ' +
+    'change-points and parent sets on Yeast data.'
+  )
+  print(output_line) ; logger.info(output_line) # Print and write output
+
+  baNet = Network(data, args.chain_length, args.burn_in)
+  baNet.infer_network('seq_coup_nh_dbn')
+
+  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+
 def testPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
     'Bayesian Piece-Wise Linear Regression with moves on ' +
@@ -108,8 +132,10 @@ def main():
   # Select and call the different training methods
   #test_h_dbn(data, true_inc)
   #testPwBlrWithParentMoves(data, true_inc)
-  testPwBlrWithCpsParentMoves(data, true_inc)
-  
+  #testPwBlrWithCpsParentMoves(data, true_inc)
+  #testSeqCoupPwBlrWithCpsParentMoves(data, true_inc)
+  testGlobCoupPwBlrWithCpsParentMoves(data, true_inc)
+
 if __name__ == "__main__":
   main()
   

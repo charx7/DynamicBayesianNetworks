@@ -139,7 +139,7 @@ def main():
   #testPwBlrWithParentMoves(coefs) # Uncomment to test the third algo on a network
   #testPwBlrWithCpsParentMoves(coefs) # Test the fourth algorithm
   #testSeqCoupPwBlrWithCpsParentMoves(coefs) # test the fifth algorithm
-  #testGlobCoupPwBlrWithCpsParentMoves(coefs) # test the sixth algorithm
+  testGlobCoupPwBlrWithCpsParentMoves(coefs) # test the sixth algorithm
 
 if __name__ == "__main__":
   main()
