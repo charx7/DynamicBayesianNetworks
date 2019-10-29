@@ -41,8 +41,8 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
     alpha_gamma_lambda_sqr = 2
     beta_gamma_lambda_sqr = 0.2
     # Standard choice of hyperparameters for sigma^2
-    alpha_gamma_sigma_sqr = 0.01
-    beta_gamma_sigma_sqr = 0.01
+    alpha_gamma_sigma_sqr = 0.005
+    beta_gamma_sigma_sqr = 0.005
     # Stardar choice of hyperparameters for delta^2
     alpha_gamma_delta_sqr = 2
     beta_gamma_delta_sqr = 0.2
