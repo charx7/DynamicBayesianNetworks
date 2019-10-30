@@ -66,8 +66,8 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
     alpha_gamma_lambda_sqr = 2
     beta_gamma_lambda_sqr = 0.2
     # Standard choice of hyperparameters for sigma^2
-    alpha_gamma_sigma_sqr = 0.01
-    beta_gamma_sigma_sqr = 0.01
+    alpha_gamma_sigma_sqr = 0.005
+    beta_gamma_sigma_sqr = 0.005
     
     selectedFeatures = [] # Empty initial parent set
     selectedChangepoints = [] # Empty initial changepoints set
@@ -89,7 +89,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
       curr_sigma_sqr = sigmaSqrSamplerWithChangePoints(y, X, mu, lambda_sqr,
       alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, self.num_samples, T, it, changePoints)
       # Append to the sigma vector
-      sigma_sqr.append(np.asscalar(curr_sigma_sqr))
+      sigma_sqr.append((curr_sigma_sqr).item())
 
       ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
       sample = betaSamplerWithChangepoints(y, X, mu, 
@@ -101,7 +101,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
       sample = lambdaSqrSamplerWithChangepoints(X, beta, mu, sigma_sqr, X_cols,
         alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it, changePoints)
       # Append the sampled value
-      lambda_sqr.append(np.asscalar(sample))
+      lambda_sqr.append((sample).item())
 
       ################ 4(b) This step proposes a change on the feature set Pi to Pi*
       pi = featureSetMoveWithChangePoints(self.data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
@@ -112,7 +112,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
       # Check if the type is non-homgeneous to do inference over all possible cps
       if self._type == 'varying_nh':  
         ################ 5(c) This step will propose a change in the changepoints from tau to tau*
-        changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_lambda_sqr,
+        changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_sigma_sqr,
           beta_gamma_sigma_sqr, lambda_sqr, pi, self.num_samples, it, changePoints)
         changePointsVector.append(changePoints) # for monitoring
       # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration

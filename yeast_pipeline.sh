@@ -1,7 +1,7 @@
 #! /bin/sh
 # Will run the algorithm
 export ARGS=' 
-  --chain_length 20000 
+  --chain_length 30000 
   --burn_in 10000 
   --change_points 15
   '

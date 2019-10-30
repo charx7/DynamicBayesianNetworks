@@ -93,7 +93,7 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
       if self._type == 'glob_coup_nh':  
         ################ 5(c) This step will propose a change in the changepoints from tau to tau*
         changePoints, currMu = globCoupChangepointsSetMove(self.data, X, y, muVector[it],
-         alpha_gamma_lambda_sqr, beta_gamma_sigma_sqr, lambda_sqr, sigma_sqr,
+         alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr, sigma_sqr,
         pi, self.num_samples, it, changePoints)
 
         # in case the current Mu changed then we replace it

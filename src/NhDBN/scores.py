@@ -3,7 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 from systemUtils import clean_figures_folder
 from pprint import pprint
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, precision_recall_curve
 from systemUtils import writeOutputFile
 
 # Logger configuration TODO move this into a config file
@@ -46,6 +46,30 @@ def adjMatrixRoc(adjMatrixProp, trueAdjMatrix, verbose):
   flattened_scores = [item for sublist in adjMatrixProp for item in sublist]
   
   drawRoc(flattened_scores, flattened_true) # Draw the RoC curve
+  drawPRC(flattened_scores, flattened_true) # Draw the PR curve
+
+def drawPRC(inferredScoreEdges, realEdges):
+  precision, recall, _ = precision_recall_curve(realEdges, inferredScoreEdges)
+
+  # calculate precision/recall auc
+  auc_prec_recall = auc(recall, precision)
+
+  print('The AuC of the PR curve was: ', auc_prec_recall)
+  plt.clf() # clear previous figure
+  plt.plot(recall, precision, marker='.', label='AUC = %0.2f' % auc_prec_recall)
+  
+  # axis labels
+  plt.xlabel('Recall')
+  plt.ylabel('Precision')
+  # axis limits
+  plt.ylim([0.0, 1.05])
+  plt.xlim([0.0, 1.0])
+  # show the legend
+  plt.legend()
+  # show the plot
+  plt.show()
+  figure_route = 'figures/prc'
+  plt.savefig(figure_route, bbox_inches='tight')
 
 def drawRoc(inferredScoreEdges, realEdges):
   # Calculate false positive rate and true positive rate

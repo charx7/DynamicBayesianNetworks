@@ -116,7 +116,7 @@ def cpBirthMove(cpSet, numSamples):
   # filter the cps that already exist  
   filteredCandidateCpSet = list(filter(lambda x: x not in cpSet, candidateCpSet))
   newCp = np.random.choice(filteredCandidateCpSet, 1) # Get a random new cp location
-  newCp = np.asscalar(newCp) # Turn into an scalar
+  newCp = (newCp).item() # Turn into an scalar
 
   cpSetCopy.append(newCp) # Append the new random cp
   cpSetCopy = sorted(cpSetCopy) # Sort the list

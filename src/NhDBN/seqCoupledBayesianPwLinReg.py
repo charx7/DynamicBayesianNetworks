@@ -99,7 +99,7 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
       # Check if the type is non-homgeneous to do inference over all possible cps
       if self._type == 'seq_coup_nh':  
         ################ 5(c) This step will propose a change in the changepoints from tau to tau*
-        changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_lambda_sqr,
+        changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_sigma_sqr,
           beta_gamma_sigma_sqr, lambda_sqr, pi, self.num_samples, it, changePoints,
           'seq-coup', delta_sqr)
 

@@ -4,7 +4,7 @@ export ARGS='
   --num_features 6
   --num_indep 4 
   --num_samples 50 
-  --generated_noise_var 0.5
+  --generated_noise_var 1.5
   --chain_length 5000 
   --burn_in 1000 
   --change_points 10 25 

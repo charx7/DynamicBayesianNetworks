@@ -104,7 +104,8 @@ def sigmaSqrSamplerWithChangePoints(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr,
 
   # Gamma function parameters
   a_gamma = alpha_gamma_sigma_sqr + (T/2)
-  b_gamma = np.asscalar(beta_gamma_sigma_sqr + 0.5 * (h_prod_sum))
+  #b_gamma = np.asscalar(beta_gamma_sigma_sqr + 0.5 * (h_prod_sum))
+  b_gamma = (beta_gamma_sigma_sqr + 0.5 * (h_prod_sum)).item()
 
   # Sample from the inverse gamma using the parameters and append to the vector of results
   curr_sigma_sqr = 1 / (np.random.gamma(a_gamma, scale = (1 / b_gamma), size = 1))
@@ -176,7 +177,9 @@ def betaSampler(y, X, mu, lambda_sqr, sigma_sqr, X_cols, numSamples, T, it):
   el2 = ((1/(lambda_sqr[it])) * mu) + np.dot(X.T, y.reshape(numSamples, 1))
   curr_mean_vector = np.dot(el1, el2)
   # Sigma vector Calculation
-  curr_cov_matrix = sigma_sqr[it + 1] * np.linalg.inv(((1/lambda_sqr[it]) * np.identity(X_cols) + np.dot(X.T, X)))
+  curr_cov_matrix = sigma_sqr[it + 1] * np.linalg.inv(
+    ((1/lambda_sqr[it]) * np.identity(X_cols) + np.dot(X.T, X)))
+
   sample = np.random.multivariate_normal(curr_mean_vector.flatten(), curr_cov_matrix)
   
   return sample
