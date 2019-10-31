@@ -142,6 +142,11 @@ def constructDesignMatrix(data, num_samples):
   
   designMatrix = ones_vector
   currFeatures = list(dict.keys(data['features']))
+  # maybe the bug is here?
+  currFeatures = [int(string.lstrip('X')) for string in currFeatures]
+  currFeatures = sorted(currFeatures)
+  currFeatures = ['X' + str(el) for el in currFeatures]
+
   # Stack the vectors to a giant numpy matrix
   for feature in currFeatures:
     currFeatureVector = data['features'][feature]
@@ -193,6 +198,11 @@ def constructNdArray(data, num_samples, change_points):
     
     currDesignMatrix = ones_vector
     currFeatures = list(dict.keys(data['features']))
+    # maybe the bug is here?
+    currFeatures = [int(string.lstrip('X')) for string in currFeatures]
+    currFeatures = sorted(currFeatures)
+    currFeatures = ['X' + str(el) for el in currFeatures]
+
     # Stack the vectors to a giant numpy matrix
     for feature in currFeatures:
       currFeatureVector = data['features'][feature] \

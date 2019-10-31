@@ -89,7 +89,8 @@ def testPwBlrWithCpsParentMoves(data, true_inc):
     'change-points and parent sets for the Yeast data.'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
-
+  if args.change_points == 0:
+    args.change_points = []
   args.change_points.append(data.shape[0] + 1) # append the len data + 1 so the algo works
   baNet = Network(data, args.chain_length, args.burn_in)
   baNet.infer_network('varying_nh_dbn')
@@ -102,7 +103,8 @@ def testPwBlrWithParentMoves(data, true_inc):
     'the parent set only with fixed changepoints for the Yeast Data. \n'
     )
   print(output_line) ; logger.info(output_line) # Print and write output
-
+  if args.change_points == 0:
+    args.change_points = []
   args.change_points.append(data.shape[0] + 1) # append the len data + 1 so the algo works
   baNet = Network(data, args.chain_length, args.burn_in, args.change_points) # Create theh BN obj
   baNet.infer_network('fixed_nh_dbn') # Do the fixed changepoints version of the DBN algo
@@ -132,8 +134,8 @@ def main():
   # Select and call the different training methods
   #test_h_dbn(data, true_inc)
   #testPwBlrWithParentMoves(data, true_inc)
-  #testPwBlrWithCpsParentMoves(data, true_inc)
-  testSeqCoupPwBlrWithCpsParentMoves(data, true_inc)
+  testPwBlrWithCpsParentMoves(data, true_inc)
+  #testSeqCoupPwBlrWithCpsParentMoves(data, true_inc)
   #testGlobCoupPwBlrWithCpsParentMoves(data, true_inc)
 
 if __name__ == "__main__":

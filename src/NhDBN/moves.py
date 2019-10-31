@@ -153,7 +153,7 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
   # Do the computations only if the changepoint move was a valid move
   if validMove:
     # Calculate the marginal likelihood of the current cps set
-    marginalTau = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
+    logmarginalTau = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
     beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
     change_points, method, curr_delta_sqr)
     
@@ -168,20 +168,22 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
     muStar = constructMuMatrix(pi) 
 
     # Calculate the marginal likelihood of the new cps set
-    marginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
+    logmarginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
     alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
     newChangePoints, method, curr_delta_sqr)
 
     # Prior calculations
     tauPrior = calculateChangePointsSetPrior(change_points)
+    logtauPrior = math.log(tauPrior)
     tauStarPrior = calculateChangePointsSetPrior(newChangePoints)
-  
+    logtauStarPrior = math.log(tauStarPrior)
+
     # Get the threshhold of the probability of acceptance of the move
-    #acceptanceRatio = min(1, (marginalTauStar/marginalTau) * (tauStarPrior / tauPrior) * hr)
-    acceptanceRatio = min(1, math.exp(
-      math.log(marginalTauStar) - math.log(marginalTau) +
-      math.log(tauStarPrior) - math.log(tauPrior) + math.log(hr)
-    ))
+    acceptanceRatio = min(1, math.exp(logmarginalTauStar - logmarginalTau + logtauStarPrior - logtauPrior + math.log(hr)))
+    # acceptanceRatio = min(1, math.exp(
+    #   math.log(marginalTauStar) - math.log(marginalTau) +
+    #   math.log(tauStarPrior) - math.log(tauPrior) + math.log(hr)
+    # ))
     # Get a sample from the U(0,1) to compare the acceptance ratio
     u = np.random.uniform(0,1)
     if u < acceptanceRatio:
@@ -334,7 +336,7 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
     # Mu matrix
     muStar = constructMuMatrix(piStar) # TODO Verify the construction of muStar
     # Calculate marginal likelihook for PiStar
-    marginalPiStar = calculateMarginalLikelihoodWithChangepoints(XStar, y, muStar,
+    logmarginalPiStar = calculateMarginalLikelihoodWithChangepoints(XStar, y, muStar,
      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples,
      change_points, method, curr_delta_sqr) 
     validMove = True # the selected move was valid
@@ -347,12 +349,14 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
   # for efficiency we will only do the computations when we selected a valid move
   if validMove:
     # marginal likelihood computation with pi
-    marginalPi = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
+    logmarginalPi = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
     beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points, method, curr_delta_sqr)
 
     # Calculate the prior probabilites of the move Pi -> Pi*
     piPrior = calculateFeatureSetPriorProb(pi, featureDimensionSpace, fanInRestriction) 
+    logpiPrior = math.log(piPrior)
     piStarPrior = calculateFeatureSetPriorProb(piStar, featureDimensionSpace, fanInRestriction)
+    logpiStarPrior = math.log(piStarPrior)
 
     # Calculate the acceptance/rejection probability of the move given Pi, Pi*
     # First we need to calculate HR given the move we selected
@@ -366,7 +370,7 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
       # Exchange move
       hr = 1
     # Get the threshhold of the probability of acceptance of the move
-    acceptanceRatio = min(1, (marginalPiStar/marginalPi) * (piStarPrior/ piPrior) * hr)
+    acceptanceRatio = min(1, math.exp(logmarginalPiStar - logmarginalPi  + logpiStarPrior - logpiPrior + math.log(hr)))
     # Now we do the log to avoid underflow
     # acceptanceRatio = min( \
     #   1, \

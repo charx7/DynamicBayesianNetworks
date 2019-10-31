@@ -76,7 +76,7 @@ def sigmaSqrSamplerWithChangePointsSeqCop(y, X, mu, lambda_sqr, alpha_gamma_sigm
     el1 = (y_h.reshape(currCplen, 1) - np.dot(X_h, mu)).T
     el3 = (y_h.reshape(currCplen, 1) -  np.dot(X_h, mu))
 
-    h_prod_sum =+ np.dot(np.dot(el1, el2), el3) # accumulate the sum 
+    h_prod_sum += np.dot(np.dot(el1, el2), el3) # accumulate the sum 
 
   # Gamma function parameters
   a_gamma = alpha_gamma_sigma_sqr + (T/2)
@@ -100,7 +100,7 @@ def sigmaSqrSamplerWithChangePoints(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr,
     el2 = np.linalg.inv(np.identity(currCplen) + lambda_sqr[it] * np.dot(X_h, X_h.T))
     el3 = (y_h.reshape(currCplen, 1) -  np.dot(X_h, mu))
     
-    h_prod_sum =+ np.dot(np.dot(el1, el2), el3) # accumulate the sum 
+    h_prod_sum += np.dot(np.dot(el1, el2), el3) # accumulate the sum 
 
   # Gamma function parameters
   a_gamma = alpha_gamma_sigma_sqr + (T/2)
@@ -179,9 +179,12 @@ def betaSampler(y, X, mu, lambda_sqr, sigma_sqr, X_cols, numSamples, T, it):
   # Sigma vector Calculation
   curr_cov_matrix = sigma_sqr[it + 1] * np.linalg.inv(
     ((1/lambda_sqr[it]) * np.identity(X_cols) + np.dot(X.T, X)))
-
-  sample = np.random.multivariate_normal(curr_mean_vector.flatten(), curr_cov_matrix)
-  
+  sample = np.random.multivariate_normal(curr_mean_vector.flatten(), curr_cov_matrix, check_valid='warn')
+  # try:
+  #   sample = np.random.multivariate_normal(curr_mean_vector.flatten(), curr_cov_matrix, check_valid='raise')
+  # except ValueError:
+  #   print('Debug')
+    
   return sample
 
 def deltaSqrSampleSeqCoup(X, y, beta, mu, lambda_sqr, sigma_sqr, delta_sqr,

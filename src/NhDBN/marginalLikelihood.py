@@ -55,7 +55,7 @@ def calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
   '''
   T = num_samples
   # Now the C Matrix needs to be calculated as a part of a product
-  accumProd = 1 # Initialize the accumulator
+  accumProd = 0 # Initialize the accumulator
   cMatrixVector = []
   for idx, cp in enumerate(change_points):
     currCplen = y[idx].shape[0] # The current cp len
@@ -69,12 +69,15 @@ def calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
     cMatrixVector.append(cMatrix) # append the C matrix because we will use it later
     cMatrixDeterminant = np.linalg.det(cMatrix) # Determinant of the curr C matrix
     cMatrixDeterminantSqrt = cMatrixDeterminant ** (1/2)
+    logcMatrixDeterminantSqrt = math.log(cMatrixDeterminantSqrt)
 
-    accumProd = accumProd * cMatrixDeterminantSqrt # Acculate the product
+    accumProd = accumProd + logcMatrixDeterminantSqrt # Acculate the log
   
-  el1 = gamma(T/2 + alpha_sigma) / gamma(alpha_sigma)
-  el2 =  (((math.pi) ** (-T/2)) * (2 * beta_sigma) ** (alpha_sigma)) / (accumProd) # Now we need the accum
-  
+  el1 = math.log(gamma(T/2 + alpha_sigma) / gamma(alpha_sigma))
+  #el2 =  (((math.pi) ** (-T/2)) * (2 * beta_sigma) ** (alpha_sigma)) / (accumProd) # Now we need the accum
+  el2 = math.log((((math.pi) ** (-T/2)) * (2 * beta_sigma) ** (alpha_sigma))) - accumProd
+
+
   accumSum = 0
   for idx, cp in enumerate(change_points):
     currCplen = y[idx].shape[0]
@@ -96,8 +99,9 @@ def calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
     partial = np.dot(np.dot(matrixElement1, matrixElement2), matrixElement3)
     accumSum = accumSum + partial
 
-  el3 = (2 * beta_sigma + accumSum) ** -(T/2 + alpha_sigma)
-  res = el1 * el2 * el3 # Calculate the final result
+  el3 = -(T/2 + alpha_sigma) * math.log((2 * beta_sigma + accumSum)) 
+
+  res = el1 + el2 + el3 # Calculate the final result
 
   return res
 
