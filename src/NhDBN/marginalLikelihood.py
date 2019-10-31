@@ -68,15 +68,14 @@ def calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
 
     cMatrixVector.append(cMatrix) # append the C matrix because we will use it later
     cMatrixDeterminant = np.linalg.det(cMatrix) # Determinant of the curr C matrix
-    cMatrixDeterminantSqrt = cMatrixDeterminant ** (1/2)
-    logcMatrixDeterminantSqrt = math.log(cMatrixDeterminantSqrt)
+    #cMatrixDeterminantSqrt = cMatrixDeterminant ** (1/2)
+    logcMatrixDeterminant = math.log(cMatrixDeterminant)
 
-    accumProd = accumProd + logcMatrixDeterminantSqrt # Acculate the log
+    accumProd = accumProd + logcMatrixDeterminant# Acculate the log
   
-  el1 = math.log(gamma(T/2 + alpha_sigma) / gamma(alpha_sigma))
+  el1 = math.log(gamma(T/2 + alpha_sigma)) - math.log(gamma(alpha_sigma))
   #el2 =  (((math.pi) ** (-T/2)) * (2 * beta_sigma) ** (alpha_sigma)) / (accumProd) # Now we need the accum
-  el2 = math.log((((math.pi) ** (-T/2)) * (2 * beta_sigma) ** (alpha_sigma))) - accumProd
-
+  el2 = math.log((((math.pi) ** (-T/2)) * (2 * beta_sigma) ** (alpha_sigma))) - ((1/2) * accumProd)
 
   accumSum = 0
   for idx, cp in enumerate(change_points):

@@ -124,7 +124,7 @@ def sigmaSqrSampler(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, beta_gamma_sigm
 
   # Sample from the inverse gamma using the parameters and append to the vector of results
   #curr_sigma_sqr = 1 / (np.random.gamma(a_gamma, b_gamma)) #Not the correct Dist to sample
-  curr_sigma_sqr = (np.random.gamma(a_gamma, scale = (1 / b_gamma), size = 1))
+  curr_sigma_sqr = 1/(np.random.gamma(a_gamma, scale = (1 / b_gamma), size = 1))
   
   return curr_sigma_sqr
 
@@ -263,7 +263,7 @@ def lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr,
   el2 = ((1/2) * (1 / sigma_sqr[it + 1]))
   a_gamma = alpha_gamma_lambda_sqr + ((X.shape[1])/2)
   b_gamma = beta_gamma_lambda_sqr + el2 * el1
-  sample = (np.random.gamma(a_gamma, scale= (1/ b_gamma)))
+  sample = 1/(np.random.gamma(a_gamma, scale= (1/ b_gamma)))
   
   return sample
 
