@@ -56,6 +56,7 @@ def drawPRC(inferredScoreEdges, realEdges):
 
   print('The AuC of the PR curve was: ', auc_prec_recall)
   plt.clf() # clear previous figure
+  plt.title('Precision-Recall Curve')
   plt.plot(recall, precision, marker='.', label='AUC = %0.2f' % auc_prec_recall)
   
   # axis labels
@@ -66,10 +67,10 @@ def drawPRC(inferredScoreEdges, realEdges):
   plt.xlim([0.0, 1.0])
   # show the legend
   plt.legend()
-  # show the plot
-  plt.show()
+  # save the plot
   figure_route = 'figures/prc'
   plt.savefig(figure_route, bbox_inches='tight')
+  plt.show()
 
 def drawRoc(inferredScoreEdges, realEdges):
   # Calculate false positive rate and true positive rate
