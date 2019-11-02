@@ -28,14 +28,14 @@ def adjMatrixRoc(adjMatrixProp, trueAdjMatrix, verbose):
   for row in trueAdjMatrix:
     row.pop(idxToRemove)
     trueAdjMatrixNoDiag.append(row)
-    idxToRemove + 1
+    idxToRemove = idxToRemove + 1
   # Now for the inferred matrix  
   adjMatrixPropNoDiag = []
   idxToRemove = 0
   for row in adjMatrixProp:
     row.pop(idxToRemove)
     adjMatrixPropNoDiag.append(row)
-    idxToRemove + 1
+    idxToRemove = idxToRemove + 1
   # Re-assign them
   trueAdjMatrix = trueAdjMatrixNoDiag
   adjMatrixProp = adjMatrixPropNoDiag

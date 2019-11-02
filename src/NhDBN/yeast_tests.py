@@ -134,8 +134,8 @@ def main():
   # Select and call the different training methods
   #test_h_dbn(data, true_inc)
   #testPwBlrWithParentMoves(data, true_inc)
-  #testPwBlrWithCpsParentMoves(data, true_inc)
-  testSeqCoupPwBlrWithCpsParentMoves(data, true_inc)
+  testPwBlrWithCpsParentMoves(data, true_inc)
+  #testSeqCoupPwBlrWithCpsParentMoves(data, true_inc)
   #testGlobCoupPwBlrWithCpsParentMoves(data, true_inc)
 
 if __name__ == "__main__":

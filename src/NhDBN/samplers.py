@@ -108,7 +108,8 @@ def sigmaSqrSamplerWithChangePoints(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr,
   b_gamma = (beta_gamma_sigma_sqr + 0.5 * (h_prod_sum)).item()
 
   # Sample from the inverse gamma using the parameters and append to the vector of results
-  curr_sigma_sqr = (np.random.gamma(a_gamma, scale = (1 / b_gamma), size = 1))
+  invSample = np.random.gamma(a_gamma, scale = ( 1/b_gamma), size = 1)
+  curr_sigma_sqr =  1 / invSample
 
   return curr_sigma_sqr
 
@@ -212,7 +213,7 @@ def deltaSqrSampleSeqCoup(X, y, beta, mu, lambda_sqr, sigma_sqr, delta_sqr,
   a_gamma = alpha_gamma_delta_sqr + (H - 1) * (X_cols[0] / 2) 
   b_gamma = beta_gamma_delta_sqr + betaMuSum
   # Sample from the dist
-  sample = (np.random.gamma(a_gamma, scale= (1/ b_gamma)))
+  sample = 1 / (np.random.gamma(a_gamma, scale= (1 / b_gamma)))
 
   return sample
 
@@ -228,7 +229,7 @@ def lambdaSqrSamplerWithChangepointsSeqCoup(beta, sigma_sqr, X_cols,
   b_gamma = beta_gamma_sigma_sqr + ((1/2) * currSigma * el)
 
   # Sample from the dist
-  sample = (np.random.gamma(a_gamma, scale= (1/ b_gamma)))
+  sample = 1 / (np.random.gamma(a_gamma, scale= ( b_gamma)))
   
   return sample # return the sampled value
 
@@ -252,7 +253,8 @@ def lambdaSqrSamplerWithChangepoints(X, beta, mu, sigma_sqr, X_cols,
   a_gamma = alpha_gamma_lambda_sqr + H * ((len(beta[0]))/2) #TODO not hardcode the beta[0] Could change dims?
   b_gamma = beta_gamma_lambda_sqr + betaMuSum
   # Sample from the dist
-  sample = (np.random.gamma(a_gamma, scale= (1/ b_gamma)))
+  invSample = np.random.gamma(a_gamma, scale= (1/ b_gamma))
+  sample = 1/(invSample)
   
   return sample
 

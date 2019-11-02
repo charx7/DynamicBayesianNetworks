@@ -65,10 +65,16 @@ class Network():
     # Add the features to the dict
     for el in currFeatures:
       col_name = 'X' + str(el)
-      data_dict['features'][col_name] = network[:num_samples - 1, el]
+      on = network[:14, el]
+      off = network[15:num_samples - 1, el]
+      data_dict['features'][col_name] = np.concatenate((on, off), axis = 0)
 
-      # Add the response to the dict
-      data_dict['response']['y'] = network[1:, currResponse]
+      #data_dict['features'][col_name] = network[:num_samples - 1, el]
+    resp_on = network[1:15, currResponse]
+    resp_off = network[16:, currResponse]
+    data_dict['response']['y'] = np.concatenate((resp_on, resp_off), axis = 0)
+    # Add the response to the dict
+    #data_dict['response']['y'] = network[1:, currResponse]
 
     self.network_configuration = data_dict # add the current config to the network
 
@@ -81,7 +87,7 @@ class Network():
         method : str
           string that will determine which method we are going to use 
     '''
-    num_samples = self.data.shape[0] # Number of data points
+    num_samples = self.data.shape[0] - 1 # Number of data points
 
     if method == 'varying_nh_dbn':   # call the nh-dbn with varying cps
       baReg = BayesianPieceWiseLinearRegression(
