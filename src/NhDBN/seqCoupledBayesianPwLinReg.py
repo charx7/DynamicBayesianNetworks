@@ -90,7 +90,7 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
       delta_sqr.append(sample)
       
       ################ 4(b) This step proposes a change on the feature set Pi to Pi*
-      pi = featureSetMoveWithChangePoints(self.data, X, y, mu, alpha_gamma_sigma_sqr,
+      pi, X, mu = featureSetMoveWithChangePoints(self.data, X, y, mu, alpha_gamma_sigma_sqr,
        beta_gamma_sigma_sqr, lambda_sqr, pi, fanInRestriction, featureDimensionSpace,
        self.num_samples, it, changePoints, 'seq-coup', delta_sqr)
       # Append to the vector of results

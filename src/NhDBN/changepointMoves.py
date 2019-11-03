@@ -23,7 +23,7 @@ def cpRellocationMove(cpSet):
 
   cpSetCopy = cpSet.copy() # Copy in case of mutability
   # TODO improve this
-  cpSetCopy[-1] = cpSetCopy[-1] - 2 # Change the last cp to be compatible with new setpoint generation
+  cpSetCopy[-1] = cpSetCopy[-1] - 1 # Change the last cp to be compatible with new setpoint generation
 
   indexes = [idx[0] for idx in enumerate(cpSet)] # idx[0] because enumrate() returns a tuple
   indexes.pop(-1) # Remove the last one because that is allways the num_samples
@@ -32,7 +32,7 @@ def cpRellocationMove(cpSet):
   # Select the adjacent changepoints
   left = idxToRellocate - 1
   if left < 0: # You cannot go past the first cp
-    cpLeft = 2 # Min cp needs to be located at 3
+    cpLeft = 1 # Min cp needs to be located at 3
   else:
     cpLeft = cpSetCopy[left] # Get the cp to the left
 
@@ -55,7 +55,7 @@ def cpRellocationMove(cpSet):
   newCp = np.random.choice(cpCandidates) # Select one randomly
   cpSetCopy.append(newCp) # Append the new random cp
   cpSetCopy = sorted(cpSetCopy) # Sort the list
-  cpSetCopy[-1] = cpSetCopy[-1] + 2 # Add again the 2 so the rest of the algo works TODO improve this
+  cpSetCopy[-1] = cpSetCopy[-1] + 1 # Add again the 2 so the rest of the algo works TODO improve this
   #print('the changepoint added was: ', newCp) # uncomment for debug
   
   return(cpSetCopy)
@@ -112,7 +112,7 @@ def cpBirthMove(cpSet, numSamples):
   candidateCpSet = [idx for idx in range(numSamples + 1)]
 
   # Remove the first 3 elements [0, 1, 2] because min(cp_{1}) must be at 3
-  del candidateCpSet[:3]
+  del candidateCpSet[:2]
   # filter the cps that already exist  
   filteredCandidateCpSet = list(filter(lambda x: x not in cpSet, candidateCpSet))
   newCp = np.random.choice(filteredCandidateCpSet, 1) # Get a random new cp location

@@ -15,7 +15,7 @@ def calculateChangePointsSetPrior(changepointsSet):
   '''
   
   changepointsSetCopy = changepointsSet.copy() # make a copy because of mutability
-  changepointsSetCopy.insert(0, 2) # insert the t0 value
+  changepointsSetCopy.insert(0, 1) # insert the t0 value
 
   p = 0.1 # hyperparameter of the prior distribution of the changepoints
   
@@ -25,7 +25,7 @@ def calculateChangePointsSetPrior(changepointsSet):
   else: # Do the computation of the prior
     # TODO check if this is valid for empty changepointsSet(s)
     # Get the last element of the changepointsSet
-    tau_h = changepointsSetCopy[-1] - 2 # (-2) because of the definition of tau_h and N
+    tau_h = changepointsSetCopy[-1] - 1 # (-2) because of the definition of tau_h and N
     tau_h_minus = changepointsSetCopy[-2] # Get the second to last element
     
     el1 = (1 - p) ** (tau_h - tau_h_minus) # first part of the computation

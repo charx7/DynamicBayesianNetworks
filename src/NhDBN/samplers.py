@@ -225,7 +225,7 @@ def lambdaSqrSamplerWithChangepointsSeqCoup(beta, sigma_sqr, X_cols,
   currSigma = 1 / sigma_sqr[it + 1] # get the current sigma sqr value
   #H = len(change_points) # TODO change with marcos answer
   el = np.dot(currBeta.T, currBeta)
-  a_gamma = alpha_gamma_lambda_sqr + ((len(beta[0]) + 1) / 2)
+  a_gamma = alpha_gamma_lambda_sqr + ((len(beta[it][0]) + 1) / 2)
   b_gamma = beta_gamma_sigma_sqr + ((1/2) * currSigma * el)
 
   # Sample from the dist
