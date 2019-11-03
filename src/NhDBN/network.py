@@ -155,7 +155,7 @@ class Network():
 
     # lets try a thinned out chain
     burned_chain = self.chain_results['pi_vector'][self.burn_in:]
-    thinned_chain =  [burned_chain[x] for x in range(len(burned_chain)) if x%10!=0]
+    thinned_chain =  [burned_chain[x] for x in range(len(burned_chain)) if x%100!=0]
 
     self.edge_scores = calculateFeatureScores(
         #self.chain_results['pi_vector'][self.burn_in:],

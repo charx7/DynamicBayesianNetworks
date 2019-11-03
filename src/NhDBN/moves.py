@@ -411,8 +411,10 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
     if u < acceptanceRatio:
       # if the sample is less than the acceptance ratio we accept the move to Pi*
       pi = piStar
-  
-  return pi
+      X = XStar
+      mu = muStar
+
+  return pi, X, mu
   
 def featureSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples, it):

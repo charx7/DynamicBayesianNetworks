@@ -79,7 +79,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
     
     # Append the initial values of the vectors
     selectedFeatures.append(pi)
-    beta.append(np.zeros(len(pi) + 1)) # TODO this beta should be a dict
+    beta.append([np.zeros(len(pi) + 1)]) # TODO this beta should be a dict
     sigma_sqr.append(1)
     lambda_sqr.append(1)
 
@@ -104,7 +104,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
       lambda_sqr.append((sample).item())
 
       ################ 4(b) This step proposes a change on the feature set Pi to Pi*
-      pi = featureSetMoveWithChangePoints(self.data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
+      pi, X, mu = featureSetMoveWithChangePoints(self.data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
         lambda_sqr, pi, fanInRestriction, featureDimensionSpace, self.num_samples, it, changePoints)
       # Append to the vector of results
       selectedFeatures.append(pi)
@@ -131,5 +131,5 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
       'lambda_sqr_vector': lambda_sqr,
       'sigma_sqr_vector': sigma_sqr,
       'pi_vector': selectedFeatures,
-      'tau_vector': selectedChangepoints
+      'tau_vector': changePointsVector
     }
