@@ -57,7 +57,7 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
     
     # Append the initial values of the vectors
     selectedFeatures.append(pi)
-    beta.append(np.zeros(len(pi) + 1)) # TODO this beta should be a dict
+    beta.append([np.zeros(len(pi) + 1)]) # TODO this beta should be a dict
     sigma_sqr.append(1)
     lambda_sqr.append(1)
     delta_sqr.append(1)

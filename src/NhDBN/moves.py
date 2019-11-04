@@ -321,10 +321,11 @@ def globCoupFeatureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr
     u = np.random.uniform(0,1)
     if u < math.exp(acceptanceRatio):
       # if the sample is less than the acceptance ratio we accept the move to Pi*
+      X = XStar
       pi = piStar
       mu = muStar
 
-  return pi, mu 
+  return pi, mu, X
 
 def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples,

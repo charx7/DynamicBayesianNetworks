@@ -53,7 +53,7 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
 
     # Append the initial values of the vectors
     selectedFeatures.append(pi)
-    beta.append(np.zeros(len(pi) + 1)) # TODO this beta should be a dict
+    beta.append([np.zeros(len(pi) + 1)]) # TODO this beta should be a dict
     sigma_sqr.append(1)
     lambda_sqr.append(1)
     muVector.append(mu)
@@ -80,7 +80,7 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
 
       ################ 4(b) This step proposes a change on the feature set Pi to Pi*
       ################ alongside a muve from \mu to \mu*
-      pi, currMu = globCoupFeatureSetMoveWithChangePoints(self.data, X, y, muVector[it],
+      pi, currMu, X = globCoupFeatureSetMoveWithChangePoints(self.data, X, y, muVector[it],
        alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
        lambda_sqr, sigma_sqr, pi, fanInRestriction, featureDimensionSpace,
        self.num_samples, it, changePoints)
@@ -92,12 +92,12 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
       # Check if the type is non-homgeneous to do inference over all possible cps
       if self._type == 'glob_coup_nh':  
         ################ 5(c) This step will propose a change in the changepoints from tau to tau*
-        changePoints, currMu = globCoupChangepointsSetMove(self.data, X, y, muVector[it],
+        changePoints, currMu = globCoupChangepointsSetMove(self.data, X, y, muVector[it + 1],
          alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr, sigma_sqr,
         pi, self.num_samples, it, changePoints)
 
         # in case the current Mu changed then we replace it
-        muVector[it] = currMu
+        muVector[it + 1] = currMu
 
       # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration
       # Select the data according to the set Pi or Pi*
