@@ -10,7 +10,7 @@ from utils import constructNdArray, generateInitialFeatureSet, \
   constructNdArray, constructMuMatrix, constructResponseNdArray, \
   constructDesignMatrix
 from changepointMoves import cpBirthMove, cpRellocationMove, cpDeathMove
-from samplers import muSampler
+from samplers import muSampler, betaTildeSampler
 
 def globCoupChangepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, sigma_sqr, pi, numSamples, it, change_points, method = '', delta_sqr = []):
@@ -166,10 +166,19 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
 
   # Do the computations only if the changepoint move was a valid move
   if validMove:
-    # Calculate the marginal likelihood of the current cps set
-    logmarginalTau = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
-    beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
-    change_points, method, curr_delta_sqr)
+    if method == 'seq-coup':
+      # if the method is seq coupled then we calculate beta tildes vector
+      muSeq = betaTildeSampler(y, X, mu, change_points,
+       lambda_sqr[it + 1], delta_sqr[it + 1])
+      # Calculate the marginal likelihood of the current cps set
+      logmarginalTau = calculateMarginalLikelihoodWithChangepoints(X, y, muSeq, alpha_gamma_sigma_sqr,
+      beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+      change_points, method, curr_delta_sqr)
+    else:
+      # Calculate the marginal likelihood of the current cps set
+      logmarginalTau = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
+      beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+      change_points, method, curr_delta_sqr)
     
     # ---> Reconstruct the design ndArray, mu vector and parameters for the marg likelihook calc
     # Select the data according to the set Pi
@@ -181,10 +190,20 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
     # Mu matrix
     muStar = constructMuMatrix(pi) 
 
-    # Calculate the marginal likelihood of the new cps set
-    logmarginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
-    alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
-    newChangePoints, method, curr_delta_sqr)
+    if method == 'seq-coup':
+      # if the method is seq coupled then we calculate beta tildes vector
+      muSeqStar = betaTildeSampler(yStar, XStar, muStar, newChangePoints,
+       lambda_sqr[it + 1], delta_sqr[it + 1])
+
+      # Calculate the marginal likelihood of the new cps set
+      logmarginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muSeqStar, 
+      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+      newChangePoints, method, curr_delta_sqr)
+    else:
+      # Calculate the marginal likelihood of the new cps set
+      logmarginalTauStar = calculateMarginalLikelihoodWithChangepoints(XStar, yStar, muStar, 
+      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, 
+      newChangePoints, method, curr_delta_sqr)
 
     # Prior calculations
     tauPrior = calculateChangePointsSetPrior(change_points)
@@ -359,13 +378,26 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
 
     # Design Matrix Design tensor? Design NdArray?
     XStar = constructNdArray(partialData, numSamples, change_points) # TODO Fix the construction of piStar
+
     # Mu matrix
     muStar = constructMuMatrix(piStar) # TODO Verify the construction of muStar
-    # Calculate marginal likelihook for PiStar
-    logmarginalPiStar = calculateMarginalLikelihoodWithChangepoints(XStar, y, muStar,
-     alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples,
-     change_points, method, curr_delta_sqr) 
+
+    if method == 'seq-coup':
+      # if the method is seq coupled then we calculate beta tildes vector
+      muStarSeq = betaTildeSampler(y, XStar, muStar, change_points,
+       lambda_sqr[it + 1], delta_sqr[it + 1])
+      # Calculate seq coup marginal likelihook for PiStar
+      logmarginalPiStar = calculateMarginalLikelihoodWithChangepoints(XStar, y, muStarSeq,
+      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples,
+      change_points, method, curr_delta_sqr) 
+    else:
+      # Calculate marginal likelihook for PiStar
+      logmarginalPiStar = calculateMarginalLikelihoodWithChangepoints(XStar, y, muStar,
+      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples,
+      change_points, method, curr_delta_sqr) 
+    
     validMove = True # the selected move was valid
+  
   except ValueError:
     piStar = pi
     #marginalPiStar = 0
@@ -374,9 +406,19 @@ def featureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_g
 
   # for efficiency we will only do the computations when we selected a valid move
   if validMove:
-    # marginal likelihood computation with pi
-    logmarginalPi = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
-    beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points, method, curr_delta_sqr)
+    if method == 'seq-coup':
+      # if the method is seq coupled then we calculate beta tildes vector
+      muSeq = betaTildeSampler(y, X, mu, change_points,
+       lambda_sqr[it + 1], delta_sqr[it + 1])
+
+      # seq coup marginal likelihood computation with pi
+      logmarginalPi = calculateMarginalLikelihoodWithChangepoints(X, y, muSeq, alpha_gamma_sigma_sqr,
+      beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points, method, curr_delta_sqr)
+    
+    else:
+      # marginal likelihood computation with pi
+      logmarginalPi = calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_gamma_sigma_sqr,
+      beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points, method, curr_delta_sqr)
 
     # Calculate the prior probabilites of the move Pi -> Pi*
     piPrior = calculateFeatureSetPriorProb(pi, featureDimensionSpace, fanInRestriction) 

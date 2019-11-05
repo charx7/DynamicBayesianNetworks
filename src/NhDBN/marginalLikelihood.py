@@ -79,13 +79,18 @@ def calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
 
   accumSum = 0
   for idx, cp in enumerate(change_points):
+    if method == 'seq-coup': # if its seq coup then get the beta tilde
+      betaTilde = mu[idx]
+    else:
+      betaTilde = mu # if not mu is just the zero vector
+
     currCplen = y[idx].shape[0]
     y_h = y[idx] # Get the current sub y vector
     X_h = X[idx] # Get the current design matrix (inside a cp)
-    # TODO do the same thing with the \mu vector
+    
     cMatrix_h = cMatrixVector[idx] # Get the change point C Matrix
     # Matrix multiplication elements
-    matrixElement1 = (y_h.reshape(currCplen, 1) - np.dot(X_h, mu)).T
+    matrixElement1 = (y_h.reshape(currCplen, 1) - np.dot(X_h, betaTilde)).T
     #matrixElement2 = np.linalg.inv(cMatrix_h)
     # #### debug
     try: 
@@ -94,7 +99,7 @@ def calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
       if 'Singular matrix' in str(err):
         print('investigate')
     ####
-    matrixElement3 = y_h.reshape(currCplen, 1) - np.dot(X_h, mu)
+    matrixElement3 = y_h.reshape(currCplen, 1) - np.dot(X_h, betaTilde)
     partial = np.dot(np.dot(matrixElement1, matrixElement2), matrixElement3)
     accumSum = accumSum + partial
 

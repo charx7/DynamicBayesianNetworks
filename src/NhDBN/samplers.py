@@ -41,7 +41,7 @@ def betaTildeSampler(y, X, mu, change_points, lambda_sqr, delta_sqr):
       el1 = np.linalg.inv(((1 / delta_sqr) * np.identity(X_h_before.shape[1])) \
         + np.dot(X_h_before.T, X_h_before))
       # TODO check the idx - 2 or 1 with marco   
-      el2 = (1 / delta_sqr) * betaTilde[idx - 1] + np.dot(
+      el2 = (1 / delta_sqr) * betaTilde[idx - 2] + np.dot(
         X_h_before.T, y_h_before.reshape(cpLenBefore, 1))
       betaTilde.append(np.dot(el1, el2))
     else: # we are on the first cp
@@ -196,7 +196,7 @@ def deltaSqrSampleSeqCoup(X, y, beta, mu, lambda_sqr, sigma_sqr, delta_sqr,
   accum = 0 # define the product accumulator
   for idx, cp in enumerate(change_points):
     if idx > 0: # the sum will take a value
-      mu = betasTilde[idx] # Get the posterior of the last segment
+      mu = betasTilde[idx - 1] # Get the posterior of the last segment
       currBeta = beta[it + 1][idx] # Get the betas vector from the segment
       X_cols_h = X_cols[idx] # Get the current cols of the current cp 
       el1 = np.dot(

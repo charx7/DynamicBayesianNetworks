@@ -119,5 +119,6 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
       'lambda_sqr_vector': lambda_sqr,
       'sigma_sqr_vector': sigma_sqr,
       'pi_vector': selectedFeatures,
-      'tau_vector': selectedChangepoints
+      'tau_vector': selectedChangepoints,
+      'delta_sqr_vector': delta_sqr
     }

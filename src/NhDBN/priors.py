@@ -17,7 +17,7 @@ def calculateChangePointsSetPrior(changepointsSet):
   changepointsSetCopy = changepointsSet.copy() # make a copy because of mutability
   changepointsSetCopy.insert(0, 1) # insert the t0 value
 
-  p = 0.1 # hyperparameter of the prior distribution of the changepoints
+  p = 0.125 # hyperparameter of the prior distribution of the changepoints
   
   # The changepoints set cannot be larger than 9 elements
   if len(changepointsSetCopy) > 10:  # consider the first pseudo-changepoint
