@@ -129,7 +129,6 @@ class Network():
       baReg.fit() # call the fit method of the regressor
       self.chain_results = baReg.results # set the results
     elif method == 'glob_coup_nh_dbn':
-      print('Create the class')
       baReg = GlobCoupledBayesianPieceWiseLinearRegression(
         self.network_configuration,
         'glob_coup_nh',

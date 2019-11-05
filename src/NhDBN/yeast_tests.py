@@ -17,6 +17,8 @@ parser.add_argument('-b_i', '--burn_in', metavar='', type= int, default = 1000,
   help = 'burn in period for the MCMC chain.')
 parser.add_argument('-c_p', '--change_points', metavar='', type = int, default = 0, nargs='+',
   help = 'a series of change points that will be generated. ')
+parser.add_argument('-m', '--method', metavar='', type = str, default = 'h-dbn',
+  help = 'what method will be run')
 
 # Mutually exclusive arguments
 group  = parser.add_mutually_exclusive_group()
@@ -131,12 +133,16 @@ def main():
   cleanOutput() # clean output folder
   data, true_inc = read_yeast() # read the YEAST data
   
-  # Select and call the different training methods
-  #test_h_dbn(data, true_inc)
-  #testPwBlrWithParentMoves(data, true_inc)
-  #testPwBlrWithCpsParentMoves(data, true_inc)
-  testSeqCoupPwBlrWithCpsParentMoves(data, true_inc)
-  #testGlobCoupPwBlrWithCpsParentMoves(data, true_inc)
+  # Select and run the chosen algorithm
+  if args.method == 'h-dbn':
+    test_h_dbn(data, true_inc)
+    #testPwBlrWithParentMoves(data, true_inc) # this one is for debug
+  elif args.method == 'nh-dbn':
+    testPwBlrWithCpsParentMoves(data, true_inc)
+  elif args.method == 'seq-dbn':
+    testSeqCoupPwBlrWithCpsParentMoves(data, true_inc)
+  elif args.method == 'glob-dbn':
+    testGlobCoupPwBlrWithCpsParentMoves(data, true_inc)
 
 if __name__ == "__main__":
   main()

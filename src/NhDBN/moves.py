@@ -33,7 +33,7 @@ def globCoupChangepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamm
       validMove = False
     else:
       # Hashting ratio calculation
-      hr = (numSamples - 1 - len(change_points)) / len(newChangePoints)
+      hr = (numSamples - 1 - len(change_points)) / (len(newChangePoints))
 
   elif randomInteger == 1: # do the death move
     try:
@@ -42,7 +42,7 @@ def globCoupChangepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamm
       validMove = False
       newChangePoints = change_points 
     # Hashtings ratio calculation
-    hr = len(change_points) / (numSamples - 1 - len(newChangePoints))
+    hr = (len(change_points)) / (numSamples - 1 - len(newChangePoints))
     
   else: # do the rellocation move
     try:
@@ -146,11 +146,11 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
     if len(newChangePoints) == 10: # cannot go beyond 10 cps
       validMove = False
     # Hashting ratio calculation
-    hr = (numSamples - 1 - len(change_points) - 1) / (len(newChangePoints) - 1)
+    hr = (numSamples - 1 - len(change_points)) / (len(newChangePoints) )
   elif randomInteger == 1: # do the death move
     try:
       newChangePoints = cpDeathMove(change_points)
-      hr = (len(change_points) - 1) / (numSamples - 1 - len(newChangePoints) -1)
+      hr = (len(change_points) ) / (numSamples - 1 - len(newChangePoints) )
     except ValueError: # If the func fail then we stay the same
       newChangePoints = change_points
       validMove = False # not a valid move
