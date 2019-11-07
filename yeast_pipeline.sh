@@ -11,8 +11,8 @@ METHOD="-m ${METHOD}"
 echo 'Running the: '$METHOD
 
 export ARGS=' 
-  --chain_length 20000
-  --burn_in 10000 
+  --chain_length 30000
+  --burn_in 15000 
   --change_points 15
   '
 # Execute without profiler

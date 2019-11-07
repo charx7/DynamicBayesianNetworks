@@ -1,17 +1,42 @@
 import numpy as np
-from tqdm import tqdm 
-from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, \
+from tqdm import tqdm
+
+from .bayesianLinearRegression import BayesianLinearRegression
+from .utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, \
   deleteMove, addMove, exchangeMove, selectData, constructNdArray, constructResponseNdArray
-from samplers import sigmaSqrSamplerWithChangePointsSeqCop, betaSamplerWithChangepointsSeqCoup, \
-  lambdaSqrSamplerWithChangepointsSeqCoup, deltaSqrSampleSeqCoup
-from moves import featureSetMoveWithChangePoints, changepointsSetMove
+from .samplers import sigmaSqrSamplerWithChangePoints, betaSamplerWithChangepoints, \
+  lambdaSqrSamplerWithChangepoints
+from .moves import featureSetMoveWithChangePoints, changepointsSetMove
 
-from bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
+class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
+  '''
+    Bayesian Piece-wise Linear Regression algorithm with 
+    varying changepoints and parent sets
 
-class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegression):
+    Attributes:
+      data : dict of the current configuration of the data
+        {
+          'features':{
+            'X1': numpy.ndarray,
+          }
+          'response':{
+            'y': numpy.ndarray
+          }
+        }
+      num_samples : int
+        number of data points
+      num_iter : int
+        number of iterations of the MCMC algorithm
+      change_points : list of int
+        list containing the marked initial change points
+      results : dict of string: list<float>
+        dictionary containing the results of the sampled chain
+  '''
   def __init__(self, data, _type, num_samples, num_iter, change_points):
-    # Call the contructor of the class BpwLinReg 
-    super().__init__(data, _type, num_samples, num_iter, change_points)  
+    # Call the contructor of the base class BayesianLinearRegression
+    super().__init__(data, num_samples, num_iter)
+    self._type = _type
+    self.change_points = change_points
   
   def fit(self):
     '''
@@ -43,16 +68,13 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
     # Standard choice of hyperparameters for sigma^2
     alpha_gamma_sigma_sqr = 0.005
     beta_gamma_sigma_sqr = 0.005
-    # Stardar choice of hyperparameters for delta^2
-    alpha_gamma_delta_sqr = 2
-    beta_gamma_delta_sqr = 0.2
-
+    
     selectedFeatures = [] # Empty initial parent set
     selectedChangepoints = [] # Empty initial changepoints set
     beta = []
     sigma_sqr = [] # noise variance parameter
     lambda_sqr = []
-    delta_sqr = []
+    changePointsVector = []
     changePoints = self.change_points
     
     # Append the initial values of the vectors
@@ -60,49 +82,39 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
     beta.append([np.zeros(len(pi) + 1)]) # TODO this beta should be a dict
     sigma_sqr.append(1)
     lambda_sqr.append(1)
-    delta_sqr.append(1)
 
     # Main for loop of the gibbs sampler
     for it in tqdm(range(self.num_iter)):
       ################# 1(b) Get a sample from sigma square
-      curr_sigma_sqr = sigmaSqrSamplerWithChangePointsSeqCop(y, X, mu, lambda_sqr,
-      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, self.num_samples, T, it,
-      changePoints, delta_sqr)
+      curr_sigma_sqr = sigmaSqrSamplerWithChangePoints(y, X, mu, lambda_sqr,
+      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, self.num_samples, T, it, changePoints)
       # Append to the sigma vector
-      sigma_sqr.append(np.asscalar(curr_sigma_sqr))
+      sigma_sqr.append((curr_sigma_sqr).item())
 
       ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
-      sample = betaSamplerWithChangepointsSeqCoup(y, X, mu, 
-        lambda_sqr, sigma_sqr, delta_sqr, X_cols, self.num_samples, T, it, changePoints)
+      sample = betaSamplerWithChangepoints(y, X, mu, 
+        lambda_sqr, sigma_sqr, X_cols, self.num_samples, T, it, changePoints)
       # Append the sample
       beta.append(sample)
 
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
-      sample = lambdaSqrSamplerWithChangepointsSeqCoup(beta, sigma_sqr, X_cols,
-       alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it, changePoints)
+      sample = lambdaSqrSamplerWithChangepoints(X, beta, mu, sigma_sqr, X_cols,
+        alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it, changePoints)
       # Append the sampled value
-      lambda_sqr.append(sample)
+      lambda_sqr.append((sample).item())
 
-      # Now we alsom need a sample from delta square 
-      sample = deltaSqrSampleSeqCoup(X, y, beta, mu, lambda_sqr, sigma_sqr, delta_sqr,
-        X_cols, alpha_gamma_delta_sqr, beta_gamma_delta_sqr, it, changePoints)
-      # Append the sampled value
-      delta_sqr.append(sample)
-      
       ################ 4(b) This step proposes a change on the feature set Pi to Pi*
-      pi, X, mu = featureSetMoveWithChangePoints(self.data, X, y, mu, alpha_gamma_sigma_sqr,
-       beta_gamma_sigma_sqr, lambda_sqr, pi, fanInRestriction, featureDimensionSpace,
-       self.num_samples, it, changePoints, 'seq-coup', delta_sqr)
+      pi, X, mu = featureSetMoveWithChangePoints(self.data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
+        lambda_sqr, pi, fanInRestriction, featureDimensionSpace, self.num_samples, it, changePoints)
       # Append to the vector of results
       selectedFeatures.append(pi)
 
       # Check if the type is non-homgeneous to do inference over all possible cps
-      if self._type == 'seq_coup_nh':  
+      if self._type == 'varying_nh':  
         ################ 5(c) This step will propose a change in the changepoints from tau to tau*
         changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_sigma_sqr,
-          beta_gamma_sigma_sqr, lambda_sqr, pi, self.num_samples, it, changePoints,
-          'seq-coup', delta_sqr)
-
+          beta_gamma_sigma_sqr, lambda_sqr, pi, self.num_samples, it, changePoints)
+        changePointsVector.append(changePoints) # for monitoring
       # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration
       # Select the data according to the set Pi or Pi*
       partialData = selectData(self.data, pi)
@@ -119,6 +131,5 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
       'lambda_sqr_vector': lambda_sqr,
       'sigma_sqr_vector': sigma_sqr,
       'pi_vector': selectedFeatures,
-      'tau_vector': selectedChangepoints,
-      'delta_sqr_vector': delta_sqr
+      'tau_vector': changePointsVector
     }

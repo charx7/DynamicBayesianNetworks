@@ -3,14 +3,14 @@ import math
 from scipy.stats import multivariate_normal
 from random import randint
 
-from marginalLikelihood import calculateMarginalLikelihood, calculateMarginalLikelihoodWithChangepoints
-from priors import calculateFeatureSetPriorProb, calculateChangePointsSetPrior
-from utils import constructNdArray, generateInitialFeatureSet, \
+from .marginalLikelihood import calculateMarginalLikelihood, calculateMarginalLikelihoodWithChangepoints
+from .priors import calculateFeatureSetPriorProb, calculateChangePointsSetPrior
+from .utils import constructNdArray, generateInitialFeatureSet, \
   constructMuMatrix, deleteMove, addMove, exchangeMove, selectData, \
   constructNdArray, constructMuMatrix, constructResponseNdArray, \
   constructDesignMatrix
-from changepointMoves import cpBirthMove, cpRellocationMove, cpDeathMove
-from samplers import muSampler, betaTildeSampler
+from .changepointMoves import cpBirthMove, cpRellocationMove, cpDeathMove
+from .samplers import muSampler, betaTildeSampler
 
 def globCoupChangepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, sigma_sqr, pi, numSamples, it, change_points, method = '', delta_sqr = []):

@@ -1,10 +1,9 @@
 import numpy as np
 import logging
 import matplotlib.pyplot as plt
-from systemUtils import clean_figures_folder
+from .systemUtils import clean_figures_folder, writeOutputFile
 from pprint import pprint
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
-from systemUtils import writeOutputFile
 
 # Logger configuration TODO move this into a config file
 logger = logging.getLogger(__name__) # create a logger obj

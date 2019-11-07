@@ -1,8 +1,8 @@
-from bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
-from bayesianLinearRegression import BayesianLinearRegression
-from seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegression
-from globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegression
-from scores import calculateFeatureScores, adjMatrixRoc
+from .bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
+from .bayesianLinearRegression import BayesianLinearRegression
+from .seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegression
+from .globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegression
+from .scores import calculateFeatureScores, adjMatrixRoc
 import numpy as np
 
 class Network():

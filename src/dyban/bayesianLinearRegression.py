@@ -2,11 +2,11 @@
 from tqdm import tqdm
 import numpy as np
 
-from utils import constructDesignMatrix, constructMuMatrix, \
+from .utils import constructDesignMatrix, constructMuMatrix, \
   deleteMove, addMove, exchangeMove, selectData, constructNdArray, constructResponseNdArray
-from samplers import sigmaSqrSampler, betaSampler, \
+from .samplers import sigmaSqrSampler, betaSampler, \
   lambdaSqrSampler
-from moves import featureSetMove
+from .moves import featureSetMove
 
 class BayesianLinearRegression:
   '''

@@ -1,12 +1,12 @@
 import numpy as np
 from tqdm import tqdm 
-from utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, \
+from .utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, \
   deleteMove, addMove, exchangeMove, selectData, constructNdArray, constructResponseNdArray
-from samplers import sigmaSqrSamplerWithChangePoints, betaSamplerWithChangepoints, \
+from .samplers import sigmaSqrSamplerWithChangePoints, betaSamplerWithChangepoints, \
   lambdaSqrSamplerWithChangepoints
-from moves import globCoupFeatureSetMoveWithChangePoints, globCoupChangepointsSetMove
+from .moves import globCoupFeatureSetMoveWithChangePoints, globCoupChangepointsSetMove
 
-from bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
+from .bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
 
 class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegression):
   def __init__(self, data, _type, num_samples, num_iter, change_points):
