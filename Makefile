@@ -3,9 +3,9 @@ help:
 	@echo "test-fixed-nh-dbn - Will execute a test on a non-homonegenous dynamic baysian network with fixed change-points"
 	@echo "test-varying-nh-dbn -  Will run a test on non-homonegenous dynamic bayesian network with varying change-points"
 	
-test-hdb:
+test-hdbn:
 	@echo "Testing a homonegenous-dynamic-bayesian network"
-	@(sh ./main_pipeline.sh)
+	@(sh ./yeast_pipeline.sh -m nh-dbn)
 
 test-varying-nh-dbn:
 	@echo "Testing a varying non-homonegenous dynamic bayesian network"

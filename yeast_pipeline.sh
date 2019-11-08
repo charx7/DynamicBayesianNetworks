@@ -16,4 +16,4 @@ export ARGS='
   --change_points 15
   '
 # Execute without profiler
-python ./src/NhDBN/yeast_tests.py $ARGS $METHOD
+python ./examples/yeast_tests.py $ARGS $METHOD
