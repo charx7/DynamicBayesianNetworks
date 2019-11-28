@@ -109,7 +109,7 @@ class Network():
       baReg = BayesianPieceWiseLinearRegression(
         self.network_configuration,  # Current data config
         'varying_nh',                # varying changepoints non-homogeneous
-        num_samples - 1,             # number of data points
+        num_samples,                 # number of data points
         self.chain_length,           # len of chain
         [num_samples + 2]            # just the last pseudo cp []
       )

@@ -94,7 +94,13 @@ def testPwBlrWithCpsParentMoves(data, true_inc):
   print(output_line) ; logger.info(output_line) # Print and write output
   if args.change_points == 0:
     args.change_points = []
-  args.change_points.append(data.shape[0] + 1) # append the len data + 1 so the algo works
+  
+  # to get the total length of the data over the segments
+  data_len = 0
+  for segment in data:
+    data_len = data_len + segment.shape[0]
+
+  args.change_points.append(data_len + 1) # append the len data + 1 so the algo works
   baNet = Network(data, args.chain_length, args.burn_in)
   baNet.infer_network('varying_nh_dbn')
 
