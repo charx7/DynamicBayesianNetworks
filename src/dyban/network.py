@@ -48,10 +48,16 @@ class Network():
         configuration : int
           integer that indicates which variable X_i is the current response
     '''    
-    network = self.data # retreive the network data
-    dims = self.data.shape[1] # dimensions of the data points
+    network_list = self.data # retreive the network data
+    dims = self.data[0].shape[1] # dimensions of the data points
     dimsVector = [x for x in range(dims)]
-    num_samples = self.data.shape[0] # number of data points
+    
+    num_samples = 0 
+    for segment in network_list:
+      # add the length of the segment
+      num_samples = segment.data.shape[0] + num_samples
+      
+    #num_samples = self.data.shape[0] # number of data points
 
     currResponse = configuration # Which column will be the response for the configuration
     # You have to evaluate because the filter returns an obj
@@ -65,17 +71,27 @@ class Network():
     # Add the features to the dict
     for el in currFeatures:
       col_name = 'X' + str(el)
-      on = network[:14, el]
-      off = network[15:num_samples - 1, el]
-      data_dict['features'][col_name] = np.concatenate((on, off), axis = 0)
+      feature_data = np.array([]) # data initilize as empty
+      for segment in network_list:
+        curr_segment_len = segment.shape[0]
+        # select all but the last data point
+        segment_data = segment[:curr_segment_len - 1, el]
+        # concatenate(stack) the segment data into the data of the curr feature
+        feature_data = np.concatenate((feature_data, segment_data)) if feature_data.size else segment_data
 
-      #data_dict['features'][col_name] = network[:num_samples - 1, el]
-    resp_on = network[1:15, currResponse]
-    resp_off = network[16:, currResponse]
-    data_dict['response']['y'] = np.concatenate((resp_on, resp_off), axis = 0)
-    # Add the response to the dict
-    #data_dict['response']['y'] = network[1:, currResponse]
+      # add to the dict
+      data_dict['features'][col_name] = feature_data
 
+    # Select + stack the data for the response
+    resp_data = np.array([]) # resp init as empty
+    for segment in network_list:
+      curr_resp_len = segment.shape[0]
+      segment_data = segment[1:curr_resp_len, currResponse] # select curr resp data
+      # concatenate the resp data
+      resp_data = np.concatenate((resp_data, segment_data), axis = 0) if resp_data.size else segment_data
+
+    data_dict['response']['y'] = resp_data
+    
     self.network_configuration = data_dict # add the current config to the network
 
   def fit(self, method):
@@ -87,7 +103,7 @@ class Network():
         method : str
           string that will determine which method we are going to use 
     '''
-    num_samples = self.data.shape[0] - 1 # Number of data points
+    num_samples = self.network_configuration['response']['y'].shape[0] # Number of data points
 
     if method == 'varying_nh_dbn':   # call the nh-dbn with varying cps
       baReg = BayesianPieceWiseLinearRegression(
@@ -95,7 +111,7 @@ class Network():
         'varying_nh',                # varying changepoints non-homogeneous
         num_samples - 1,             # number of data points
         self.chain_length,           # len of chain
-        [num_samples + 1]            # just the last pseudo cp []
+        [num_samples + 2]            # just the last pseudo cp []
       )
       baReg.fit() # Call the fit method of the regressor
       self.chain_results = baReg.results # Set the results
@@ -113,7 +129,7 @@ class Network():
     elif method == 'h_dbn':          # call the h-dbn
       baReg = BayesianLinearRegression(
         self.network_configuration,  # current data config of the network
-        num_samples,                 # number of samples
+        num_samples + 1,             # number of samples
         self.chain_length            # length of the MCMC chain
       )
       baReg.fit() # call to the fit method of the regressor
@@ -124,7 +140,7 @@ class Network():
         'seq_coup_nh',               # varying changepoints non-homogeneous seq coupled
         num_samples - 1,             # number of data points
         self.chain_length,           # len of chain
-        [num_samples + 1]            # just the last pseudo cp []
+        [num_samples + 2]            # just the last pseudo cp []
       )
       baReg.fit() # call the fit method of the regressor
       self.chain_results = baReg.results # set the results
@@ -132,9 +148,9 @@ class Network():
       baReg = GlobCoupledBayesianPieceWiseLinearRegression(
         self.network_configuration,
         'glob_coup_nh',
-        num_samples - 1,
+        num_samples,
         self.chain_length,
-        [num_samples + 1]
+        [num_samples + 2]
       )
       baReg.fit() # call to the fit method of the glob coup regressor
       self.chain_results = baReg.results
@@ -148,8 +164,8 @@ class Network():
           integer referencing which variable X_i is the 
           current response of the configuration
     '''
-    dims = self.data.shape[1] # Get the number of features (dimensions of the data)
-
+    dims = self.data[0].shape[1] # dimensions of the data points
+    
     currFeatures = [int(string[1]) for string in list(self.network_configuration['features'])]
 
     # lets try a thinned out chain
@@ -175,7 +191,9 @@ class Network():
           string with the name of the method we are going to use 
           to fit the data
     '''
-    dims = self.data.shape[1] # dimensions of the data points
+    # because data is now a list we have to select the first allways
+    # existing element
+    dims = self.data[0].shape[1] # dimensions of the data points
     dimsVector = [x for x in range(dims)]
 
     for configuration in dimsVector:

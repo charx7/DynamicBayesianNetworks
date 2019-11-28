@@ -37,7 +37,13 @@ def read_yeast():
   dataOn = data_reader('./data/datayeaston.txt')
   dataOn = np.delete(dataOn, 0, 0) # delte the first row (misread headers)
 
-  merged_data = np.vstack((dataOn, dataOff)) # merge the on + off datasets
+  # now we return a list of data
+  #merged_data = np.vstack((dataOn, dataOff)) # merge the on + off datasets
+
+  # return a list of data
+  data_list = []
+  data_list.append(dataOn) # append the first time series segment
+  data_list.append(dataOff) # append the second time series segment
 
   # Set the true incidence matrix defined by the literature
   # true_inc = [
@@ -54,7 +60,7 @@ def read_yeast():
     [0, 1, 1, 0, 0],
     [0, 0, 1, 0, 0]
   ]
-  return(merged_data, true_inc)
+  return(data_list, true_inc)
 
 def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
