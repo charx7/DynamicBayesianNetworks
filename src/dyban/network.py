@@ -3,6 +3,7 @@ from .bayesianLinearRegression import BayesianLinearRegression
 from .seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegression
 from .globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegression
 from .scores import calculateFeatureScores, adjMatrixRoc
+from .fullParentsBpwLinReg import FPBayesianPieceWiseLinearRegression
 import numpy as np
 
 class Network():
@@ -115,7 +116,16 @@ class Network():
       )
       baReg.fit() # Call the fit method of the regressor
       self.chain_results = baReg.results # Set the results
-
+    elif method == 'fp_varying_nh_dbn': # full parents credible intervals method
+      baReg = FPBayesianPieceWiseLinearRegression(
+        self.network_configuration,  # Current data config
+        'varying_nh',                # varying changepoints non-homogeneous
+        num_samples,                 # number of data points
+        self.chain_length,           # len of chain
+        [num_samples + 2]            # just the last pseudo cp []
+      )
+      baReg.fit() # Call the fit method of the regressor
+      self.chain_results = baReg.results # Set the results
     elif method == 'fixed_nh_dbn':   # call the nh-dbn with fixed cps
       baReg = BayesianPieceWiseLinearRegression(
         self.network_configuration,  # Current data config of the network
@@ -155,7 +165,7 @@ class Network():
       baReg.fit() # call to the fit method of the glob coup regressor
       self.chain_results = baReg.results
 
-  def score_edges(self, currResponse):
+  def score_edges(self, currResponse, method):
     '''
       Calculates de edge score for the current configuration of the network 
 
@@ -163,23 +173,31 @@ class Network():
         currResponse : int
           integer referencing which variable X_i is the 
           current response of the configuration
+        method : str
+          string that contains the type of method used so we can evaluate 
+          with the chain_results of the pi_vector or with the credible intervals
+          for the full parent sets
     '''
     dims = self.data[0].shape[1] # dimensions of the data points
-    
     currFeatures = [int(string[1]) for string in list(self.network_configuration['features'])]
 
-    # lets try a thinned out chain
-    burned_chain = self.chain_results['pi_vector'][self.burn_in:]
-    thinned_chain =  [burned_chain[x] for x in range(len(burned_chain)) if x%100!=0]
+    # check if the method is for full parents
+    if method == 'fp_varying_nh_dbn': # this should only check the first 2 letters of the method
+      # extract chain results
+      print('Should evaluate the credible intervals')
+    else:
+      # lets try a thinned out chain
+      burned_chain = self.chain_results['pi_vector'][self.burn_in:]
+      thinned_chain =  [burned_chain[x] for x in range(len(burned_chain)) if x%100!=0]
 
-    self.edge_scores = calculateFeatureScores(
-        #self.chain_results['pi_vector'][self.burn_in:],
-        thinned_chain,
-        dims, 
-        currFeatures,
-        currResponse)
+      self.edge_scores = calculateFeatureScores(
+          #self.chain_results['pi_vector'][self.burn_in:],
+          thinned_chain,
+          dims, 
+          currFeatures,
+          currResponse)
 
-    self.proposed_adj_matrix.append(self.edge_scores) # append to the proposed adj matrix
+      self.proposed_adj_matrix.append(self.edge_scores) # append to the proposed adj matrix
 
   def infer_network(self, method):
     '''
@@ -199,4 +217,4 @@ class Network():
     for configuration in dimsVector:
       self.set_network_configuration(configuration)
       self.fit(method)
-      self.score_edges(configuration)
+      self.score_edges(configuration, method)
