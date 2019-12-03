@@ -183,11 +183,28 @@ class Network():
 
     # check if the method is for full parents
     if method == 'fp_varying_nh_dbn': # this should only check the first 2 letters of the method
-      # extract chain results
-      print('Should evaluate the credible intervals')
+      # thin the chain
+      burned_chain = self.chain_results['betas_vector'][self.burn_in:]
+      thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
+
+      betas_matrix = np.array([]) # delcare an empty np array
+      # loop over the chain to create the betas matrix
+      for row in thinned_chain:
+        # get the beta samples from each segment
+        for vec in row:
+          r_vec = vec.reshape(1, vec.shape[0]) # reshape for a vertical stack
+          betas_matrix = np.concatenate((betas_matrix, r_vec)) if betas_matrix.size else r_vec
+      
+      for col_tuple in enumerate(currFeatures):
+        idx = col_tuple[0]
+        if idx == 0: continue # dont do the intercept
+        beta_post = betas_matrix[:, idx]
+
+      print('Should evaluate the credible intervals')        
     else:
       # lets try a thinned out chain
       burned_chain = self.chain_results['pi_vector'][self.burn_in:]
+      # TODO check the functionality of this thinning
       thinned_chain =  [burned_chain[x] for x in range(len(burned_chain)) if x%100!=0]
 
       self.edge_scores = calculateFeatureScores(
