@@ -123,8 +123,8 @@ def testPwBlrWithParentMoves(data, true_inc):
 
 def test_h_dbn(data, true_inc):
   output_line = (
-    'Bayesian Linear Regression with moves on ' +
-    'the parent set only for the Yeast data. \n'
+    'Homogeneous Dinamic Bayesian Linear Regression with full parents ' +
+    'for the Yeast data. \n'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
 
@@ -132,7 +132,7 @@ def test_h_dbn(data, true_inc):
 
   # Create/Call the Network objects/methods
   baNet = Network(data, args.chain_length, args.burn_in, args.change_points) # Create theh BN obj
-  baNet.infer_network('h_dbn') # Do the fixed parents version of the DBN algo
+  baNet.infer_network('fp_h_dbn') # Do the fixed parents version of the DBN algo
   
   # trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)

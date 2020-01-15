@@ -4,6 +4,7 @@ from .seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegress
 from .globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegression
 from .scores import calculateFeatureScores, adjMatrixRoc, credible_interval
 from .fullParentsBpwLinReg import FPBayesianPieceWiseLinearRegression
+from .fpBayesianLinearRegression import FpBayesianLinearRegression
 import numpy as np
 
 class Network():
@@ -144,6 +145,14 @@ class Network():
       )
       baReg.fit() # call to the fit method of the regressor
       self.chain_results = baReg.results # set the results
+    elif method == 'fp_h_dbn':       # call the full parents h-dbn
+      baReg = FpBayesianLinearRegression(
+        self.network_configuration,  # current data config of the network
+        num_samples + 1,             # number of samples
+        self.chain_length            # length of the MCMC chain
+      )
+      baReg.fit() # call the fit method of the regressor
+      self.chain_results = baReg.results # set the results
     elif method == 'seq_coup_nh_dbn':
       baReg = SeqCoupledBayesianPieceWiseLinearRegression(
         self.network_configuration,  # Current data config
@@ -182,12 +191,12 @@ class Network():
     currFeatures = [int(string[1]) for string in list(self.network_configuration['features'])]
 
     # check if the method is for full parents
-    if method == 'fp_varying_nh_dbn': # this should only check the first 2 letters of the method
+    if (method == 'fp_varying_nh_dbn' or method == 'fp_h_dbn'): # this should only check the first 2 letters of the method
       # thin the chain
       burned_chain = self.chain_results['betas_vector'][self.burn_in:]
       thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
 
-      betas_matrix = np.array([]) # delcare an empty np array
+      betas_matrix = np.array([]) # declare an empty np array
       # loop over the chain to create the betas matrix
       for row in thinned_chain:
         # get the beta samples from each segment
@@ -195,6 +204,7 @@ class Network():
           r_vec = vec.reshape(1, vec.shape[0]) # reshape for a vertical stack
           betas_matrix = np.concatenate((betas_matrix, r_vec)) if betas_matrix.size else r_vec
       
+      edge_scores = [0,0,0,0,0] # TODO not hardcode the dimensions
       for col_tuple in enumerate(currFeatures):
         idx = col_tuple[0] + 1 # we need to start from 1 because of the intercept
         beta_post = betas_matrix[:, idx] # extract the post sample
@@ -202,6 +212,13 @@ class Network():
         res = credible_interval(beta_post, currResponse, currFeature) # cred interval computation
         print('The 95% Credible interval for ', currFeature + 1,
          ' -> ', currResponse + 1, ' is: ', res[0], res[1])
+        # test of 0 is inside the 95% conf interval -> add 0 to the adj list
+        if not(res[0] <= 0 <= res[1]):
+          # if we found that 0 is not on the cred interval then we set
+          # the edge value to 1 
+          edge_scores[currFeature] = 1
+
+      self.proposed_adj_matrix.append(edge_scores) # append to the proposed adj matrix
     else:
       # lets try a thinned out chain
       burned_chain = self.chain_results['pi_vector'][self.burn_in:]
