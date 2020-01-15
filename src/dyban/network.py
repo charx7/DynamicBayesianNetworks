@@ -2,7 +2,7 @@ from .bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
 from .bayesianLinearRegression import BayesianLinearRegression
 from .seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegression
 from .globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegression
-from .scores import calculateFeatureScores, adjMatrixRoc
+from .scores import calculateFeatureScores, adjMatrixRoc, credible_interval
 from .fullParentsBpwLinReg import FPBayesianPieceWiseLinearRegression
 import numpy as np
 
@@ -196,11 +196,12 @@ class Network():
           betas_matrix = np.concatenate((betas_matrix, r_vec)) if betas_matrix.size else r_vec
       
       for col_tuple in enumerate(currFeatures):
-        idx = col_tuple[0]
-        if idx == 0: continue # dont do the intercept
-        beta_post = betas_matrix[:, idx]
-
-      print('Should evaluate the credible intervals')        
+        idx = col_tuple[0] + 1 # we need to start from 1 because of the intercept
+        beta_post = betas_matrix[:, idx] # extract the post sample
+        currFeature = col_tuple[1] # get the current feature
+        res = credible_interval(beta_post, currResponse, currFeature) # cred interval computation
+        print('The 95% Credible interval for ', currFeature + 1,
+         ' -> ', currResponse + 1, ' is: ', res[0], res[1])
     else:
       # lets try a thinned out chain
       burned_chain = self.chain_results['pi_vector'][self.burn_in:]

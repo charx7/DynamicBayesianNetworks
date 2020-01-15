@@ -121,4 +121,21 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
     adjRow[feat] = freqSum / denom
 
   return adjRow
-    
+
+def credible_interval(posterior_sample, response, feature):
+  _ = plt.hist(posterior_sample, bins='auto', density='true')
+  title = 'Beta Posterior Sample Histogram for edge ' + str(feature + 1) + \
+    ' => ' +  str(response + 1)
+  plt.title(title)
+  #plt.show() # uncomment for plot show
+
+  # use quantiles to calculate the credible intervals
+  lower_bound = np.quantile(posterior_sample, 0.025)
+  upper_bound = np.quantile(posterior_sample, 0.975)
+
+  cred_interval = (lower_bound, upper_bound)
+  
+  # need to also calculate the p-value
+  
+  return cred_interval
+  

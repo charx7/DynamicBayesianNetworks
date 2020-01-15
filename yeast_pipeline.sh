@@ -11,9 +11,8 @@ METHOD="-m ${METHOD}"
 echo 'Running the: '$METHOD
 
 export ARGS=' 
-  --chain_length 30000
-  --burn_in 15000 
-  --change_points 15
+  --chain_length 10000
+  --burn_in 5000 
   '
 # Execute without profiler
 python ./examples/yeast_tests.py $ARGS $METHOD
