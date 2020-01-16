@@ -5,6 +5,7 @@ from .globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegressi
 from .scores import calculateFeatureScores, adjMatrixRoc, credible_interval
 from .fullParentsBpwLinReg import FPBayesianPieceWiseLinearRegression
 from .fpBayesianLinearRegression import FpBayesianLinearRegression
+from .fpGlobCoupBpwLinReg import FpGlobCoupledBayesianPieceWiseLinearRegression
 import numpy as np
 
 class Network():
@@ -165,11 +166,21 @@ class Network():
       self.chain_results = baReg.results # set the results
     elif method == 'glob_coup_nh_dbn':
       baReg = GlobCoupledBayesianPieceWiseLinearRegression(
-        self.network_configuration,
-        'glob_coup_nh',
-        num_samples,
-        self.chain_length,
-        [num_samples + 2]
+        self.network_configuration,   # current data config
+        'glob_coup_nh',               # glob coup additional functions
+        num_samples,                  # number of data points
+        self.chain_length,            # len of chain
+        [num_samples + 2]             # just the last pseudo cp []
+      )
+      baReg.fit() # call to the fit method of the glob coup regressor
+      self.chain_results = baReg.results
+    elif method == 'fp_glob_coup_nh_dbn':
+      baReg = FpGlobCoupledBayesianPieceWiseLinearRegression(
+        self.network_configuration,   # current data config
+        'glob_coup_nh',               # glob coup additional functions
+        num_samples,                  # number of data points
+        self.chain_length,            # length of the chain
+        [num_samples + 2]             # just the last pseudo cp []
       )
       baReg.fit() # call to the fit method of the glob coup regressor
       self.chain_results = baReg.results
@@ -191,10 +202,19 @@ class Network():
     currFeatures = [int(string[1]) for string in list(self.network_configuration['features'])]
 
     # check if the method is for full parents
-    if (method == 'fp_varying_nh_dbn' or method == 'fp_h_dbn'): # this should only check the first 2 letters of the method
-      # thin the chain
-      burned_chain = self.chain_results['betas_vector'][self.burn_in:]
-      thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
+    # this should only check the first 2 letters of the method
+    if (method == 'fp_varying_nh_dbn' or method == 'fp_h_dbn'
+      or method == 'fp_glob_coup_nh_dbn'): 
+      # thin + burn the chain
+      if method == 'fp_glob_coup_nh_dbn':
+        # if the method is from the glob coup we will use the global mean vector 
+        burned_chain = self.chain_results['mu_vector'][self.burn_in:]
+        thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
+        # necessary so the beta matrix built correctly
+        thinned_chain = [[element] for element in thinned_chain] 
+      else:  
+        burned_chain = self.chain_results['betas_vector'][self.burn_in:]
+        thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
 
       betas_matrix = np.array([]) # declare an empty np array
       # loop over the chain to create the betas matrix

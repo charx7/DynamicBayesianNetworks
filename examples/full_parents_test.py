@@ -64,13 +64,13 @@ def read_yeast():
 
 def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
-    'Globally Coupled Bayesian Piece-Wise Linear Regression with moves on ' +
-    'change-points and parent sets on Yeast Data.'
+    'Full Parents Credible Intervals Globally Coupled Bayesian Piece-Wise Linear Regression' +
+    'with moves on change-points only Yeast Data.'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
 
   baNet = Network(data, args.chain_length, args.burn_in)
-  baNet.infer_network('glob_coup_nh_dbn')
+  baNet.infer_network('fp_glob_coup_nh_dbn')
 
   adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
 
