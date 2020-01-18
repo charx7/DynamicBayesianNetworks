@@ -2,7 +2,7 @@ import argparse
 import logging
 import numpy as np
 from dyban import Network
-from utils import data_reader, cleanOutput, adjMatrixRoc
+from utils import data_reader, cleanOutput, adjMatrixRoc, scoreMetrics, transformResults
 
 # Define the arg parset of the generate func
 parser = argparse.ArgumentParser(description = 'Specify the type of data to be generated.')
@@ -72,7 +72,9 @@ def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
   baNet = Network(data, args.chain_length, args.burn_in)
   baNet.infer_network('fp_glob_coup_nh_dbn')
 
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+  flattened_scores, flattened_true = transformResults(baNet.proposed_adj_matrix, true_inc)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+  scoreMetrics(flattened_scores, flattened_true)
 
 def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
@@ -135,7 +137,9 @@ def test_h_dbn(data, true_inc):
   baNet.infer_network('fp_h_dbn') # Do the fixed parents version of the DBN algo
   
   # trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+  flattened_scores, flattened_true = transformResults(baNet.proposed_adj_matrix, true_inc)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+  scoreMetrics(flattened_scores, flattened_true)
 
 def main():
   cleanOutput() # clean output folder

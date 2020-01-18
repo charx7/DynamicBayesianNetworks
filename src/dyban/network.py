@@ -229,8 +229,9 @@ class Network():
         idx = col_tuple[0] + 1 # we need to start from 1 because of the intercept
         beta_post = betas_matrix[:, idx] # extract the post sample
         currFeature = col_tuple[1] # get the current feature
-        res = credible_interval(beta_post, currResponse, currFeature) # cred interval computation
-        print('The 95% Credible interval for ', currFeature + 1,
+        pct = 0.05 # the 1 - percent cred interval
+        res = credible_interval(beta_post, currResponse, currFeature, pct) # cred interval computation
+        print('The ', 100 - (pct * 100), '% Credible interval for ', currFeature + 1,
          ' -> ', currResponse + 1, ' is: ', res[0], res[1])
         # test of 0 is inside the 95% conf interval -> add 0 to the adj list
         if not(res[0] <= 0 <= res[1]):

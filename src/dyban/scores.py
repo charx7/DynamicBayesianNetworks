@@ -122,7 +122,9 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
 
   return adjRow
 
-def credible_interval(posterior_sample, response, feature):
+def credible_interval(posterior_sample, response, feature, interval_length):
+  interval_length = 0.11 # this should be an argument of the func
+
   _ = plt.hist(posterior_sample, bins='auto', density='true')
   title = 'Beta Posterior Sample Histogram for edge ' + str(feature + 1) + \
     ' => ' +  str(response + 1)
@@ -130,8 +132,10 @@ def credible_interval(posterior_sample, response, feature):
   #plt.show() # uncomment for plot show
 
   # use quantiles to calculate the credible intervals
-  lower_bound = np.quantile(posterior_sample, 0.025)
-  upper_bound = np.quantile(posterior_sample, 0.975)
+  lower = interval_length / 2
+  upper = (1 - interval_length) / 2
+  lower_bound = np.quantile(posterior_sample, lower)
+  upper_bound = np.quantile(posterior_sample, upper)
 
   cred_interval = (lower_bound, upper_bound)
   

@@ -5,7 +5,7 @@ import logging
 import matplotlib.pyplot as plt
 
 from pprint import pprint
-from sklearn.metrics import roc_curve, auc, precision_recall_curve
+from sklearn.metrics import roc_curve, auc, precision_recall_curve, precision_score, recall_score, f1_score
 from numpy import genfromtxt
 
 # Logger configuration TODO move this into a config file
@@ -18,12 +18,7 @@ file_handler = logging.FileHandler('output.log', mode='a') # The file output nam
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-def adjMatrixRoc(adjMatrixProp, trueAdjMatrix, verbose):
-  if verbose:
-    print('The true adj matrix is: ') ; logger.info('The true adj matrix is: ')
-    pprint(trueAdjMatrix) ; logger.info(str(trueAdjMatrix))
-    print('The proposed adj matrix is: ') ; logger.info('The proposed adj matrix is: ')
-    pprint(adjMatrixProp) ; logger.info(str(adjMatrixProp))
+def transformResults(trueAdjMatrix, adjMatrixProp):
   # Remove the diagonal that is allways going to be right
   trueAdjMatrixNoDiag = []
   idxToRemove = 0
@@ -47,8 +42,30 @@ def adjMatrixRoc(adjMatrixProp, trueAdjMatrix, verbose):
   flattened_true = [1 if item else 0 for item in flattened_true] # convert to binary response vector
   flattened_scores = [item for sublist in adjMatrixProp for item in sublist]
   
-  drawRoc(flattened_scores, flattened_true) # Draw the RoC curve
-  drawPRC(flattened_scores, flattened_true) # Draw the PR curve
+  trueAdjMatrix = flattened_true
+  adjMatrixProp = flattened_scores
+
+  return trueAdjMatrix, adjMatrixProp
+
+def scoreMetrics(adjMatrixProp, trueAdjMatrix):
+  # calculate various metrics
+  precision = precision_score(trueAdjMatrix, adjMatrixProp)
+  recall = recall_score(trueAdjMatrix, adjMatrixProp)
+  f1 = f1_score(trueAdjMatrix, adjMatrixProp)
+
+  print('The precision for the 95 percent classifier is:', precision)
+  print('The recall for the 95 percent is:', recall)
+  print('The f1-score for the 95 percent classifier is:', f1)
+
+def adjMatrixRoc(adjMatrixProp, trueAdjMatrix, verbose):
+  if verbose:
+    print('The true adj matrix is: ') ; logger.info('The true adj matrix is: ')
+    pprint(trueAdjMatrix) ; logger.info(str(trueAdjMatrix))
+    print('The proposed adj matrix is: ') ; logger.info('The proposed adj matrix is: ')
+    pprint(adjMatrixProp) ; logger.info(str(adjMatrixProp))
+  
+  drawRoc(adjMatrixProp, trueAdjMatrix) # Draw the RoC curve
+  drawPRC(adjMatrixProp, trueAdjMatrix) # Draw the PR curve
 
 def drawPRC(inferredScoreEdges, realEdges):
   precision, recall, _ = precision_recall_curve(realEdges, inferredScoreEdges)
