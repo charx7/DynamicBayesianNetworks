@@ -122,9 +122,18 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
 
   return adjRow
 
-def credible_interval(posterior_sample, response, feature, interval_length):
-  interval_length = 0.11 # this should be an argument of the func
+def credible_score(posterior_sample):
+  post_len = len(posterior_sample)
+  # compute the fraction of the samples larger than 0
+  n_greater = len([el for el in posterior_sample if el >= 0])
+  # compute the fraction of the samples less than 0
+  n_less = len([el for el in posterior_sample if el <= 0])
+  # use the maximum of both fractions as our new edge score
+  score = max(n_greater / post_len, n_less / post_len)
 
+  return score
+
+def credible_interval(posterior_sample, response, feature, interval_length):
   _ = plt.hist(posterior_sample, bins='auto', density='true')
   title = 'Beta Posterior Sample Histogram for edge ' + str(feature + 1) + \
     ' => ' +  str(response + 1)

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from generateTestData import generateNetwork
 from systemUtils import cleanOutput, writeOutputFile, data_reader
-from scores import calculateFeatureScores, adjMatrixRoc
+from scores import calculateFeatureScores, adjMatrixRoc, transformResults
 from network import Network
 from pprint import pprint
 

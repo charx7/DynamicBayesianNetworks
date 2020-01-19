@@ -72,9 +72,9 @@ def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
   baNet = Network(data, args.chain_length, args.burn_in)
   baNet.infer_network('fp_glob_coup_nh_dbn')
 
-  flattened_scores, flattened_true = transformResults(baNet.proposed_adj_matrix, true_inc)
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
   adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
-  scoreMetrics(flattened_scores, flattened_true)
+  #scoreMetrics(flattened_scores, flattened_true) # can only be done with the cred assign approach
 
 def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
@@ -107,8 +107,9 @@ def testPwBlrWithCpsParentMoves(data, true_inc):
   baNet = Network(data, args.chain_length, args.burn_in)
   baNet.infer_network('fp_varying_nh_dbn')
 
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
-
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+  
 def testPwBlrWithParentMoves(data, true_inc):
   output_line = (
     'Bayesian Piece-Wise Linear Regression with moves on ' +
@@ -137,9 +138,11 @@ def test_h_dbn(data, true_inc):
   baNet.infer_network('fp_h_dbn') # Do the fixed parents version of the DBN algo
   
   # trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
-  flattened_scores, flattened_true = transformResults(baNet.proposed_adj_matrix, true_inc)
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
   adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
-  scoreMetrics(flattened_scores, flattened_true)
+  
+  # we can only do this metrics for the credible interval case
+  #scoreMetrics(flattened_scores, flattened_true)
 
 def main():
   cleanOutput() # clean output folder

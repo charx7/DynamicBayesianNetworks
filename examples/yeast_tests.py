@@ -2,7 +2,7 @@ import argparse
 import logging
 import numpy as np
 from dyban import Network
-from utils import data_reader, cleanOutput, adjMatrixRoc
+from utils import data_reader, cleanOutput, adjMatrixRoc, transformResults
 
 # Define the arg parset of the generate func
 parser = argparse.ArgumentParser(description = 'Specify the type of data to be generated.')
@@ -72,8 +72,9 @@ def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
   baNet = Network(data, args.chain_length, args.burn_in)
   baNet.infer_network('glob_coup_nh_dbn')
 
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
-
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+  
 def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
     'Sequentially Coupled Bayesian Piece-Wise Linear Regression with moves on ' +
@@ -84,7 +85,8 @@ def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   baNet = Network(data, args.chain_length, args.burn_in)
   baNet.infer_network('seq_coup_nh_dbn')
 
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
 
 def testPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
@@ -104,7 +106,8 @@ def testPwBlrWithCpsParentMoves(data, true_inc):
   baNet = Network(data, args.chain_length, args.burn_in)
   baNet.infer_network('varying_nh_dbn')
 
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
 
 def testPwBlrWithParentMoves(data, true_inc):
   output_line = (
@@ -118,7 +121,8 @@ def testPwBlrWithParentMoves(data, true_inc):
   baNet = Network(data, args.chain_length, args.burn_in, args.change_points) # Create theh BN obj
   baNet.infer_network('fixed_nh_dbn') # Do the fixed changepoints version of the DBN algo
 
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose) # check the ROC
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
 
 def test_h_dbn(data, true_inc):
   output_line = (
@@ -134,7 +138,8 @@ def test_h_dbn(data, true_inc):
   baNet.infer_network('h_dbn') # Do the fixed parents version of the DBN algo
   
   # trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
 
 def main():
   cleanOutput() # clean output folder

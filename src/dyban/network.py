@@ -2,7 +2,7 @@ from .bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
 from .bayesianLinearRegression import BayesianLinearRegression
 from .seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegression
 from .globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegression
-from .scores import calculateFeatureScores, adjMatrixRoc, credible_interval
+from .scores import calculateFeatureScores, adjMatrixRoc, credible_interval, credible_score
 from .fullParentsBpwLinReg import FPBayesianPieceWiseLinearRegression
 from .fpBayesianLinearRegression import FpBayesianLinearRegression
 from .fpGlobCoupBpwLinReg import FpGlobCoupledBayesianPieceWiseLinearRegression
@@ -214,7 +214,15 @@ class Network():
         thinned_chain = [[element] for element in thinned_chain] 
       else:  
         burned_chain = self.chain_results['betas_vector'][self.burn_in:]
+        burned_cps = self.chain_results['tau_vector'][self.burn_in] # check
         thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
+        thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
+      
+      ### Calculate the cps evolution matrix
+      # get the len of the time-series
+      # for every point on the time-series add the coefficient that corresponds to
+      # the respective changepoint
+      # append to the cps evolution matrix
 
       betas_matrix = np.array([]) # declare an empty np array
       # loop over the chain to create the betas matrix
@@ -229,22 +237,26 @@ class Network():
         idx = col_tuple[0] + 1 # we need to start from 1 because of the intercept
         beta_post = betas_matrix[:, idx] # extract the post sample
         currFeature = col_tuple[1] # get the current feature
-        pct = 0.05 # the 1 - percent cred interval
+        pct = 0.11 # the 1 - percent cred interval
         res = credible_interval(beta_post, currResponse, currFeature, pct) # cred interval computation
         print('The ', 100 - (pct * 100), '% Credible interval for ', currFeature + 1,
          ' -> ', currResponse + 1, ' is: ', res[0], res[1])
-        # test of 0 is inside the 95% conf interval -> add 0 to the adj list
-        if not(res[0] <= 0 <= res[1]):
-          # if we found that 0 is not on the cred interval then we set
-          # the edge value to 1 
-          edge_scores[currFeature] = 1
 
+        cred_score = credible_score(beta_post) # compute the new score
+        edge_scores[currFeature] = cred_score # assign to the score array
+
+        # # We should not check if 0 is in the 95% conf interval (check this)
+        # # test of 0 is inside the 95% conf interval -> add 0 to the adj list
+        # if not(res[0] <= 0 <= res[1]):
+        #   # if we found that 0 is not on the cred interval then we set
+        #   # the edge value to 1 
+        #   edge_scores[currFeature] = 1
       self.proposed_adj_matrix.append(edge_scores) # append to the proposed adj matrix
+
     else:
-      # lets try a thinned out chain
+      # burn + thin the chain
       burned_chain = self.chain_results['pi_vector'][self.burn_in:]
-      # TODO check the functionality of this thinning
-      thinned_chain =  [burned_chain[x] for x in range(len(burned_chain)) if x%100!=0]
+      thinned_chain =  [burned_chain[x] for x in range(len(burned_chain)) if x%10!=0]
 
       self.edge_scores = calculateFeatureScores(
           #self.chain_results['pi_vector'][self.burn_in:],
