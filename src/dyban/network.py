@@ -2,7 +2,8 @@ from .bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
 from .bayesianLinearRegression import BayesianLinearRegression
 from .seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegression
 from .globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegression
-from .scores import calculateFeatureScores, adjMatrixRoc, credible_interval, credible_score
+from .scores import calculateFeatureScores, adjMatrixRoc, credible_interval, \
+ credible_score, get_betas_over_time, get_scores_over_time, beta_post_matrix, score_beta_matrix
 from .fullParentsBpwLinReg import FPBayesianPieceWiseLinearRegression
 from .fpBayesianLinearRegression import FpBayesianLinearRegression
 from .fpGlobCoupBpwLinReg import FpGlobCoupledBayesianPieceWiseLinearRegression
@@ -32,6 +33,7 @@ class Network():
     self.proposed_adj_matrix = [] # proposed adj matrix
     self.edge_scores = None
     self.chain_results = None
+    self.scores_over_time = [] # scores over time list of matrices
     
   def set_network_configuration(self, configuration):
     '''
@@ -203,54 +205,41 @@ class Network():
 
     # check if the method is for full parents
     # this should only check the first 2 letters of the method
-    if (method == 'fp_varying_nh_dbn' or method == 'fp_h_dbn'
+    if (method == 'fp_varying_nh_dbn' 
+      or method == 'fp_h_dbn'
       or method == 'fp_glob_coup_nh_dbn'): 
-      # thin + burn the chain
+      
+      # thin + burn the chain on the global mean chain
       if method == 'fp_glob_coup_nh_dbn':
         # if the method is from the glob coup we will use the global mean vector 
         burned_chain = self.chain_results['mu_vector'][self.burn_in:]
         thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
-        # necessary so the beta matrix built correctly
+        # necessary so the beta matrix is built correctly
         thinned_chain = [[element] for element in thinned_chain] 
       else:  
-        burned_chain = self.chain_results['betas_vector'][self.burn_in:]
-        burned_cps = self.chain_results['tau_vector'][self.burn_in] # check
+        # shift the betas by 2 so it fits with the cps
+        betas_chain = self.chain_results['betas_vector'][2:]
+        # burn the shifted chain
+        burned_chain = betas_chain[self.burn_in:]
+        # thin both of the chains
         thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
-        thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
-      
-      ### Calculate the cps evolution matrix
-      # get the len of the time-series
-      # for every point on the time-series add the coefficient that corresponds to
-      # the respective changepoint
-      # append to the cps evolution matrix
+        
+        # we only have chainpoints in the non-homogeneous model
+        if method != 'fp_h_dbn':
+          # burn the cps chain
+          burned_cps = self.chain_results['tau_vector'][self.burn_in:] 
+          thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
 
-      betas_matrix = np.array([]) # declare an empty np array
-      # loop over the chain to create the betas matrix
-      for row in thinned_chain:
-        # get the beta samples from each segment
-        for vec in row:
-          r_vec = vec.reshape(1, vec.shape[0]) # reshape for a vertical stack
-          betas_matrix = np.concatenate((betas_matrix, r_vec)) if betas_matrix.size else r_vec
-      
-      edge_scores = [0,0,0,0,0] # TODO not hardcode the dimensions
-      for col_tuple in enumerate(currFeatures):
-        idx = col_tuple[0] + 1 # we need to start from 1 because of the intercept
-        beta_post = betas_matrix[:, idx] # extract the post sample
-        currFeature = col_tuple[1] # get the current feature
-        pct = 0.11 # the 1 - percent cred interval
-        res = credible_interval(beta_post, currResponse, currFeature, pct) # cred interval computation
-        print('The ', 100 - (pct * 100), '% Credible interval for ', currFeature + 1,
-         ' -> ', currResponse + 1, ' is: ', res[0], res[1])
+        # This will get the betas over time as diagnostic
+        if method == 'fp_varying_nh_dbn': # for now just for the non-hom method
+          # get the len of the time-series
+          time_pts = self.network_configuration['response']['y'].shape[0]
+          betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, thinned_chain)
+          scores_over_time = get_scores_over_time(betas_over_time, currFeatures, dims)
+          self.scores_over_time.append(scores_over_time) # append to the network
 
-        cred_score = credible_score(beta_post) # compute the new score
-        edge_scores[currFeature] = cred_score # assign to the score array
-
-        # # We should not check if 0 is in the 95% conf interval (check this)
-        # # test of 0 is inside the 95% conf interval -> add 0 to the adj list
-        # if not(res[0] <= 0 <= res[1]):
-        #   # if we found that 0 is not on the cred interval then we set
-        #   # the edge value to 1 
-        #   edge_scores[currFeature] = 1
+      betas_matrix = beta_post_matrix(thinned_chain) # construct the betas post matrix
+      edge_scores = score_beta_matrix(betas_matrix, currFeatures, currResponse) # score the matrix
       self.proposed_adj_matrix.append(edge_scores) # append to the proposed adj matrix
 
     else:

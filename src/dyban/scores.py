@@ -89,6 +89,68 @@ def drawRoc(inferredScoreEdges, realEdges):
   figure_route = 'figures/roc'
   plt.savefig(figure_route, bbox_inches='tight')
 
+def fraction_score(posterior_sample):
+  '''
+    Compute the fraction score for negative and positive
+    sampled coefficients score.
+  '''
+  post_len = len(posterior_sample)
+  # compute the fraction of the samples less than 0
+  n_less = len([el for el in posterior_sample if el <= 0])
+  n_fraction = n_less / post_len # compute the fraction
+
+  score = 0.5 - n_fraction # substract from 0.5 50% neg coefs and 50% pos coefs
+  
+  return score
+
+def get_scores_over_time(betas_over_time, currFeatures, dims):
+  '''
+    Compute the scores over time matrix for the current proposed edges
+  '''
+  scores_over_time_matrix = np.array([])
+  for curr_betas_matrix in betas_over_time:
+    time_pt_scores = np.array([]) # empty np array with the current time point scores
+    for col_tuple in enumerate(currFeatures):
+      jdx = col_tuple[0] + 1
+      curr_posterior = curr_betas_matrix[:, jdx]
+      curr_timepoint_score = credible_score(curr_posterior)
+      time_pt_scores = np.append(time_pt_scores, curr_timepoint_score)
+    # flatten and append to the overal scores_over_time_matrix
+    time_pt_scores = time_pt_scores.reshape(1, dims - 1) # reshape so we can vertically stack
+    scores_over_time_matrix = np.concatenate((scores_over_time_matrix, time_pt_scores)) if scores_over_time_matrix.size else time_pt_scores
+
+  return scores_over_time_matrix    
+
+def get_betas_over_time(time_pts, thinned_changepoints, thinned_chain):        
+  betas_list = [] # empty list that will contain the 33 thinned chains
+  for time_pt in range(time_pts):
+    curr_betas_matrix = np.array([]) # declare empty array
+    for idx, cps in enumerate(thinned_changepoints):
+      concatenated = False
+      for jdx, cp in enumerate(cps):
+        if (time_pt + 1 < cp and concatenated == False):
+          concatenated = True
+          time_pt_betas = thinned_chain[idx][jdx].reshape(1, 5) #TODO not hardcode 5
+          curr_betas_matrix = np.concatenate((curr_betas_matrix, time_pt_betas)) if curr_betas_matrix.size else time_pt_betas      
+    betas_list.append(curr_betas_matrix) # append to the list
+
+  return betas_list
+
+def beta_post_matrix(thinned_chain):
+  '''
+    Will Construct the beta posteriors matrix
+  '''
+  # Beta posterior matrix construction
+  betas_matrix = np.array([]) # declare an empty np array
+  # loop over the chain to create the betas matrix
+  for row in thinned_chain:
+    # get the beta samples from each segment
+    for vec in row:
+      r_vec = vec.reshape(1, vec.shape[0]) # reshape for a vertical stack
+      betas_matrix = np.concatenate((betas_matrix, r_vec)) if betas_matrix.size else r_vec
+      
+  return betas_matrix
+
 def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, currentResponse):
   adjRow = [0 for x in range(totalDims)]
   
@@ -152,3 +214,29 @@ def credible_interval(posterior_sample, response, feature, interval_length):
   
   return cred_interval
   
+def score_beta_matrix(betas_matrix, currFeatures, currResponse):
+  '''
+    Calculate the new edge-scores for the
+    betas matrix of the full-parents set
+  '''
+  edge_scores = [0,0,0,0,0] # TODO not hardcode the dimensions
+  for col_tuple in enumerate(currFeatures):
+    idx = col_tuple[0] + 1 # we need to start from 1 because of the intercept
+    beta_post = betas_matrix[:, idx] # extract the post sample
+    currFeature = col_tuple[1] # get the current feature
+    pct = 0.11 # the 1 - percent cred interval
+    res = credible_interval(beta_post, currResponse, currFeature, pct) # cred interval computation
+    print('The ', 100 - (pct * 100), '% Credible interval for ', currFeature + 1,
+      ' -> ', currResponse + 1, ' is: ', res[0], res[1])
+
+    cred_score = credible_score(beta_post) # compute the new score
+    edge_scores[currFeature] = cred_score # assign to the score array
+
+    # # We should not check if 0 is in the 95% conf interval (check this)
+    # # test of 0 is inside the 95% conf interval -> add 0 to the adj list
+    # if not(res[0] <= 0 <= res[1]):
+    #   # if we found that 0 is not on the cred interval then we set
+    #   # the edge value to 1 
+    #   edge_scores[currFeature] = 1
+    
+  return edge_scores
