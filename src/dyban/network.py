@@ -234,7 +234,7 @@ class Network():
         if method == 'fp_varying_nh_dbn': # for now just for the non-hom method
           # get the len of the time-series
           time_pts = self.network_configuration['response']['y'].shape[0]
-          betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, thinned_chain)
+          betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, thinned_chain, dims) #TODO add the dims
           scores_over_time = get_scores_over_time(betas_over_time, currFeatures, dims)
           self.scores_over_time.append(scores_over_time) # append to the network
 

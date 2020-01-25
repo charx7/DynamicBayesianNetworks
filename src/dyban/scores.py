@@ -121,7 +121,7 @@ def get_scores_over_time(betas_over_time, currFeatures, dims):
 
   return scores_over_time_matrix    
 
-def get_betas_over_time(time_pts, thinned_changepoints, thinned_chain):        
+def get_betas_over_time(time_pts, thinned_changepoints, thinned_chain, dims):        
   betas_list = [] # empty list that will contain the 33 thinned chains
   for time_pt in range(time_pts):
     curr_betas_matrix = np.array([]) # declare empty array
@@ -130,7 +130,7 @@ def get_betas_over_time(time_pts, thinned_changepoints, thinned_chain):
       for jdx, cp in enumerate(cps):
         if (time_pt + 1 < cp and concatenated == False):
           concatenated = True
-          time_pt_betas = thinned_chain[idx][jdx].reshape(1, 5) #TODO not hardcode 5
+          time_pt_betas = thinned_chain[idx][jdx].reshape(1, dims) # reshape the curr betas vector
           curr_betas_matrix = np.concatenate((curr_betas_matrix, time_pt_betas)) if curr_betas_matrix.size else time_pt_betas      
     betas_list.append(curr_betas_matrix) # append to the list
 
@@ -219,7 +219,9 @@ def score_beta_matrix(betas_matrix, currFeatures, currResponse):
     Calculate the new edge-scores for the
     betas matrix of the full-parents set
   '''
-  edge_scores = [0,0,0,0,0] # TODO not hardcode the dimensions
+  dims = betas_matrix.shape[1]
+  edge_scores = [0 for i in range(dims)] # empty edge scores matrix
+
   for col_tuple in enumerate(currFeatures):
     idx = col_tuple[0] + 1 # we need to start from 1 because of the intercept
     beta_post = betas_matrix[:, idx] # extract the post sample
