@@ -7,6 +7,7 @@ from .scores import calculateFeatureScores, adjMatrixRoc, credible_interval, \
 from .fullParentsBpwLinReg import FPBayesianPieceWiseLinearRegression
 from .fpBayesianLinearRegression import FpBayesianLinearRegression
 from .fpGlobCoupBpwLinReg import FpGlobCoupledBayesianPieceWiseLinearRegression
+from .fpSeqCoupBpwlinReg import FpSeqCoupledBayesianPieceWiseLinearRegression
 import numpy as np
 
 class Network():
@@ -166,6 +167,16 @@ class Network():
       )
       baReg.fit() # call the fit method of the regressor
       self.chain_results = baReg.results # set the results
+    elif method == 'fp_seq_coup_nh_dbn':
+      baReg = FpSeqCoupledBayesianPieceWiseLinearRegression(
+        self.network_configuration,  # Current data config
+        'seq_coup_nh',               # varying changepoints non-homogeneous seq coupled
+        num_samples - 1,             # number of data points
+        self.chain_length,           # len of chain
+        [num_samples + 2]            # just the last pseudo cp []
+      )
+      baReg.fit() # call the fit method of the regressor
+      self.chain_results = baReg.results # set the results
     elif method == 'glob_coup_nh_dbn':
       baReg = GlobCoupledBayesianPieceWiseLinearRegression(
         self.network_configuration,   # current data config
@@ -207,6 +218,7 @@ class Network():
     # this should only check the first 2 letters of the method
     if (method == 'fp_varying_nh_dbn' 
       or method == 'fp_h_dbn'
+      or method == 'fp_seq_coup_nh_dbn'
       or method == 'fp_glob_coup_nh_dbn'): 
       
       # thin + burn the chain on the global mean chain
@@ -231,7 +243,8 @@ class Network():
           thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
 
         # This will get the betas over time as diagnostic
-        if method == 'fp_varying_nh_dbn': # for now just for the non-hom method
+        if (method == 'fp_varying_nh_dbn'
+          or method == 'fp_seq_coup_nh_dbn'): # for now just for the non-hom method
           # get the len of the time-series
           time_pts = self.network_configuration['response']['y'].shape[0]
           betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, thinned_chain, dims) #TODO add the dims

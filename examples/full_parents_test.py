@@ -78,16 +78,17 @@ def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
 
 def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
-    'Sequentially Coupled Bayesian Piece-Wise Linear Regression with moves on ' +
-    'change-points and parent sets on Yeast data.'
+    'Full Parents Sequentially Coupled Bayesian Piece-Wise Linear Regression with moves on ' +
+    'change-points and full parents on Yeast data.'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
 
   baNet = Network(data, args.chain_length, args.burn_in)
-  baNet.infer_network('seq_coup_nh_dbn')
+  baNet.infer_network('fp_seq_coup_nh_dbn')
 
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
-
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+  
 def testPwBlrWithCpsParentMoves(data, true_inc):
   # credible intervals computation with full parents
   output_line = (
