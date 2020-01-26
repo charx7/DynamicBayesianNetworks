@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from generateTestData import generateNetwork
 from systemUtils import cleanOutput, writeOutputFile, data_reader
+from utils import save_chain
 from scores import calculateFeatureScores, adjMatrixRoc, transformResults
 from network import Network
 from pprint import pprint
@@ -72,6 +73,9 @@ def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
   baNet.infer_network('glob_coup_nh_dbn')
 
   adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+  
+  # save the chain into the output folder
+  save_chain('glob_coup_dbn.pckl', baNet)
 
 def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
@@ -84,6 +88,9 @@ def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   baNet.infer_network('seq_coup_nh_dbn')
 
   adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+
+  # save the chain into the output folder
+  save_chain('seq_coup_dbn.pckl', baNet)
 
 def testPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
@@ -98,6 +105,9 @@ def testPwBlrWithCpsParentMoves(data, true_inc):
   baNet.infer_network('varying_nh_dbn')
 
   adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+
+  # save the chain into the output folder
+  save_chain('nh_dbn.pckl', baNet)
 
 def testPwBlrWithParentMoves(data, true_inc):
   output_line = (
@@ -129,8 +139,11 @@ def test_h_dbn(data, true_inc):
   # trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
 
+  # save the chain into the output folder
+  save_chain('h_dbn.pckl', baNet)
+
 def main():
-  cleanOutput() # clean output folder
+  #cleanOutput() # clean output folder #TODO make it an argumento to clean the folder
   data, true_inc = read_yeast() # read the YEAST data
   
   # Select and run the chosen algorithm

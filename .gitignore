@@ -1,9 +1,12 @@
 *.vscode
 __pycache__/
-/notebooks/*
 dist/
 build/
 *.egg-info
 /figures/
 /output/
 *.log
+*.pickle
+*.pckl
+examples/figures/
+examples/output/

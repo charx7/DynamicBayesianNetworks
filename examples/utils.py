@@ -1,6 +1,7 @@
 import os
 import shutil
 import pathlib
+import pickle
 import logging
 import matplotlib.pyplot as plt
 
@@ -188,6 +189,43 @@ def cleanOutput():
   
   # Make the output directory again
   os.mkdir('output/')  
+
+def save_chain(filename, network_object):
+  '''
+    Saves the network object into the output folder.
+    
+    Args:
+      filename : str
+        the name of the file
+      network_object : Network
+        object that is going to be saved into disc
+  '''
+  filepath = os.path.join('./output/',filename) # append to the filepath
+
+  # save with pickle
+  with open(filepath, 'wb') as f:
+    pickle.dump(network_object, f)
+
+def load_chain(filename):
+  '''
+    Loads the chain file that has been previouly saved in the
+    /output/ folder.
+
+    Args:
+      filename : str
+        name of the file to read
+  '''
+  filepath = os.path.join('./output/',filename) # append to the filepath
+
+  try:
+    pckled_obj = open(filepath, 'rb')
+    network = pickle.load(pckled_obj)
+    pckled_obj.close()
+    print('Obj succesfully loaded.')
+    return network
+  except:
+    print('No file was loaded, please try again.')
+    return
 
 def writeOutputFile(text = ''):
   '''

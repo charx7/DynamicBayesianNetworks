@@ -1,8 +1,10 @@
 import argparse
 import logging
+import pickle
+import os
 import numpy as np
 from dyban import Network
-from utils import data_reader, cleanOutput, adjMatrixRoc, scoreMetrics, transformResults
+from utils import data_reader, cleanOutput, adjMatrixRoc, scoreMetrics, transformResults, save_chain
 
 # Define the arg parset of the generate func
 parser = argparse.ArgumentParser(description = 'Specify the type of data to be generated.')
@@ -74,7 +76,9 @@ def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
 
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
   adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
-  #scoreMetrics(flattened_scores, flattened_true) # can only be done with the cred assign approach
+
+  # save the chain into the output folder
+  save_chain('fp_glob_coup_dbn.pckl', baNet)
 
 def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
@@ -89,6 +93,9 @@ def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
   adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
   
+  # save the chain into the output folder
+  save_chain('fp_seq_coup_dbn.pckl', baNet)
+
 def testPwBlrWithCpsParentMoves(data, true_inc):
   # credible intervals computation with full parents
   output_line = (
@@ -111,19 +118,8 @@ def testPwBlrWithCpsParentMoves(data, true_inc):
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
   adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
   
-def testPwBlrWithParentMoves(data, true_inc):
-  output_line = (
-    'Bayesian Piece-Wise Linear Regression with moves on ' +
-    'the parent set only with fixed changepoints for the Yeast Data. \n'
-    )
-  print(output_line) ; logger.info(output_line) # Print and write output
-  if args.change_points == 0:
-    args.change_points = []
-  args.change_points.append(data.shape[0] + 1) # append the len data + 1 so the algo works
-  baNet = Network(data, args.chain_length, args.burn_in, args.change_points) # Create theh BN obj
-  baNet.infer_network('fixed_nh_dbn') # Do the fixed changepoints version of the DBN algo
-
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose) # check the ROC
+  # save the chain into the output folder
+  save_chain('fp_nh_dbn.pckl', baNet)
 
 def test_h_dbn(data, true_inc):
   output_line = (
@@ -142,11 +138,14 @@ def test_h_dbn(data, true_inc):
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
   adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
   
+  # save the chain into the output folder
+  save_chain('fp_h_dbn.pckl', baNet)
+
   # we can only do this metrics for the credible interval case
   #scoreMetrics(flattened_scores, flattened_true)
 
 def main():
-  cleanOutput() # clean output folder
+  #cleanOutput() # clean output folder #TODO make into an arg to clean or not
   data, true_inc = read_yeast() # read the YEAST data
   
   # Select and run the chosen algorithm
