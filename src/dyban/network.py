@@ -35,6 +35,7 @@ class Network():
     self.edge_scores = None
     self.chain_results = None
     self.scores_over_time = [] # scores over time list of matrices
+    self.betas_over_time = [] # we also want the betas over time for diagnostics
     
   def set_network_configuration(self, configuration):
     '''
@@ -248,6 +249,7 @@ class Network():
           # get the len of the time-series
           time_pts = self.network_configuration['response']['y'].shape[0]
           betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, thinned_chain, dims) #TODO add the dims
+          self.betas_over_time.append(betas_over_time) # append to the network
           scores_over_time = get_scores_over_time(betas_over_time, currFeatures, dims)
           self.scores_over_time.append(scores_over_time) # append to the network
 

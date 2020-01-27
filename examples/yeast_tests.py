@@ -2,7 +2,7 @@ import argparse
 import logging
 import numpy as np
 from dyban import Network
-from utils import data_reader, cleanOutput, adjMatrixRoc, transformResults
+from utils import data_reader, cleanOutput, adjMatrixRoc, transformResults, save_chain
 
 # Define the arg parset of the generate func
 parser = argparse.ArgumentParser(description = 'Specify the type of data to be generated.')
@@ -75,6 +75,9 @@ def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
   adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
   
+  # save the chain into the output folder
+  save_chain('glob_coup_dbn.pckl', baNet)
+
 def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
     'Sequentially Coupled Bayesian Piece-Wise Linear Regression with moves on ' +
@@ -87,6 +90,9 @@ def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
 
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
   adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+
+  # save the chain into the output folder
+  save_chain('seq_coup_dbn.pckl', baNet)
 
 def testPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
@@ -108,6 +114,9 @@ def testPwBlrWithCpsParentMoves(data, true_inc):
 
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
   adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+
+  # save the chain into the output folder
+  save_chain('nh_dbn.pckl', baNet)
 
 def testPwBlrWithParentMoves(data, true_inc):
   output_line = (
@@ -141,8 +150,11 @@ def test_h_dbn(data, true_inc):
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
   adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
 
+  # save the chain into the output folder
+  save_chain('h_dbn.pckl', baNet)
+
 def main():
-  cleanOutput() # clean output folder
+  #cleanOutput() # clean output folder #TODO make the cleaning into an argument
   data, true_inc = read_yeast() # read the YEAST data
   
   # Select and run the chosen algorithm
