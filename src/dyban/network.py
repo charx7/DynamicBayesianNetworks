@@ -37,6 +37,7 @@ class Network():
     self.scores_over_time = [] # scores over time list of matrices
     self.betas_over_time = [] # we also want the betas over time for diagnostics
     self.cps_over_response = [] # we want all the different computed chains
+    self.network_configurations = [] # the list of all the design matrices of all the network configs
 
   def set_network_configuration(self, configuration):
     '''
@@ -101,6 +102,7 @@ class Network():
     data_dict['response']['y'] = resp_data
     
     self.network_configuration = data_dict # add the current config to the network
+    self.network_configurations.append(data_dict) # append the current network config 
 
   def fit(self, method):
     '''
