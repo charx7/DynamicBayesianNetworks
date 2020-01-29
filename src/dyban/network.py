@@ -36,7 +36,8 @@ class Network():
     self.chain_results = None
     self.scores_over_time = [] # scores over time list of matrices
     self.betas_over_time = [] # we also want the betas over time for diagnostics
-    
+    self.cps_over_response = [] # we want all the different computed chains
+
   def set_network_configuration(self, configuration):
     '''
       Method transforms and sets the 'raw' data using the 
@@ -256,7 +257,8 @@ class Network():
       betas_matrix = beta_post_matrix(thinned_chain) # construct the betas post matrix
       edge_scores = score_beta_matrix(betas_matrix, currFeatures, currResponse) # score the matrix
       self.proposed_adj_matrix.append(edge_scores) # append to the proposed adj matrix
-
+      # TODO check compatibility for the glob-coup model
+      self.cps_over_response.append(thinned_changepoints) # append the cps chain over the curr response
     else:
       # burn + thin the chain
       burned_chain = self.chain_results['pi_vector'][self.burn_in:]

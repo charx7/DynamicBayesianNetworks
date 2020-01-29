@@ -113,7 +113,8 @@ def get_scores_over_time(betas_over_time, currFeatures, dims):
     for col_tuple in enumerate(currFeatures):
       jdx = col_tuple[0] + 1
       curr_posterior = curr_betas_matrix[:, jdx]
-      curr_timepoint_score = credible_score(curr_posterior)
+      #curr_timepoint_score = credible_score(curr_posterior) # for the credible scores bayesian pvalue
+      curr_timepoint_score = fraction_score(curr_posterior) # for frac scores
       time_pt_scores = np.append(time_pt_scores, curr_timepoint_score)
     # flatten and append to the overal scores_over_time_matrix
     time_pt_scores = time_pt_scores.reshape(1, dims - 1) # reshape so we can vertically stack

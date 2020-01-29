@@ -33,6 +33,7 @@ def cps_plot(data):
   _x = [i for i in range(33)]
   _x = [i for i in _x if i > 1]
 
+  title = 'Cps Probability Across Time of the First Chain Configuration'
   sns.set(style="darkgrid") # style
   ax = sns.barplot(
     y = data,
@@ -40,7 +41,31 @@ def cps_plot(data):
     palette="Blues_d",
     label="cps-prob-over-time").set(xlabel='time-points', ylabel='cps-prob')
   #plt.xlim(2, None) # show from 2 in case we want a line-plot
+  plt.title(title)
   plt.show()
+
+def line_plot(data, parent, response):
+  title = 'Edge Fraction-Score of ' + parent + '->' + response 
+  
+  _x = [i for i in range(34)]
+  _x = [i for i in _x if i > 0]
+
+  ax = sns.lineplot(
+    x=_x,
+    y=data,
+    markers=True,
+    dashes=False)
+  plt.title(title)
+  plt.ylim(-0.55, 0.55)
+  plt.show()
+
+def fraction_scores_plot(data):
+  # TODO this needs to be called for every configuration of the data
+  curr_network_configuration = data[0] # the first config for now
+
+  # this needs to be done over curr_network_configuration.shape[1] this case 4 edges
+  curr_edge = curr_network_configuration[:,0]
+  line_plot(curr_edge, '2', '1')
 
 def main():
   network = load_chain('fp_nh_dbn.pckl')
@@ -62,9 +87,8 @@ def main():
   boxplot(curr_response_matrix)
 
   #### TODO functionalize this: Now the chainpoints prob vector
-  # this is just the last chain so we need to store the other ones in the obj
-  burned_cps = network.chain_results['tau_vector'][network.burn_in:]  
-  thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
+  # get the chain values for the first response configuration this has to be inside a loop
+  thinned_changepoints = network.cps_over_response[0] # 0 has to be an idx
 
   # get the vector of each cps probability
   cps_prob = []
@@ -82,6 +106,9 @@ def main():
         cps_prob.append(0)
   # plot function
   cps_plot(cps_prob)
+
+  ##### Line plot of fraction scores
+  fraction_scores_plot(network.scores_over_time)
 
 if __name__ == '__main__':
   main()
