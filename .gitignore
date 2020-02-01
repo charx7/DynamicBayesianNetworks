@@ -10,3 +10,5 @@ build/
 *.pckl
 examples/figures/
 examples/output/
+*.aux
+^model_diagnostics.*
