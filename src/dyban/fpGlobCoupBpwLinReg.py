@@ -84,17 +84,6 @@ class FpGlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegr
       # Append the sampled value
       lambda_sqr.append(np.asscalar(sample))
 
-      # Block not necessary for the full parents model
-      # ############### 4(b) This step proposes a change on the feature set Pi to Pi*
-      # ############### alongside a muve from \mu to \mu*
-      # pi, currMu, X = globCoupFeatureSetMoveWithChangePoints(self.data, X, y, muVector[it],
-      #  alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
-      #  lambda_sqr, sigma_sqr, pi, fanInRestriction, featureDimensionSpace,
-      #  self.num_samples, it, changePoints)
-      # # Append to the vector of results
-      # selectedFeatures.append(pi)
-      # muVector.append(currMu)
-
       # Check if the type is non-homgeneous to do inference over all possible cps
       if self._type == 'glob_coup_nh':  
         ################ 5(c) This step will propose a change in the changepoints from tau to tau*
@@ -105,6 +94,9 @@ class FpGlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegr
         # Append to the vector of results
         muVector.append(currMu)
 
+        # append to the tau vector of changepoints
+        selectedChangepoints.append(changePoints)
+        
       # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration
       # Select the data according to the set Pi or Pi*
       partialData = selectData(self.data, pi)
@@ -122,5 +114,6 @@ class FpGlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegr
       'sigma_sqr_vector': sigma_sqr,
       'pi_vector': selectedFeatures,
       'tau_vector': selectedChangepoints,
-      'mu_vector': muVector
+      'mu_vector': muVector,
+      'betas_vector': beta
     }

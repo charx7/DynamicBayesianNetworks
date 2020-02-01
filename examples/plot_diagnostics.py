@@ -182,7 +182,7 @@ def chain_points_prob_plot(cps_over_response, network_config):
   cps_plot(cps_prob)
 
 def main():
-  network = load_chain('fp_nh_dbn.pckl')
+  network = load_chain('fp_glob_coup_dbn.pckl')
 
   # Betas bloxplots
   beta_boxplots_overtime(network.betas_over_time)

@@ -231,35 +231,42 @@ class Network():
         burned_chain = self.chain_results['mu_vector'][self.burn_in:]
         thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
         # necessary so the beta matrix is built correctly
-        thinned_chain = [[element] for element in thinned_chain] 
-      else:  
-        # shift the betas by 2 so it fits with the cps
-        betas_chain = self.chain_results['betas_vector'][2:]
-        # burn the shifted chain
-        burned_chain = betas_chain[self.burn_in:]
-        # thin both of the chains
-        thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
-        
-        # we only have chainpoints in the non-homogeneous model
-        if method != 'fp_h_dbn':
-          # burn the cps chain
-          burned_cps = self.chain_results['tau_vector'][self.burn_in:] 
-          thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
+        mu_thinned_chain = [[element] for element in thinned_chain]
+      
+      # shift the betas by 2 so it fits with the cps
+      betas_chain = self.chain_results['betas_vector'][2:]
+      # burn the shifted chain
+      burned_chain = betas_chain[self.burn_in:]
+      # thin both of the chains
+      betas_thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
+      
+      # we only have chainpoints in the non-homogeneous model
+      if method != 'fp_h_dbn':
+        # burn the cps chain
+        burned_cps = self.chain_results['tau_vector'][self.burn_in:] 
+        thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
+      else:
+        thinned_changepoints = [] # if not then we just assign an empty list
 
-        # This will get the betas over time as diagnostic
-        if (method == 'fp_varying_nh_dbn'
-          or method == 'fp_seq_coup_nh_dbn'): # for now just for the non-hom method
-          # get the len of the time-series
-          time_pts = self.network_configuration['response']['y'].shape[0]
-          betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, thinned_chain, dims) #TODO add the dims
-          self.betas_over_time.append(betas_over_time) # append to the network
-          scores_over_time = get_scores_over_time(betas_over_time, currFeatures, dims)
-          self.scores_over_time.append(scores_over_time) # append to the network
+      # This will get the betas over time as diagnostic
+      if (method == 'fp_varying_nh_dbn'
+        or method == 'fp_seq_coup_nh_dbn'
+        or method == 'fp_glob_coup_nh_dbn'): 
+        # get the len of the time-series
+        time_pts = self.network_configuration['response']['y'].shape[0]
+        betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, betas_thinned_chain, dims) #TODO add the dims
+        self.betas_over_time.append(betas_over_time) # append to the network
+        scores_over_time = get_scores_over_time(betas_over_time, currFeatures, dims)
+        self.scores_over_time.append(scores_over_time) # append to the network
 
-      betas_matrix = beta_post_matrix(thinned_chain) # construct the betas post matrix
+      if method == 'fp_glob_coup_nh_dbn':
+        # if we are using a glob coup model change the scores to the global vector
+        # TODO make this a user input
+        betas_thinned_chain = mu_thinned_chain
+
+      betas_matrix = beta_post_matrix(betas_thinned_chain) # construct the betas post matrix
       edge_scores = score_beta_matrix(betas_matrix, currFeatures, currResponse) # score the matrix
       self.proposed_adj_matrix.append(edge_scores) # append to the proposed adj matrix
-      # TODO check compatibility for the glob-coup model
       self.cps_over_response.append(thinned_changepoints) # append the cps chain over the curr response
     else:
       # burn + thin the chain

@@ -95,21 +95,11 @@ class FpSeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegre
       # Append the sampled value
       delta_sqr.append(sample)
       
-      # Block not necessary in the full-parents model
-      # ################ 4(b) This step proposes a change on the feature set Pi to Pi*
-      # pi, X, mu = featureSetMoveWithChangePoints(self.data, X, y, mu, alpha_gamma_sigma_sqr,
-      #  beta_gamma_sigma_sqr, lambda_sqr, pi, fanInRestriction, featureDimensionSpace,
-      #  self.num_samples, it, changePoints, 'seq-coup', delta_sqr)
-      # # Append to the vector of results
-      # selectedFeatures.append(pi)
-
-      # Check if the type is non-homgeneous to do inference over all possible cps
-      if self._type == 'seq_coup_nh':  
-        ################ 5(c) This step will propose a change in the changepoints from tau to tau*
-        changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_sigma_sqr,
-          beta_gamma_sigma_sqr, lambda_sqr, pi, self.num_samples, it, changePoints,
-          'seq-coup', delta_sqr)
-        selectedChangepoints.append(changePoints) # append the sampled cps
+      ################ 4(c) This step will propose a change in the changepoints from tau to tau*
+      changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_sigma_sqr,
+        beta_gamma_sigma_sqr, lambda_sqr, pi, self.num_samples, it, changePoints,
+        'seq-coup', delta_sqr)
+      selectedChangepoints.append(changePoints) # append the sampled cps
 
       # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration
       # Select the data according to the set Pi or Pi*
