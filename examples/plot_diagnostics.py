@@ -43,11 +43,11 @@ def boxplot(data, feature, response):
   plt.clf() # clear the figure obj from memory so it doesnt overlap
   #plt.show() #TODO make it as an agument
 
-def cps_plot(data):
+def cps_plot(data, resp_label):
   _x = [i for i in range(33)]
   _x = [i for i in _x if i > 1]
 
-  title = 'Cps Probability Across Time of the First Chain Configuration'
+  title = 'Cps Probability Across Time of the Chain Configuration Y = X' + resp_label
   sns.set(style="darkgrid") # style
   ax = sns.barplot(
     y = data,
@@ -56,7 +56,7 @@ def cps_plot(data):
     label="cps-prob-over-time").set(xlabel='time-points', ylabel='cps-prob')
   #plt.xlim(2, None) # show from 2 in case we want a line-plot
   plt.title(title)
-  figure_route = 'figures/changepoints_prob_X0'
+  figure_route = 'figures/changepoints_prob_X' + resp_label
   plt.savefig(figure_route)
   plt.show()
 
@@ -184,27 +184,30 @@ def beta_boxplots_overtime(betas_response_list, network_configurations):
       # plot it!
       boxplot(curr_response_matrix, feat, curr_response)
 
-def chain_points_prob_plot(cps_over_response, network_config):
-  #### Now the chainpoints prob vector
-  # TODO get the chain values for the first response configuration this has to be inside a loop
-  thinned_changepoints = cps_over_response[0] # 0 has to be an idx
+def chain_points_prob_plot(cps_over_response, network_configs):
+  for idx, network_config in enumerate(network_configs):
+    _, curr_resp_label = get_feats_resp(network_config) # get the labels for the plot/file
 
-  # get the vector of each cps probability
-  cps_prob = []
-  time_periods = len(network_config)
-  total_cps = np.sum([1 for cps in thinned_changepoints])
-  for idx in range(time_periods):
-    if (idx >1): # we dont start with the 0th or 1st element
-      # check if idx in the cps vector
-      counts_vector = [1 for cps in thinned_changepoints if idx in cps]
-      counts = np.sum(counts_vector)
-      fraq = counts / total_cps
-      if counts != 0:
-        cps_prob.append(fraq)
-      else:
-        cps_prob.append(0)
-  # plot function
-  cps_plot(cps_prob)
+    network_config = network_config['response']['y'] # get the numpy array values
+    #### Now the chainpoints prob vector
+    thinned_changepoints = cps_over_response[idx] 
+
+    # get the vector of each cps probability
+    cps_prob = []
+    time_periods = len(network_config)
+    total_cps = np.sum([1 for cps in thinned_changepoints])
+    for idx in range(time_periods):
+      if (idx >1): # we dont start with the 0th or 1st element
+        # check if idx in the cps vector
+        counts_vector = [1 for cps in thinned_changepoints if idx in cps]
+        counts = np.sum(counts_vector)
+        fraq = counts / total_cps
+        if counts != 0:
+          cps_prob.append(fraq)
+        else:
+          cps_prob.append(0)
+    # plot function
+    cps_plot(cps_prob, curr_resp_label)
 
 def main():
   network = load_chain('fp_glob_coup_dbn.pckl')
@@ -213,12 +216,12 @@ def main():
   #beta_boxplots_overtime(network.betas_over_time, network_configurations_list)
 
   # residual plots over-time
-  residual_plots_overtime(network.betas_over_time, network.network_configurations)
+  #residual_plots_overtime(network.betas_over_time, network.network_configurations)
 
   # Cps barplots
   chain_points_prob_plot(
     network.cps_over_response,
-    network.network_configuration['response']['y']
+    network.network_configurations
   )
 
   ##### Line plot of fraction scores
