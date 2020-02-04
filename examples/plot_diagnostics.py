@@ -1,3 +1,4 @@
+import time
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -58,7 +59,8 @@ def cps_plot(data, resp_label):
   plt.title(title)
   figure_route = 'figures/changepoints_prob_X' + resp_label
   plt.savefig(figure_route)
-  plt.show()
+  plt.clf() # clear figure
+  #plt.show()
 
 def line_plot(data, parent, response):
   title = 'Edge Fraction-Score of ' + parent + '->' + response 
@@ -75,15 +77,19 @@ def line_plot(data, parent, response):
   plt.ylim(-0.55, 0.55)
   figure_route = 'figures/edge_fraction_' + parent + '_' + response
   plt.savefig(figure_route)
-  plt.show()
+  plt.clf() # clear the figure so plots wont overlap
+  
 
-def fraction_scores_plot(data):
-  # TODO this needs to be called for every configuration of the data
-  curr_network_configuration = data[0] # the first config for now
-
-  # this needs to be done over curr_network_configuration.shape[1] this case 4 edges
-  curr_edge = curr_network_configuration[:,0]
-  line_plot(curr_edge, '2', '1')
+def fraction_scores_plot(network_configurations, scores_over_time_list):
+  for idx, network_config in enumerate(network_configurations):
+    feature_labels, response_label = get_feats_resp(network_config) 
+    
+    curr_scores_over_time = scores_over_time_list[idx] # get the current scores over time
+    
+    # TODO we need to add the intercept in this plots
+    for j_idx, feature in enumerate(feature_labels): # loop over all features
+      curr_edge = curr_scores_over_time[:,j_idx] 
+      line_plot(curr_edge, str(feature), response_label)
 
 def get_design_matrices_list(configurations):
   design_list = []
@@ -118,7 +124,6 @@ def get_response_list(network_configs):
 
   return resp_list
 
-# TODO join this and the other boxplot into one func
 def boxplot_res(data, response):
   title = 'Residuals over time of response Y = X' + response
   col_names = [i for i in range(data.shape[1] + 1)]
@@ -131,7 +136,8 @@ def boxplot_res(data, response):
   #ax = sns.swarmplot(data=df, color="grey") # seems too clunky
   figure_route = 'figures/residuals_over_time_X' + response
   plt.savefig(figure_route)
-  plt.show()
+  plt.clf() # clear fig
+  #plt.show()
 
 
 def residual_plots_overtime(betas_response_list, network_configs):
@@ -212,11 +218,15 @@ def chain_points_prob_plot(cps_over_response, network_configs):
 def main():
   network = load_chain('fp_glob_coup_dbn.pckl')
   network_configurations_list = network.network_configurations
+  
+  print('Starting to plot...')
+  t = time.time()
+
   # Betas bloxplots
-  #beta_boxplots_overtime(network.betas_over_time, network_configurations_list)
+  beta_boxplots_overtime(network.betas_over_time, network_configurations_list)
 
   # residual plots over-time
-  #residual_plots_overtime(network.betas_over_time, network.network_configurations)
+  residual_plots_overtime(network.betas_over_time, network.network_configurations)
 
   # Cps barplots
   chain_points_prob_plot(
@@ -225,7 +235,9 @@ def main():
   )
 
   ##### Line plot of fraction scores
-  fraction_scores_plot(network.scores_over_time)
+  fraction_scores_plot(network.network_configurations, network.scores_over_time)
+
+  print('Time elapsed: ', time.time() - t, ' seconds.')
 
 if __name__ == '__main__':
   main()
