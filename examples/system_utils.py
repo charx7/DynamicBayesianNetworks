@@ -7,9 +7,26 @@ def clean_output():
   proc = subprocess.Popen(cmd) # call a subprocess and pass it the args
   
 def main():
-  # arguments that will format the .tex
+  # arguments that will format the .tex (dummy data for now)
   args = {
-    'title':'testerino'
+    'title':'Model Output',
+    'model': 'Bayesian Non-Homogeneous',
+    'type': 'Full-Parents',
+    'length': '30k',
+    'burn-in': '10k',
+    'thinning': 'modulo 10',
+    'auprc': '0.80',
+    'scoring_method': 'frac-score',
+    'network_configs': [
+      {
+        'features': ['X1', 'X2','X3','X4'],
+        'response': 'X0' 
+      },
+      {
+        'features': ['X0', 'X2', 'X3', 'X4'],
+        'response': 'X1'
+      }
+    ]
   }
 
   # string that defines the body of the latex document
@@ -29,24 +46,65 @@ def main():
 
   \section*{Model Output}
   ------------ \\
-  Model: Bayesian Non-Homogeneous \\
-  type: full parents \\
-  length: 30k \\
-  burn-in: 10k \\
-  thinning: modulo 10 \\
+  Model: ''' + args['model'] + r''' \\
+  type: ''' + args['type'] + r''' \\
+  length: ''' + args['length'] + r''' \\
+  burn-in: ''' + args['burn-in'] + r''' \\
+  thinning: ''' + args['thinning'] + r''' \\
   ------------ \\
-  AUPRC: 0.56 \\
-  scoring method: frac\_score \\
+  AUPRC: ''' + args['auprc'] + r''' \\
+  scoring method: ''' + args['scoring_method'] + r'''  \\
   \begin{figure}[ht]
     \includegraphics[width=10cm]{./figures/prc.png}
     \centering
     \caption{Area Under the Precision Recall Curve} 
   \end{figure}
-  \subsection{Diagnostics}
-  Network Configuration: * = x1 \\
-  Residuals over time Boxplot
+  \section{Diagnostics}'''
 
-  \end{document}'''
+  # loop for every configuration 
+  for network_config in args['network_configs']:
+    curr_feats = network_config['features']
+    curr_resp = network_config['response']
+    curr_content = r'''
+    \subsection{Network Configuration: y =''' + curr_resp + r'''}
+    \subsubsection{Residuals over time Boxplot}
+    \begin{figure}[H]
+      \includegraphics[width=10cm]{./figures/residuals_over_time_''' + curr_resp + r'''.png}
+      \centering
+      \caption{Residuals over time} 
+    \end{figure}
+    \subsubsection{Change-Points Probability Barplot}
+    \begin{figure}[H]
+      \includegraphics[width=10cm]{./figures/changepoints_prob_''' + curr_resp + r'''.png}
+      \centering
+      \caption{Probability of a changepoint.} 
+    \end{figure}
+    '''
+    content = content + curr_content # append to the latex file
+
+    # we have this here because the plots may not be applicable on other models
+    content = content + r'''\subsubsection{Edge Specific Plots}''' 
+    # Now we have to loop over the edge specific plots
+    for edge in curr_feats:
+      curr_content = r'''
+      \textbf{Edge: ''' + edge + r'''--''' + curr_resp +r'''}
+      \\Edge betas over time plot
+      \begin{figure}[H]
+        \includegraphics[width=10cm]{./figures/edge_''' + edge.lstrip('X') + r'''_''' + curr_resp.lstrip('X') + r'''_boxplot_betas_overtime.png}
+        \centering
+        \caption{Betas over time bloxplot.} 
+      \end{figure}
+      Edge fraction score over time plot
+      \begin{figure}[H]
+        \includegraphics[width=10cm]{./figures/edge_fraction_''' + edge.lstrip('X') + r'''_''' + curr_resp.lstrip('X') + r'''.png}
+        \centering
+        \caption{Edge Fraction-Score overtime plot.} 
+      \end{figure}
+      '''
+      content = content + curr_content # append to the .tex file
+
+  footer = r'''\end{document}''' # footer of the doc
+  content = content + footer
 
   # write the codument into disc
   with open('./output/model_diagnostics.tex','w') as f:

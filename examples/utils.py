@@ -245,10 +245,3 @@ def writeOutputFile(text = ''):
     # Create a new output file on the output directory
     with open(os.path.join('output/output.txt'), 'w') as output:
         output.write('Output file: \n')
-        
-def main():
-  data = data_reader('./data/datayeastoff.txt')
-  print(data)
-
-if __name__ == '__main__':
-  main()
