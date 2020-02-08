@@ -268,8 +268,9 @@ class Network():
       edge_scores = score_beta_matrix(betas_matrix, currFeatures, currResponse) # score the matrix
       self.proposed_adj_matrix.append(edge_scores) # append to the proposed adj matrix
       self.cps_over_response.append(thinned_changepoints) # append the cps chain over the curr response
-    else:
-      # burn + thin the chain
+    else: # we are doing the varying parents model(s)
+      # TODO make a single prune_chain() method prunning = burn + thinning
+      # burn + thin the features (parents) chain
       burned_chain = self.chain_results['pi_vector'][self.burn_in:]
       thinned_chain =  [burned_chain[x] for x in range(len(burned_chain)) if x%10!=0]
 
@@ -281,6 +282,20 @@ class Network():
           currResponse)
 
       self.proposed_adj_matrix.append(self.edge_scores) # append to the proposed adj matrix
+
+      # betas chain prunning
+      # shift the betas by 2 so it fits with the cps
+      betas_chain = self.chain_results['padded_betas'][2:]
+      burned_chain = betas_chain[self.burn_in:]
+      betas_thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
+
+      # cps chain pruning
+      burned_cps = self.chain_results['tau_vector'][self.burn_in:] 
+      thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
+
+      time_pts = self.network_configuration['response']['y'].shape[0] # get the len of the time-series
+      betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, betas_thinned_chain, dims) #TODO add the dims
+      self.betas_over_time.append(betas_over_time) # append to the network
 
   def infer_network(self, method):
     '''

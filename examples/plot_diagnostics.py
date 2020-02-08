@@ -216,28 +216,36 @@ def chain_points_prob_plot(cps_over_response, network_configs):
     cps_plot(cps_prob, curr_resp_label)
 
 def main():
-  network = load_chain('fp_glob_coup_dbn.pckl')
+  file_name = 'nh_dbn.pckl'
+  network = load_chain(file_name)
   network_configurations_list = network.network_configurations
   
-  print('Starting to plot...')
-  t = time.time()
+  if file_name[:2] == 'fp': # check if the model is of the type full parents  
+    print('Starting to plot for the full parents model...')
+    t = time.time()
 
-  # Betas bloxplots
-  beta_boxplots_overtime(network.betas_over_time, network_configurations_list)
+    # Betas bloxplots
+    beta_boxplots_overtime(network.betas_over_time, network_configurations_list)
 
-  # residual plots over-time
-  residual_plots_overtime(network.betas_over_time, network.network_configurations)
+    # residual plots over-time
+    residual_plots_overtime(network.betas_over_time, network.network_configurations)
 
-  # Cps barplots
-  chain_points_prob_plot(
-    network.cps_over_response,
-    network.network_configurations
-  )
+    # Cps barplots
+    chain_points_prob_plot(
+      network.cps_over_response,
+      network.network_configurations
+    )
 
-  ##### Line plot of fraction scores
-  fraction_scores_plot(network.network_configurations, network.scores_over_time)
+    ##### Line plot of fraction scores
+    fraction_scores_plot(network.network_configurations, network.scores_over_time)
 
-  print('Time elapsed: ', time.time() - t, ' seconds.')
+    print('Time elapsed: ', time.time() - t, ' seconds.')
+  else: # the loaded model is not with full parents
+    print('Starting to plot for the changing parents model...')
+    t = time.time()
+    # residual plots over-time
+    residual_plots_overtime(network.betas_over_time, network.network_configurations)
+    print('Time elapsed: ', time.time() - t, ' seconds.')
 
 if __name__ == '__main__':
   main()

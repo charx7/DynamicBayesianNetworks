@@ -72,6 +72,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
     selectedFeatures = [] # Empty initial parent set
     selectedChangepoints = [] # Empty initial changepoints set
     beta = []
+    padded_betas = [] # initial empty padded betas (extra zeroes)
     sigma_sqr = [] # noise variance parameter
     lambda_sqr = []
     changePointsVector = []
@@ -80,6 +81,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
     # Append the initial values of the vectors
     selectedFeatures.append(pi)
     beta.append([np.zeros(len(pi) + 1)]) # TODO this beta should be a dict
+    padded_betas.append([np.zeros(featureDimensionSpace + 1)]) # initial padded betas
     sigma_sqr.append(1)
     lambda_sqr.append(1)
 
@@ -96,7 +98,9 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
         lambda_sqr, sigma_sqr, X_cols, self.num_samples, T, it, changePoints)
       # Append the sample
       beta.append(sample)
-
+      padded_sample = self.transform_beta_coef(sample, pi, featureDimensionSpace)
+      padded_betas.append(padded_sample)
+      
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
       sample = lambdaSqrSamplerWithChangepoints(X, beta, mu, sigma_sqr, X_cols,
         alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it, changePoints)
@@ -131,5 +135,7 @@ class BayesianPieceWiseLinearRegression(BayesianLinearRegression):
       'lambda_sqr_vector': lambda_sqr,
       'sigma_sqr_vector': sigma_sqr,
       'pi_vector': selectedFeatures,
+      'betas_vector': beta,
+      'padded_betas': padded_betas,
       'tau_vector': changePointsVector
     }

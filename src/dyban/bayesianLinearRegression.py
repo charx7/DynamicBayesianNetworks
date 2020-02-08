@@ -35,6 +35,32 @@ class BayesianLinearRegression:
     self.num_samples = num_samples
     self.num_iter = num_iter
     self.results = None
+  
+  @staticmethod
+  def transform_beta_coef(beta, pi, dims):
+    '''
+      Transforms and expands our beta coefficients so if a parent
+      was not sampled -> a zero gets added to the sample
+    '''
+    srtd_pi = sorted(pi) # sort pi for this to work
+    padded_beta = []
+    for cp_beta in beta:
+      cp_beta_padded = np.array([]) # empty numpy array that is going to save the values
+      parent_idx = 0
+      for dim in range(dims + 1):
+          if (dim == 0): # the first one is allways present (the intercept)
+            curr_coef = cp_beta[0]
+          elif dim in srtd_pi: # check if the current feature(dimension) is in the parent set
+            parent_idx = parent_idx + 1 # sum one to the parent position
+            curr_coef = cp_beta[parent_idx]
+          else:
+            curr_coef = np.zeros(1)
+          # stack to the padded vector
+          cp_beta_padded = np.hstack((cp_beta_padded, curr_coef)) if cp_beta_padded.size else curr_coef
+          
+      # append once we have added the extra 0s for non-existing parents
+      padded_beta.append(cp_beta_padded)
+    return padded_beta
 
   # @abstractmethod
   def fit(self):
