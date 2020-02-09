@@ -6,28 +6,34 @@ def clean_output():
   cmd = ['sh', 'clean_latex.sh']
   proc = subprocess.Popen(cmd) # call a subprocess and pass it the args
   
-def main():
+def generate_report(args, title, auprc):
+  '''
+    Will generate the report on a pdf format with latex
+  '''
+  args['title'] = title # add the title arg
+  args['auprc'] = '0.80' # add the auprc arg
+  
   # arguments that will format the .tex (dummy data for now)
-  args = {
-    'title':'Model Output',
-    'model': 'Bayesian Non-Homogeneous',
-    'type': 'Full-Parents',
-    'length': '30k',
-    'burn-in': '10k',
-    'thinning': 'modulo 10',
-    'auprc': '0.80',
-    'scoring_method': 'frac-score',
-    'network_configs': [
-      {
-        'features': ['X1', 'X2','X3','X4'],
-        'response': 'X0' 
-      },
-      {
-        'features': ['X0', 'X2', 'X3', 'X4'],
-        'response': 'X1'
-      }
-    ]
-  }
+  # args = {
+  #   'title':'Model Output',
+  #   'model': 'Bayesian Non-Homogeneous',
+  #   'type': 'Full-Parents',
+  #   'length': '30k',
+  #   'burn-in': '10k',
+  #   'thinning': 'modulo 10',
+  #   'auprc': '0.80',
+  #   'scoring_method': 'frac-score',
+  #   'network_configs': [
+  #     {
+  #       'features': ['X1', 'X2','X3','X4'],
+  #       'response': 'X0' 
+  #     },
+  #     {
+  #       'features': ['X0', 'X2', 'X3', 'X4'],
+  #       'response': 'X1'
+  #     }
+  #   ]
+  # }
 
   # string that defines the body of the latex document
   content = r'''\documentclass[a4paper]{article}
@@ -81,27 +87,27 @@ def main():
     \end{figure}
     '''
     content = content + curr_content # append to the latex file
-
-    # we have this here because the plots may not be applicable on other models
-    content = content + r'''\subsubsection{Edge Specific Plots}''' 
-    # Now we have to loop over the edge specific plots
-    for edge in curr_feats:
-      curr_content = r'''
-      \textbf{Edge: ''' + edge + r'''--''' + curr_resp +r'''}
-      \\Edge betas over time plot
-      \begin{figure}[H]
-        \includegraphics[width=10cm]{./figures/edge_''' + edge.lstrip('X') + r'''_''' + curr_resp.lstrip('X') + r'''_boxplot_betas_overtime.png}
-        \centering
-        \caption{Betas over time bloxplot.} 
-      \end{figure}
-      Edge fraction score over time plot
-      \begin{figure}[H]
-        \includegraphics[width=10cm]{./figures/edge_fraction_''' + edge.lstrip('X') + r'''_''' + curr_resp.lstrip('X') + r'''.png}
-        \centering
-        \caption{Edge Fraction-Score overtime plot.} 
-      \end{figure}
-      '''
-      content = content + curr_content # append to the .tex file
+    if type == 'Full-Parents':
+      # we have this here because the plots may not be applicable on other models
+      content = content + r'''\subsubsection{Edge Specific Plots}''' 
+      # Now we have to loop over the edge specific plots
+      for edge in curr_feats:
+        curr_content = r'''
+        \textbf{Edge: ''' + edge + r'''--''' + curr_resp +r'''}
+        \\Edge betas over time plot
+        \begin{figure}[H]
+          \includegraphics[width=10cm]{./figures/edge_''' + edge.lstrip('X') + r'''_''' + curr_resp.lstrip('X') + r'''_boxplot_betas_overtime.png}
+          \centering
+          \caption{Betas over time bloxplot.} 
+        \end{figure}
+        Edge fraction score over time plot
+        \begin{figure}[H]
+          \includegraphics[width=10cm]{./figures/edge_fraction_''' + edge.lstrip('X') + r'''_''' + curr_resp.lstrip('X') + r'''.png}
+          \centering
+          \caption{Edge Fraction-Score overtime plot.} 
+        \end{figure}
+        '''
+        content = content + curr_content # append to the .tex file
 
   footer = r'''\end{document}''' # footer of the doc
   content = content + footer
@@ -127,5 +133,5 @@ def main():
   clean_output()
 
 if __name__ == '__main__':
-  main()
+  generate_report()
   

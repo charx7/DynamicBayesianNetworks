@@ -12,3 +12,4 @@ examples/figures/
 examples/output/
 *.aux
 ^model_diagnostics.*
+peregrine_run.sh

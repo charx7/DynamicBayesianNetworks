@@ -5,7 +5,7 @@ from dyban import Network
 from utils import data_reader, cleanOutput, adjMatrixRoc, transformResults, save_chain
 
 # Define the arg parset of the generate func
-parser = argparse.ArgumentParser(description = 'Specify the type of data to be generated.')
+parser = argparse.ArgumentParser(description = 'Specify the hyper-params of the method to be computed.')
 parser.add_argument('-c_l', '--chain_length', metavar='', type = int, default = 5000,
   help = 'amount of iterations for the MCMC algorithm.')
 parser.add_argument('-b_i', '--burn_in', metavar='', type= int, default = 1000,

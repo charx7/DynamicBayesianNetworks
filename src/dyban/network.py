@@ -38,6 +38,15 @@ class Network():
     self.betas_over_time = [] # we also want the betas over time for diagnostics
     self.cps_over_response = [] # we want all the different computed chains
     self.network_configurations = [] # the list of all the design matrices of all the network configs
+    self.network_args = {
+      'model': None,
+      'type': None,
+      'length': str(self.chain_length),
+      'burn-in': str(self.burn_in),
+      'thinning': 'modulo 10',
+      'scoring_method': None,
+      'network_configs': []
+    } # dict where we are going to save the args used by the network
 
   def set_network_configuration(self, configuration):
     '''
@@ -103,6 +112,12 @@ class Network():
     
     self.network_configuration = data_dict # add the current config to the network
     self.network_configurations.append(data_dict) # append the current network config 
+    # dictionary that will save the args used in the conf
+    formated_dict = {
+      'features': list(data_dict['features'].keys()),
+      'response': 'X' + str(currResponse)
+    }
+    self.network_args['network_configs'].append(formated_dict)
 
   def fit(self, method):
     '''
@@ -116,6 +131,8 @@ class Network():
     num_samples = self.network_configuration['response']['y'].shape[0] # Number of data points
 
     if method == 'varying_nh_dbn':   # call the nh-dbn with varying cps
+      self.network_args['model'] = 'Bayesian Non-Homogeneous'
+      self.network_args['type'] = 'Varying Parents'
       baReg = BayesianPieceWiseLinearRegression(
         self.network_configuration,  # Current data config
         'varying_nh',                # varying changepoints non-homogeneous
@@ -126,6 +143,8 @@ class Network():
       baReg.fit() # Call the fit method of the regressor
       self.chain_results = baReg.results # Set the results
     elif method == 'fp_varying_nh_dbn': # full parents credible intervals method
+      self.network_args['model'] = 'Bayesian Non-Homogeneous'
+      self.network_args['type'] = 'Full Parents'
       baReg = FPBayesianPieceWiseLinearRegression(
         self.network_configuration,  # Current data config
         'varying_nh',                # varying changepoints non-homogeneous
@@ -136,6 +155,8 @@ class Network():
       baReg.fit() # Call the fit method of the regressor
       self.chain_results = baReg.results # Set the results
     elif method == 'fixed_nh_dbn':   # call the nh-dbn with fixed cps
+      self.network_args['model'] = 'Bayesian Non-Homogeneous'
+      self.network_args['type'] = 'Varying Parents-Fixed changepoints'
       baReg = BayesianPieceWiseLinearRegression(
         self.network_configuration,  # Current data config of the network
         'fixed_nh',                  # fixed cps non-homogeneous
@@ -146,6 +167,8 @@ class Network():
       baReg.fit() # call the fit method of the regressor
       self.chain_results = baReg.results # set the results
     elif method == 'h_dbn':          # call the h-dbn
+      self.network_args['model'] = 'Bayesian Homogeneous'
+      self.network_args['type'] = 'Varying Parents'
       baReg = BayesianLinearRegression(
         self.network_configuration,  # current data config of the network
         num_samples + 1,             # number of samples
@@ -154,6 +177,8 @@ class Network():
       baReg.fit() # call to the fit method of the regressor
       self.chain_results = baReg.results # set the results
     elif method == 'fp_h_dbn':       # call the full parents h-dbn
+      self.network_args['model'] = 'Bayesian Homogeneous'
+      self.network_args['type'] = 'Full Parents'
       baReg = FpBayesianLinearRegression(
         self.network_configuration,  # current data config of the network
         num_samples + 1,             # number of samples
@@ -162,6 +187,8 @@ class Network():
       baReg.fit() # call the fit method of the regressor
       self.chain_results = baReg.results # set the results
     elif method == 'seq_coup_nh_dbn':
+      self.network_args['model'] = 'Sequentilly Coupled Non-Homogeneous'
+      self.network_args['type'] = 'Varying Parents'
       baReg = SeqCoupledBayesianPieceWiseLinearRegression(
         self.network_configuration,  # Current data config
         'seq_coup_nh',               # varying changepoints non-homogeneous seq coupled
@@ -172,6 +199,8 @@ class Network():
       baReg.fit() # call the fit method of the regressor
       self.chain_results = baReg.results # set the results
     elif method == 'fp_seq_coup_nh_dbn':
+      self.network_args['model'] = 'Sequentilly Coupled Non-Homogeneous'
+      self.network_args['type'] = 'Full Parents'
       baReg = FpSeqCoupledBayesianPieceWiseLinearRegression(
         self.network_configuration,  # Current data config
         'seq_coup_nh',               # varying changepoints non-homogeneous seq coupled
@@ -182,6 +211,8 @@ class Network():
       baReg.fit() # call the fit method of the regressor
       self.chain_results = baReg.results # set the results
     elif method == 'glob_coup_nh_dbn':
+      self.network_args['model'] = 'Globally Coupled Non-Homogeneous'
+      self.network_args['type'] = 'Varying Parents'
       baReg = GlobCoupledBayesianPieceWiseLinearRegression(
         self.network_configuration,   # current data config
         'glob_coup_nh',               # glob coup additional functions
@@ -192,6 +223,8 @@ class Network():
       baReg.fit() # call to the fit method of the glob coup regressor
       self.chain_results = baReg.results
     elif method == 'fp_glob_coup_nh_dbn':
+      self.network_args['model'] = 'Globally Coupled Non-Homogeneous'
+      self.network_args['type'] = 'Full Parents'
       baReg = FpGlobCoupledBayesianPieceWiseLinearRegression(
         self.network_configuration,   # current data config
         'glob_coup_nh',               # glob coup additional functions
@@ -266,6 +299,7 @@ class Network():
 
       betas_matrix = beta_post_matrix(betas_thinned_chain) # construct the betas post matrix
       edge_scores = score_beta_matrix(betas_matrix, currFeatures, currResponse) # score the matrix
+      self.network_args['scoring_method'] = 'fraq-score'
       self.proposed_adj_matrix.append(edge_scores) # append to the proposed adj matrix
       self.cps_over_response.append(thinned_changepoints) # append the cps chain over the curr response
     else: # we are doing the varying parents model(s)
@@ -280,7 +314,7 @@ class Network():
           dims, 
           currFeatures,
           currResponse)
-
+      self.network_args['scoring_method'] = 'edge-scores'
       self.proposed_adj_matrix.append(self.edge_scores) # append to the proposed adj matrix
 
       # betas chain prunning
@@ -322,3 +356,4 @@ class Network():
       self.set_network_configuration(configuration)
       self.fit(method)
       self.score_edges(configuration, method)
+  

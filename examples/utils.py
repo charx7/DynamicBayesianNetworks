@@ -90,7 +90,8 @@ def drawPRC(inferredScoreEdges, realEdges):
   # save the plot
   figure_route = 'figures/prc'
   plt.savefig(figure_route, bbox_inches='tight')
-  plt.show()
+  #plt.show() # uncomment to show the figure
+  plt.clf()
 
 def drawRoc(inferredScoreEdges, realEdges):
   # Calculate false positive rate and true positive rate
@@ -109,6 +110,7 @@ def drawRoc(inferredScoreEdges, realEdges):
   clean_figures_folder('figures/')
   figure_route = 'figures/roc'
   plt.savefig(figure_route, bbox_inches='tight')
+  plt.clf()
 
 def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, currentResponse):
   adjRow = [0 for x in range(totalDims)]
