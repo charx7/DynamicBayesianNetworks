@@ -46,6 +46,7 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
     selectedFeatures = [] # Empty initial parent set
     selectedChangepoints = [] # Empty initial changepoints set
     beta = []
+    padded_betas = []
     sigma_sqr = [] # noise variance parameter
     lambda_sqr = []
     changePoints = self.change_points
@@ -54,6 +55,7 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
     # Append the initial values of the vectors
     selectedFeatures.append(pi)
     beta.append([np.zeros(len(pi) + 1)]) # TODO this beta should be a dict
+    padded_betas.append(np.zeros(featureDimensionSpace + 1)) # for the padded betas vector
     sigma_sqr.append(1)
     lambda_sqr.append(1)
     muVector.append(mu)
@@ -71,6 +73,8 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
         lambda_sqr, sigma_sqr, X_cols, self.num_samples, T, it, changePoints)
       # Append the sample
       beta.append(sample)
+      padded_sample = self.transform_beta_coef(sample, pi, featureDimensionSpace)
+      padded_betas.append(padded_sample)
 
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
       sample = lambdaSqrSamplerWithChangepoints(X, beta, muVector[it], sigma_sqr, X_cols,
@@ -88,7 +92,6 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
       selectedFeatures.append(pi)
       muVector.append(currMu)
 
-      # TODO adapt from there onwards
       # Check if the type is non-homgeneous to do inference over all possible cps
       if self._type == 'glob_coup_nh':  
         ################ 5(c) This step will propose a change in the changepoints from tau to tau*
@@ -96,6 +99,7 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
          alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr, sigma_sqr,
         pi, self.num_samples, it, changePoints)
 
+        selectedChangepoints.append(changePoints) # append the selected cps
         # in case the current Mu changed then we replace it
         muVector[it + 1] = currMu
 
@@ -115,5 +119,6 @@ class GlobCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegres
       'lambda_sqr_vector': lambda_sqr,
       'sigma_sqr_vector': sigma_sqr,
       'pi_vector': selectedFeatures,
-      'tau_vector': selectedChangepoints
+      'tau_vector': selectedChangepoints,
+      'padded_betas': padded_betas
     }

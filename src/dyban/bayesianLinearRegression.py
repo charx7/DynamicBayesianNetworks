@@ -35,13 +35,17 @@ class BayesianLinearRegression:
     self.num_samples = num_samples
     self.num_iter = num_iter
     self.results = None
-  
+    
   @staticmethod
   def transform_beta_coef(beta, pi, dims):
     '''
       Transforms and expands our beta coefficients so if a parent
       was not sampled -> a zero gets added to the sample
     '''
+    # if beta is not a list  we have no changepoints -> HDBN
+    if isinstance(beta, list) == False:
+      beta = [beta] # we add it into a single list so its subscriptable by the algo
+
     srtd_pi = sorted(pi) # sort pi for this to work
     padded_beta = []
     for cp_beta in beta:
@@ -85,6 +89,8 @@ class BayesianLinearRegression:
 
     selectedFeatures = []
     beta = []
+    padded_betas = []
+    padded_betas.append(np.zeros(featureDimensionSpace + 1)) # for the padded betas vector
     sigma_sqr = [] # noise variance parameter
     lambda_sqr = []
     T = self.num_samples # T is the number of data points
@@ -115,6 +121,8 @@ class BayesianLinearRegression:
       sample = betaSampler(y, X, mu, lambda_sqr, sigma_sqr, X_cols, self.num_samples - 1, T, it)
       # Append the sample
       beta.append(sample)
+      padded_sample = self.transform_beta_coef(sample, pi, featureDimensionSpace)
+      padded_betas.append(padded_sample)
 
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
       sample = lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr,
@@ -141,6 +149,8 @@ class BayesianLinearRegression:
     self.results = {
       'lambda_sqr_vector': lambda_sqr,
       'sigma_sqr_vector': sigma_sqr,
-      'pi_vector': selectedFeatures
+      'pi_vector': selectedFeatures,
+      'padded_betas': padded_betas,
+      'tau_vector': []
     }
     

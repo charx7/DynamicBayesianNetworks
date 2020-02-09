@@ -290,13 +290,19 @@ class Network():
       betas_thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]
 
       # cps chain pruning
-      burned_cps = self.chain_results['tau_vector'][self.burn_in:] 
-      thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
+      if len(self.chain_results['tau_vector']) == 0:
+        # TODO fix the betas over time so it works with the homogeneous model
+        # we are on the homogeneous dbn model
+        pass
+      else:
+        burned_cps = self.chain_results['tau_vector'][self.burn_in:] 
+        thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
 
-      time_pts = self.network_configuration['response']['y'].shape[0] # get the len of the time-series
-      betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, betas_thinned_chain, dims) #TODO add the dims
-      self.betas_over_time.append(betas_over_time) # append to the network
-
+        time_pts = self.network_configuration['response']['y'].shape[0] # get the len of the time-series
+        betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, betas_thinned_chain, dims) #TODO add the dims
+        self.betas_over_time.append(betas_over_time) # append to the network
+        self.cps_over_response.append(thinned_changepoints) # append the cps chain over the curr response
+      
   def infer_network(self, method):
     '''
       Infers the network topology on the data by changing to all

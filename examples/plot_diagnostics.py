@@ -216,7 +216,7 @@ def chain_points_prob_plot(cps_over_response, network_configs):
     cps_plot(cps_prob, curr_resp_label)
 
 def main():
-  file_name = 'nh_dbn.pckl'
+  file_name = 'glob_coup_dbn.pckl'
   network = load_chain(file_name)
   network_configurations_list = network.network_configurations
   
@@ -245,6 +245,13 @@ def main():
     t = time.time()
     # residual plots over-time
     residual_plots_overtime(network.betas_over_time, network.network_configurations)
+
+    # Cps barplots
+    chain_points_prob_plot(
+      network.cps_over_response,
+      network.network_configurations
+    )
+    
     print('Time elapsed: ', time.time() - t, ' seconds.')
 
 if __name__ == '__main__':

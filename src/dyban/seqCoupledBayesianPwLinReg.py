@@ -50,6 +50,7 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
     selectedFeatures = [] # Empty initial parent set
     selectedChangepoints = [] # Empty initial changepoints set
     beta = []
+    padded_betas = [] # initial empty padded betas (extra zeroes)
     sigma_sqr = [] # noise variance parameter
     lambda_sqr = []
     delta_sqr = []
@@ -58,6 +59,7 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
     # Append the initial values of the vectors
     selectedFeatures.append(pi)
     beta.append([np.zeros(len(pi) + 1)]) # TODO this beta should be a dict
+    padded_betas.append([np.zeros(featureDimensionSpace + 1)]) # initial padded betas
     sigma_sqr.append(1)
     lambda_sqr.append(1)
     delta_sqr.append(1)
@@ -76,6 +78,8 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
         lambda_sqr, sigma_sqr, delta_sqr, X_cols, self.num_samples, T, it, changePoints)
       # Append the sample
       beta.append(sample)
+      padded_sample = self.transform_beta_coef(sample, pi, featureDimensionSpace)
+      padded_betas.append(padded_sample)
 
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
       sample = lambdaSqrSamplerWithChangepointsSeqCoup(beta, sigma_sqr, X_cols,
@@ -102,6 +106,7 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
         changePoints = changepointsSetMove(self.data, X, y, mu, alpha_gamma_sigma_sqr,
           beta_gamma_sigma_sqr, lambda_sqr, pi, self.num_samples, it, changePoints,
           'seq-coup', delta_sqr)
+        selectedChangepoints.append(changePoints) # append the results of the selected cps
 
       # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration
       # Select the data according to the set Pi or Pi*
@@ -120,5 +125,6 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
       'sigma_sqr_vector': sigma_sqr,
       'pi_vector': selectedFeatures,
       'tau_vector': selectedChangepoints,
-      'delta_sqr_vector': delta_sqr
+      'delta_sqr_vector': delta_sqr,
+      'padded_betas': padded_betas
     }
