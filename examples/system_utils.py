@@ -87,7 +87,18 @@ def generate_report(args, title, auprc):
     \end{figure}
     '''
     content = content + curr_content # append to the latex file
-    if type == 'Full-Parents':
+    if args['type'] == 'Full Parents':
+      # We add the multiple edge scores overlayed before showing them separately
+      curr_content = r'''
+      \subsection{Multiple Edge-Scores Lines-Plot}
+      \begin{figure}[H]
+        \includegraphics[width=10cm]{./figures/mult_edge_frac_scores_''' + curr_resp.lstrip('X') + r'''.png}
+        \centering
+        \caption{Multiple Line Plot of edge frac-scores.} 
+      \end{figure}
+      '''
+      content = content + curr_content # append to the latex content
+      
       # we have this here because the plots may not be applicable on other models
       content = content + r'''\subsubsection{Edge Specific Plots}''' 
       # Now we have to loop over the edge specific plots
@@ -131,7 +142,3 @@ def generate_report(args, title, auprc):
   
   # clean the output
   clean_output()
-
-if __name__ == '__main__':
-  generate_report()
-  

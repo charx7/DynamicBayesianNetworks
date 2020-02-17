@@ -62,6 +62,29 @@ def cps_plot(data, resp_label):
   plt.clf() # clear figure
   #plt.show()
 
+def multiple_line_plot(data, feature_labels, parent):
+  title = 'Multiiple Edge Fraction Scores of Y=' + parent
+
+  _x = [i for i in range(34)]
+  _x = [i for i in _x if i > 0]
+  
+  # style
+  plt.style.use('seaborn-darkgrid')
+  
+  # create a color palette
+  palette = plt.get_cmap('Set1')
+  
+  for column in range(data.shape[1]):
+    lbl = 'X' + str(feature_labels[column])
+    plt.plot(_x, data[:,column], marker='', color=palette(column), label=lbl)
+
+  plt.title(title)
+  plt.ylim(-0.55, 0.55)
+  plt.legend(loc=2, ncol=2) # Add legend
+  figure_route = 'figures/mult_edge_frac_scores_' + parent 
+  plt.savefig(figure_route)
+  plt.clf() # clear the figure so plots wont overlap
+  
 def line_plot(data, parent, response):
   title = 'Edge Fraction-Score of ' + parent + '->' + response 
   
@@ -90,6 +113,9 @@ def fraction_scores_plot(network_configurations, scores_over_time_list):
     for j_idx, feature in enumerate(feature_labels): # loop over all features
       curr_edge = curr_scores_over_time[:,j_idx] 
       line_plot(curr_edge, str(feature), response_label)
+
+    # call the multiple line plots
+    multiple_line_plot(curr_scores_over_time, feature_labels, response_label)
 
 def get_design_matrices_list(configurations):
   design_list = []
@@ -216,7 +242,7 @@ def chain_points_prob_plot(cps_over_response, network_configs):
     cps_plot(cps_prob, curr_resp_label)
 
 def main():
-  file_name = 'seq_coup_dbn.pckl'
+  file_name = 'fp_glob_coup_dbn.pckl'
   network = load_chain(file_name)
   network_configurations_list = network.network_configurations
   
