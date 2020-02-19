@@ -2,6 +2,7 @@ from .bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
 from .bayesianLinearRegression import BayesianLinearRegression
 from .seqCoupledBayesianPwLinReg import SeqCoupledBayesianPieceWiseLinearRegression
 from .globCoupBayesianPwLinReg import GlobCoupledBayesianPieceWiseLinearRegression
+from .vvglobCoup import VVglobCoupled
 from .scores import calculateFeatureScores, adjMatrixRoc, credible_interval, \
  credible_score, get_betas_over_time, get_scores_over_time, beta_post_matrix, score_beta_matrix
 from .fullParentsBpwLinReg import FPBayesianPieceWiseLinearRegression
@@ -230,6 +231,18 @@ class Network():
         'glob_coup_nh',               # glob coup additional functions
         num_samples,                  # number of data points
         self.chain_length,            # length of the chain
+        [num_samples + 2]             # just the last pseudo cp []
+      )
+      baReg.fit() # call to the fit method of the glob coup regressor
+      self.chain_results = baReg.results
+    elif method == 'var_glob_coup_nh_dbn':
+      self.network_args['model'] = 'Varying Globally Coupled Non-Homogeneous'
+      self.network_args['type'] = 'Varying Parents'
+      baReg = VVglobCoupled(
+        self.network_configuration,   # current data config
+        'var_glob_coup_nh',           # glob coup additional functions
+        num_samples,                  # number of data points
+        self.chain_length,            # len of chain
         [num_samples + 2]             # just the last pseudo cp []
       )
       baReg.fit() # call to the fit method of the glob coup regressor

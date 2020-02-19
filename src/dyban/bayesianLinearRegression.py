@@ -113,20 +113,20 @@ class BayesianLinearRegression:
     # Main for loop of the gibbs sampler
     for it in tqdm(range(self.num_iter)):
       ################# 1(a) Get a sample from sigma square
-      curr_sigma_sqr = sigmaSqrSampler(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, 
-        beta_gamma_sigma_sqr, self.num_samples - 1, T, it)
+      curr_sigma_sqr = sigmaSqrSampler(y, X, mu, lambda_sqr[it], alpha_gamma_sigma_sqr, 
+        beta_gamma_sigma_sqr, self.num_samples - 1, T)
       sigma_sqr.append(np.asscalar(curr_sigma_sqr))
 
       ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
-      sample = betaSampler(y, X, mu, lambda_sqr, sigma_sqr, X_cols, self.num_samples - 1, T, it)
+      sample = betaSampler(y, X, mu, lambda_sqr[it], sigma_sqr[it + 1], X_cols, self.num_samples - 1, T)
       # Append the sample
       beta.append(sample)
       padded_sample = self.transform_beta_coef(sample, pi, featureDimensionSpace)
       padded_betas.append(padded_sample)
 
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
-      sample = lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr,
-         beta_gamma_lambda_sqr, it)
+      sample = lambdaSqrSampler(X, beta[it + 1], mu, sigma_sqr[it + 1], X_cols, alpha_gamma_lambda_sqr,
+         beta_gamma_lambda_sqr)
       # Append the sampled value
       lambda_sqr.append(np.asscalar(sample))
 

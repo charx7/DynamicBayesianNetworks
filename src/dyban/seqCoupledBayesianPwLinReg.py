@@ -67,29 +67,29 @@ class SeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegress
     # Main for loop of the gibbs sampler
     for it in tqdm(range(self.num_iter)):
       ################# 1(b) Get a sample from sigma square
-      curr_sigma_sqr = sigmaSqrSamplerWithChangePointsSeqCop(y, X, mu, lambda_sqr,
-      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, self.num_samples, T, it,
-      changePoints, delta_sqr)
+      curr_sigma_sqr = sigmaSqrSamplerWithChangePointsSeqCop(y, X, mu, lambda_sqr[it],
+      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, self.num_samples, T,
+      changePoints, delta_sqr[it])
       # Append to the sigma vector
       sigma_sqr.append(np.asscalar(curr_sigma_sqr))
 
       ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
       sample = betaSamplerWithChangepointsSeqCoup(y, X, mu, 
-        lambda_sqr, sigma_sqr, delta_sqr, X_cols, self.num_samples, T, it, changePoints)
+        lambda_sqr[it], sigma_sqr[it + 1], delta_sqr[it], X_cols, self.num_samples, T, changePoints)
       # Append the sample
       beta.append(sample)
       padded_sample = self.transform_beta_coef(sample, pi, featureDimensionSpace)
       padded_betas.append(padded_sample)
 
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
-      sample = lambdaSqrSamplerWithChangepointsSeqCoup(beta, sigma_sqr, X_cols,
-       alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it, changePoints)
+      sample = lambdaSqrSamplerWithChangepointsSeqCoup(beta[it + 1], sigma_sqr[it + 1], X_cols,
+       alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, changePoints)
       # Append the sampled value
       lambda_sqr.append(sample)
 
       # Now we alsom need a sample from delta square 
-      sample = deltaSqrSampleSeqCoup(X, y, beta, mu, lambda_sqr, sigma_sqr, delta_sqr,
-        X_cols, alpha_gamma_delta_sqr, beta_gamma_delta_sqr, it, changePoints)
+      sample = deltaSqrSampleSeqCoup(X, y, beta[it + 1], mu, lambda_sqr[it + 1], sigma_sqr[it + 1], delta_sqr[it],
+        X_cols, alpha_gamma_delta_sqr, beta_gamma_delta_sqr, changePoints)
       # Append the sampled value
       delta_sqr.append(sample)
       
