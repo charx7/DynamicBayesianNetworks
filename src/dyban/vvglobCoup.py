@@ -3,8 +3,8 @@ from tqdm import tqdm
 from .utils import constructDesignMatrix, generateInitialFeatureSet, constructMuMatrix, \
   deleteMove, addMove, exchangeMove, selectData, constructNdArray, constructResponseNdArray
 from .samplers import segmentSigmaSampler, vvBetaSamplerWithChangepoints, \
-  lambdaSqrSamplerWithChangepoints
-from .moves import globCoupFeatureSetMoveWithChangePoints, globCoupChangepointsSetMove
+  lambdaSqrSamplerWithChangepoints, vvMuSampler
+from .moves import globCoupFeatureSetMoveWithChangePoints, vvGlobCoupTauMove
 
 from .bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
 
@@ -81,30 +81,29 @@ class VVglobCoupled(BayesianPieceWiseLinearRegression):
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
       sample = lambdaSqrSamplerWithChangepoints(X, beta[it + 1], muVector[it], 
         sigma_sqr_vector[it + 1], X_cols, alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr,
-        it, changePoints)
+        changePoints)
       # Append the sampled value
       lambda_sqr.append(np.asscalar(sample))
+      
+      # ################ 4(b) This step proposes a change on the feature set Pi to Pi*
+      # ################ alongside a muve from \mu to \mu*
+      # pi, currMu, X = globCoupFeatureSetMoveWithChangePoints(self.data, X, y, muVector[it],
+      #  alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
+      #  lambda_sqr, sigma_sqr, pi, fanInRestriction, featureDimensionSpace,
+      #  self.num_samples, it, changePoints)
+      # # Append to the vector of results
+      # selectedFeatures.append(pi)
+      # muVector.append(currMu)
 
-      ################ 4(b) This step proposes a change on the feature set Pi to Pi*
-      ################ alongside a muve from \mu to \mu*
-      pi, currMu, X = globCoupFeatureSetMoveWithChangePoints(self.data, X, y, muVector[it],
-       alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
-       lambda_sqr, sigma_sqr, pi, fanInRestriction, featureDimensionSpace,
-       self.num_samples, it, changePoints)
-      # Append to the vector of results
-      selectedFeatures.append(pi)
-      muVector.append(currMu)
+      ################ Propose a change in the changepoints from tau to tau*
+      changePoints = vvGlobCoupTauMove(self.data, X, y, muVector[it],
+        alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], sigma_sqr_vector[it + 1],
+        pi, self.num_samples, changePoints)
 
-      # Check if the type is non-homgeneous to do inference over all possible cps
-      if self._type == 'glob_coup_nh':  
-        ################ 5(c) This step will propose a change in the changepoints from tau to tau*
-        changePoints, currMu = globCoupChangepointsSetMove(self.data, X, y, muVector[it + 1],
-         alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr, sigma_sqr,
-        pi, self.num_samples, it, changePoints)
+      selectedChangepoints.append(changePoints) # append the selected cps
+      
+      
 
-        selectedChangepoints.append(changePoints) # append the selected cps
-        # in case the current Mu changed then we replace it
-        muVector[it + 1] = currMu
 
       # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration
       # Select the data according to the set Pi or Pi*

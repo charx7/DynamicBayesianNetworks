@@ -94,7 +94,7 @@ def segmentSigmaSampler(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, \
     y_h = y[idx] # Get the current sub y vector
     X_h = X[idx] # Get the current design matrix
     sigma_h = sigmaSqrSampler(y_h, X_h, mu, lambda_sqr, alpha_gamma_sigma_sqr, \
-      beta_gamma_sigma_sqr, numSamples, T, it)
+      beta_gamma_sigma_sqr, numSamples, T)
     sigmas_vector.append(np.asscalar(sigma_h))
 
   return sigmas_vector
@@ -179,7 +179,7 @@ def vvBetaSamplerWithChangepoints(y, X, mu, lambda_sqr, sigma_sqr_vector,
 
     # Get the sample from beta using teh betaSampler func
     currCpBeta = betaSampler(y_h, X_h, mu, 
-      lambda_sqr, sigma_sqr_h, X_cols_h, currCplen, T, it)
+      lambda_sqr, sigma_sqr_h, X_cols_h, currCplen, T)
     # Append to the betas vector list
     betasVector.append(currCpBeta)
 
@@ -346,4 +346,44 @@ def muSampler(mu, change_points, X, y, sigma_sqr, lambda_sqr):
   sample = sample.reshape(sample.shape[0], 1)
   
   #return sample, density, densityBefore
+  return sample, density
+
+def vvMuSampler(mu, change_points, X, y, sigma_sqr, lambda_sqr):
+  time_pts = X[0].shape[0] # get the len of the time series
+  dims = X[0].shape[1] # get the number of parents + intercept
+  eye_1 = np.eye(time_pts)
+  eye_2 = np.eye(dims) 
+
+  cov_accum = 0
+  mean_accum = 0
+  for idx, _ in enumerate(change_points):
+    X_h = X[idx]
+    y_h = y[idx]
+    sigma_sqr_h = sigma_sqr[idx]
+
+    # covar calculations
+    el1 = eye_1 + lambda_sqr * np.dot(X_h, X_h.T)
+    el1 = np.linalg.inv(sigma_sqr_h * el1)
+    el1 = np.dot(np.dot(X_h.T, el1), X_h)
+
+    # mu calculations
+    el2 = eye_1 + lambda_sqr * np.dot(X_h, X_h.T)
+    el2 = np.linalg.inv(sigma_sqr_h * el1)
+    el2 = np.dot(np.dot(X_h.T, el2), y_h)
+
+    cov_accum = cov_accum + el1 # sum the current segment value
+    mean_accum = mean_accum + el2
+
+  cov_plus_plus = np.linalg.inv(cov_accum + eye_2) # covariance computation
+  mean_plus_plus = np.dot(cov_plus_plus, mean_accum)
+
+  # Get the sample
+  sample = np.random.multivariate_normal(mean_plus_plus.flatten(), cov_plus_plus)
+  # Calculate the density
+  density = multivariate_normal.pdf(sample.flatten(), mean = mean_plus_plus.flatten(),
+    cov = cov_plus_plus)
+
+  # reshape mu to avoid trouble later
+  sample = sample.reshape(sample.shape[0], 1)
+
   return sample, density

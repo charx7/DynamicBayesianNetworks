@@ -87,27 +87,20 @@ class FpBayesianLinearRegression:
     # Main for loop of the gibbs sampler
     for it in tqdm(range(self.num_iter)):
       ################# 1(a) Get a sample from sigma square
-      curr_sigma_sqr = sigmaSqrSampler(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, 
-        beta_gamma_sigma_sqr, self.num_samples - 1, T, it)
+      curr_sigma_sqr = sigmaSqrSampler(y, X, mu, lambda_sqr[it], alpha_gamma_sigma_sqr, 
+        beta_gamma_sigma_sqr, self.num_samples - 1, T)
       sigma_sqr.append(np.asscalar(curr_sigma_sqr))
 
       ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
-      sample = betaSampler(y, X, mu, lambda_sqr, sigma_sqr, X_cols, self.num_samples - 1, T, it)
+      sample = betaSampler(y, X, mu, lambda_sqr[it], sigma_sqr[it + 1], X_cols, self.num_samples - 1, T)
       # Append the sample
       beta.append([sample]) # append a list of samples so the cred intervals work
 
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
-      sample = lambdaSqrSampler(X, beta, mu, sigma_sqr, X_cols, alpha_gamma_lambda_sqr,
-         beta_gamma_lambda_sqr, it)
+      sample = lambdaSqrSampler(X, beta[it + 1], mu, sigma_sqr[it + 1], X_cols, alpha_gamma_lambda_sqr,
+         beta_gamma_lambda_sqr)
       # Append the sampled value
       lambda_sqr.append(np.asscalar(sample))
-
-      # Block not necessary in the full parents computation
-      # ################ 4(a) This step proposes a change on the feature set Pi to Pi*
-      # pi = featureSetMove(self.data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
-      #   lambda_sqr, pi, fanInRestriction, featureDimensionSpace, self.num_samples - 1, it)
-      # # Append to the vector of results
-      # selectedFeatures.append(pi)
 
       ################ Reconstruct the design matrix, mu vector and parameters for the next iteration
       # Select the data according to the set Pi or Pi*

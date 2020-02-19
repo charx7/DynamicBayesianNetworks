@@ -3,7 +3,7 @@ import math
 from scipy.stats import multivariate_normal
 from random import randint
 
-from .marginalLikelihood import calculateMarginalLikelihood, calculateMarginalLikelihoodWithChangepoints
+from .marginalLikelihood import calculateMarginalLikelihood, calculateMarginalLikelihoodWithChangepoints, vvLogMargLikelihood
 from .priors import calculateFeatureSetPriorProb, calculateChangePointsSetPrior
 from .utils import constructNdArray, generateInitialFeatureSet, \
   constructMuMatrix, deleteMove, addMove, exchangeMove, selectData, \
@@ -235,6 +235,76 @@ def selectMoveDict(selectedFunc):
 
   return switcher.get(selectedFunc)
 
+def vvGlobCoupTauMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
+  lambda_sqr, sigma_sqr, pi, numSamples, change_points):
+  
+  # Select a random birth, death or rellocate move
+  randomInteger = randint(0,2)
+
+  # Changepoint moves selection
+  validMove = True
+  if randomInteger == 0: # If the random integer is 0 then do a birth move
+    newChangePoints = cpBirthMove(change_points, numSamples)
+    if len(newChangePoints) > 9:
+      validMove = False
+    else:
+      # Hashting ratio calculation
+      hr = (numSamples - 1 - len(change_points)) / (len(newChangePoints))
+
+  elif randomInteger == 1: # do the death move
+    try:
+      newChangePoints = cpDeathMove(change_points)
+    except ValueError: # If the func fail then we stay the same
+      validMove = False
+      newChangePoints = change_points 
+    # Hashtings ratio calculation
+    hr = (len(change_points)) / (numSamples - 1 - len(newChangePoints))
+    
+  else: # do the rellocation move
+    try:
+      newChangePoints = cpRellocationMove(change_points)
+    except ValueError: # If the func fail then we stay the same
+      validMove = False  
+    # Hashtings ratio calculation
+    hr = 1
+
+  if validMove:
+    # Calculate the marginal likelihood of the current cps set
+    logmarginalTau = vvLogMargLikelihood(X, y, mu, alpha_gamma_sigma_sqr,
+      beta_gamma_sigma_sqr, lambda_sqr, numSamples, change_points)
+
+    # ---> Reconstruct the design ndArray, mu vector and parameters for the marg likelihook calc
+    # Select the data according to the set Pi
+    partialData = selectData(data, pi)
+    # Design ndArray
+    XStar = constructNdArray(partialData, numSamples, newChangePoints)
+    respVector = data['response']['y'] # We have to partition y for each changepoint as well
+    yStar = constructResponseNdArray(respVector, newChangePoints)
+    
+    # After changes on the design matrix now we can calculate the modified marg likelihood
+    # Calculate the marginal likelihood of the new cps set and new mu star
+    logmarginalTauStar = vvLogMargLikelihood(XStar, yStar, mu, 
+      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr, numSamples, newChangePoints)
+
+    # Prior calculations for tau, tau*
+    tauPrior = calculateChangePointsSetPrior(change_points)
+    tauStarPrior = calculateChangePointsSetPrior(newChangePoints)
+
+    # Get the threshhold of the probability of acceptance of the move
+    acceptanceRatio = min(1,
+      logmarginalTauStar - logmarginalTau + 
+      math.log(tauStarPrior) - math.log(tauPrior) +
+      math.log(hr)
+    )
+
+    # Get a sample from the U(0,1) to compare the acceptance ratio
+    u = np.random.uniform(0,1)
+    if u < math.exp(acceptanceRatio):
+      # if the sample is less than the acceptance ratio we accept the move to Tau* (the new cps)
+      change_points = newChangePoints
+      
+  return change_points
+    
 def globCoupFeatureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, sigma_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples,
   it, change_points, method = '', delta_sqr = []):

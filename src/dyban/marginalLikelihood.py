@@ -2,6 +2,46 @@ from scipy.special import gamma
 import numpy as np
 import math 
 
+def vvLogMargLikelihood(X, y, mu, alpha_sigma,
+  beta_sigma, lambda_sqr, num_samples, change_points):
+  # C_h and C_h determinant computation
+  cMatrixVector = []
+  cMatrixVectorLog = [] 
+  for idx, cp in enumerate(change_points):
+    currCplen = y[idx].shape[0] # The current cp len
+    X_h = X[idx] # Get the current design matrix (inside a cp)
+    
+    cMatrix = np.identity(currCplen) + lambda_sqr * (np.dot(X_h, X_h.T))
+    cMatrixVector.append(cMatrix) # append the C matrix because we will use it later
+
+    cMatrixDeterminant = np.linalg.det(cMatrix) # Determinant of the curr C matrix
+    logcMatrixDeterminant = math.log(cMatrixDeterminant ** (1/2))
+    cMatrixVectorLog.append(logcMatrixDeterminant) # append the log for later use
+  
+  accum = 0 # this will accumulate the marg likelihood
+  for idx, _ in enumerate(change_points):
+    T_h = y[idx].shape[0] # current segment length
+    c_h_det = cMatrixVectorLog[idx] # get the current det**(1/2) of C_h
+    y_h = y[idx] # Get the current sub y vector
+    X_h = X[idx] # Get the current design matrix (inside a cp)
+    cMatrix_h = cMatrixVector[idx] # Get the change point C Matrix
+    
+    el1 = math.log(gamma(T_h/2 + alpha_sigma)) - math.log(gamma(alpha_sigma))
+    el2 = math.log(math.pi ** (-T_h/2)) + math.log((2 * beta_sigma) ** (alpha_sigma)) - c_h_det
+
+    betaTilde = mu # if not mu is just the zero vector
+
+    # Matrix multiplication elements
+    matrixElement1 = (y_h.reshape(currCplen, 1) - np.dot(X_h, betaTilde)).T 
+    matrixElement2 = np.linalg.inv(cMatrix_h)
+    matrixElement3 = y_h.reshape(currCplen, 1) - np.dot(X_h, betaTilde)
+    partial = np.dot(np.dot(matrixElement1, matrixElement2), matrixElement3)
+    el3 = -(T_h / 2 + alpha_sigma) * math.log((2 * beta_sigma + partial)) 
+
+    accum = accum + el1 + el2 + el3 # Calculate the final result
+    
+  return accum
+
 def calculateSeqCoupMargLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
   beta_sigma, lambda_sqr, delta_sqr, num_samples, change_points):
   '''
@@ -71,7 +111,7 @@ def calculateMarginalLikelihoodWithChangepoints(X, y, mu, alpha_sigma,
     #cMatrixDeterminantSqrt = cMatrixDeterminant ** (1/2)
     logcMatrixDeterminant = math.log(cMatrixDeterminant ** (1/2))
 
-    accumProd = accumProd + logcMatrixDeterminant# Acculate the log
+    accumProd = accumProd + logcMatrixDeterminant# Accumulate the log
   
   el1 = math.log(gamma(T/2 + alpha_sigma)) - math.log(gamma(alpha_sigma))
   #el2 =  (((math.pi) ** (-T/2)) * (2 * beta_sigma) ** (alpha_sigma)) / (accumProd) # Now we need the accum

@@ -91,20 +91,20 @@ class FPBayesianPieceWiseLinearRegression(BayesianLinearRegression):
     # Main for loop of the gibbs sampler
     for it in tqdm(range(self.num_iter)):
       ################# 1(b) Get a sample from sigma square
-      curr_sigma_sqr = sigmaSqrSamplerWithChangePoints(y, X, mu, lambda_sqr,
-      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, self.num_samples, T, it, changePoints)
+      curr_sigma_sqr = sigmaSqrSamplerWithChangePoints(y, X, mu, lambda_sqr[it],
+      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, self.num_samples, T, changePoints)
       # Append to the sigma vector
       sigma_sqr.append((curr_sigma_sqr).item())
 
       ################ 2(a) Get a sample of Beta form the multivariate Normal distribution
       sample = betaSamplerWithChangepoints(y, X, mu, 
-        lambda_sqr, sigma_sqr, X_cols, self.num_samples, T, it, changePoints)
+        lambda_sqr[it], sigma_sqr[it + 1], X_cols, self.num_samples, T, it, changePoints)
       # Append the sample
       beta.append(sample)
 
       ################ 3(a) Get a sample of lambda square from a Gamma distribution
-      sample = lambdaSqrSamplerWithChangepoints(X, beta, mu, sigma_sqr, X_cols,
-        alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, it, changePoints)
+      sample = lambdaSqrSamplerWithChangepoints(X, beta[it + 1], mu, sigma_sqr[it + 1], X_cols,
+        alpha_gamma_lambda_sqr, beta_gamma_lambda_sqr, changePoints)
       # Append the sampled value
       lambda_sqr.append((sample).item())
 
