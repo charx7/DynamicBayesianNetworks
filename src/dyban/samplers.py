@@ -88,14 +88,14 @@ def sigmaSqrSamplerWithChangePointsSeqCop(y, X, mu, lambda_sqr, alpha_gamma_sigm
   return curr_sigma_sqr
 
 def segmentSigmaSampler(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, \
-   beta_gamma_sigma_sqr, numSamples, T, it, change_points):
+   beta_gamma_sigma_sqr, numSamples, change_points):
   sigmas_vector = [] # sigma square vector that we will return
   for idx, _ in enumerate(change_points):
     y_h = y[idx] # Get the current sub y vector
     X_h = X[idx] # Get the current design matrix
     segment_len = y_h.shape[0]
     sigma_h = sigmaSqrSampler(y_h, X_h, mu, lambda_sqr, alpha_gamma_sigma_sqr, \
-      beta_gamma_sigma_sqr, segment_len, T)
+      beta_gamma_sigma_sqr, segment_len, segment_len)
     sigmas_vector.append(np.asscalar(sigma_h))
 
   return sigmas_vector
@@ -340,14 +340,15 @@ def muSampler(mu, change_points, X, y, sigma_sqr, lambda_sqr):
   # Calculate the density
   density = multivariate_normal.pdf(sample.flatten(), mean = muDaggerDagger.flatten(),
     cov = sigmaDaggerDagger)
-  # densityBefore  = multivariate_normal.pdf(mu.flatten(), mean = muDaggerDagger.flatten(),
-  #   cov = sigmaDaggerDagger)
+  # in case we just want the density w/o sampling
+  densityBefore  = multivariate_normal.pdf(mu.flatten(), mean = muDaggerDagger.flatten(),
+    cov = sigmaDaggerDagger)
 
   # reshape mu to avoid trouble later
   sample = sample.reshape(sample.shape[0], 1)
   
   #return sample, density, densityBefore
-  return sample, density
+  return sample, density, densityBefore
 
 def vvMuSampler(mu, change_points, X, y, sigma_sqr, lambda_sqr):
   dims = X[0].shape[1] # get the number of parents + intercept
@@ -383,8 +384,11 @@ def vvMuSampler(mu, change_points, X, y, sigma_sqr, lambda_sqr):
   # Calculate the density
   density = multivariate_normal.pdf(sample.flatten(), mean = mean_plus_plus.flatten(),
     cov = cov_plus_plus)
+  # in case we just want the density w/o sampling
+  densityBefore  = multivariate_normal.pdf(mu.flatten(), mean = mean_plus_plus.flatten(),
+    cov = cov_plus_plus)
 
   # reshape mu to avoid trouble later
   sample = sample.reshape(sample.shape[0], 1)
 
-  return sample, density
+  return sample, density, densityBefore

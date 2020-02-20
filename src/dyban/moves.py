@@ -69,7 +69,7 @@ def globCoupChangepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamm
     change_points, method, curr_delta_sqr)
     
     # Get the density of mu
-    _, muDensity = muSampler(mu, change_points,
+    _, _, muDensity = muSampler(mu, change_points,
       X, y, sigma_sqr[it + 1], lambda_sqr[it + 1])
 
     # ---> Reconstruct the design ndArray, mu vector and parameters for the marg likelihook calc
@@ -83,7 +83,7 @@ def globCoupChangepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamm
     muDagger = constructMuMatrix(pi) 
   
     # Mu matrix star matrix (new)
-    muStar, muStarDensity = muSampler(muDagger, newChangePoints, 
+    muStar, muStarDensity, _ = muSampler(muDagger, newChangePoints, 
       XStar, yStar, sigma_sqr[it + 1], lambda_sqr[it + 1])
 
     # After changes on the design matrix now we can calculate the modified marg likelihood
@@ -363,7 +363,7 @@ def vvGlobCoupPiMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr
     
     # TODO this should be different
     # Mu matrix star matrix (new)
-    muStar, muStarDensity = vvMuSampler(muDagger, change_points,
+    muStar, muStarDensity, _ = vvMuSampler(muDagger, change_points,
       XStar, y, sigma_sqr, lambda_sqr[it + 1])
 
     # Calculate marginal likelihook for PiStar
@@ -376,7 +376,7 @@ def vvGlobCoupPiMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr
     
     # TODO verify from here
     # Calculate mu density
-    _, muDensity = vvMuSampler(mu, change_points,
+    _, _, muDensity = vvMuSampler(mu, change_points,
       X, y, sigma_sqr, lambda_sqr[it + 1])
     
     # Calculate the prior probabilites of the move Pi -> Pi*
@@ -475,7 +475,7 @@ def globCoupFeatureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr
     XStar = constructNdArray(partialData, numSamples, change_points)
     muDagger = constructMuMatrix(piStar) 
     # Mu matrix star matrix (new)
-    muStar, muStarDensity = muSampler(muDagger, change_points, 
+    muStar, muStarDensity, _ = muSampler(muDagger, change_points, 
       XStar, y, sigma_sqr[it + 1], lambda_sqr[it + 1])
 
     # Calculate marginal likelihook for PiStar
@@ -487,7 +487,7 @@ def globCoupFeatureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr
     beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points, method, curr_delta_sqr)
 
     # Calculate mu density
-    _, muDensity = muSampler(mu, change_points, 
+    _, _, muDensity = muSampler(mu, change_points, 
       X, y, sigma_sqr[it + 1], lambda_sqr[it + 1])
 
     # Calculate the prior probabilites of the move Pi -> Pi*

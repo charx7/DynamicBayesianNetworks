@@ -73,7 +73,7 @@ def testVvGlobCoup(data, true_inc):
   baNet.infer_network('var_glob_coup_nh_dbn')
 
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
-  adjMatrixRoc(baNet.proposed_adj_matrix, true_inc, args.verbose)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
   
   # save the chain into the output folder
   save_chain('vv_glob_coup_dbn.pckl', baNet)

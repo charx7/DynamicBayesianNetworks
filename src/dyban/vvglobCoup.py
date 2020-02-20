@@ -66,7 +66,7 @@ class VVglobCoupled(BayesianPieceWiseLinearRegression):
     for it in tqdm(range(self.num_iter)):
       ################# 1(b) Get a sample from sigma square
       curr_sigma_sqr = segmentSigmaSampler(y, X, muVector[it], lambda_sqr[it],
-        alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, self.num_samples, T, it, changePoints)
+        alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, self.num_samples, changePoints)
       # Append to the sigma vector
       sigma_sqr_vector.append(curr_sigma_sqr)
 
@@ -124,7 +124,7 @@ class VVglobCoupled(BayesianPieceWiseLinearRegression):
       
     self.results = {
       'lambda_sqr_vector': lambda_sqr,
-      'sigma_sqr_vector': sigma_sqr,
+      'sigma_sqr_vector': sigma_sqr_vector,
       'pi_vector': selectedFeatures,
       'tau_vector': selectedChangepoints,
       'padded_betas': padded_betas
