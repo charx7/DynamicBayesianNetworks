@@ -90,7 +90,7 @@ class FpSeqCoupledBayesianPieceWiseLinearRegression(BayesianPieceWiseLinearRegre
       lambda_sqr.append(sample)
 
       # Now we alsom need a sample from delta square 
-      sample = deltaSqrSampleSeqCoup(X, y, beta, mu, lambda_sqr[it + 1], sigma_sqr[it + 1], delta_sqr[it],
+      sample = deltaSqrSampleSeqCoup(X, y, beta[it + 1], mu, lambda_sqr[it + 1], sigma_sqr[it + 1], delta_sqr[it],
         X_cols, alpha_gamma_delta_sqr, beta_gamma_delta_sqr, changePoints)
       # Append the sampled value
       delta_sqr.append(sample)

@@ -93,8 +93,9 @@ def segmentSigmaSampler(y, X, mu, lambda_sqr, alpha_gamma_sigma_sqr, \
   for idx, _ in enumerate(change_points):
     y_h = y[idx] # Get the current sub y vector
     X_h = X[idx] # Get the current design matrix
+    segment_len = y_h.shape[0]
     sigma_h = sigmaSqrSampler(y_h, X_h, mu, lambda_sqr, alpha_gamma_sigma_sqr, \
-      beta_gamma_sigma_sqr, numSamples, T)
+      beta_gamma_sigma_sqr, segment_len, T)
     sigmas_vector.append(np.asscalar(sigma_h))
 
   return sigmas_vector
@@ -349,9 +350,7 @@ def muSampler(mu, change_points, X, y, sigma_sqr, lambda_sqr):
   return sample, density
 
 def vvMuSampler(mu, change_points, X, y, sigma_sqr, lambda_sqr):
-  time_pts = X[0].shape[0] # get the len of the time series
   dims = X[0].shape[1] # get the number of parents + intercept
-  eye_1 = np.eye(time_pts)
   eye_2 = np.eye(dims) 
 
   cov_accum = 0
@@ -360,7 +359,9 @@ def vvMuSampler(mu, change_points, X, y, sigma_sqr, lambda_sqr):
     X_h = X[idx]
     y_h = y[idx]
     sigma_sqr_h = sigma_sqr[idx]
-
+    time_pts = X_h.shape[0] # get the len of the curr segment 
+    eye_1 = np.eye(time_pts)
+  
     # covar calculations
     el1 = eye_1 + lambda_sqr * np.dot(X_h, X_h.T)
     el1 = np.linalg.inv(sigma_sqr_h * el1)
@@ -368,7 +369,7 @@ def vvMuSampler(mu, change_points, X, y, sigma_sqr, lambda_sqr):
 
     # mu calculations
     el2 = eye_1 + lambda_sqr * np.dot(X_h, X_h.T)
-    el2 = np.linalg.inv(sigma_sqr_h * el1)
+    el2 = np.linalg.inv(sigma_sqr_h * el2)
     el2 = np.dot(np.dot(X_h.T, el2), y_h)
 
     cov_accum = cov_accum + el1 # sum the current segment value

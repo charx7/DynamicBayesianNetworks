@@ -4,7 +4,7 @@ from .utils import constructDesignMatrix, generateInitialFeatureSet, constructMu
   deleteMove, addMove, exchangeMove, selectData, constructNdArray, constructResponseNdArray
 from .samplers import segmentSigmaSampler, vvBetaSamplerWithChangepoints, \
   lambdaSqrSamplerWithChangepoints, vvMuSampler
-from .moves import globCoupFeatureSetMoveWithChangePoints, vvGlobCoupTauMove
+from .moves import vvGlobCoupPiMove, vvGlobCoupTauMove
 
 from .bayesianPwLinearRegression import BayesianPieceWiseLinearRegression
 
@@ -65,7 +65,7 @@ class VVglobCoupled(BayesianPieceWiseLinearRegression):
     # Main for loop of the gibbs sampler
     for it in tqdm(range(self.num_iter)):
       ################# 1(b) Get a sample from sigma square
-      curr_sigma_sqr = segmentSigmaSampler(y, X, muVector[it], lambda_sqr,
+      curr_sigma_sqr = segmentSigmaSampler(y, X, muVector[it], lambda_sqr[it],
         alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, self.num_samples, T, it, changePoints)
       # Append to the sigma vector
       sigma_sqr_vector.append(curr_sigma_sqr)
@@ -85,25 +85,15 @@ class VVglobCoupled(BayesianPieceWiseLinearRegression):
       # Append the sampled value
       lambda_sqr.append(np.asscalar(sample))
       
-      # ################ 4(b) This step proposes a change on the feature set Pi to Pi*
-      # ################ alongside a muve from \mu to \mu*
-      # pi, currMu, X = globCoupFeatureSetMoveWithChangePoints(self.data, X, y, muVector[it],
-      #  alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
-      #  lambda_sqr, sigma_sqr, pi, fanInRestriction, featureDimensionSpace,
-      #  self.num_samples, it, changePoints)
-      # # Append to the vector of results
-      # selectedFeatures.append(pi)
-      # muVector.append(currMu)
-
-      ################ Propose a change in the changepoints from tau to tau*
-      changePoints = vvGlobCoupTauMove(self.data, X, y, muVector[it],
-        alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], sigma_sqr_vector[it + 1],
-        pi, self.num_samples, changePoints)
-
-      selectedChangepoints.append(changePoints) # append the selected cps
+      ################ Propose a move from pi -> pi* and \mu -> \mu*
+      pi, currMu, X = vvGlobCoupPiMove(self.data, X, y, muVector[it],
+       alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
+       lambda_sqr, sigma_sqr_vector[it + 1], pi, fanInRestriction, featureDimensionSpace,
+       self.num_samples, it, changePoints)
       
-      
-
+      # Append to the vector of results
+      selectedFeatures.append(pi)
+      muVector.append(currMu)
 
       # ---> Reconstruct the design ndArray, mu vector and parameters for the next iteration
       # Select the data according to the set Pi or Pi*
@@ -114,9 +104,24 @@ class VVglobCoupled(BayesianPieceWiseLinearRegression):
       y = constructResponseNdArray(respVector, changePoints)
       # Mu matrix
       mu = constructMuMatrix(pi)
+      
+      ################ Propose a change in the changepoints from tau to tau*
+      changePoints = vvGlobCoupTauMove(self.data, X, y, muVector[it + 1],
+        alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], sigma_sqr_vector[it + 1],
+        pi, self.num_samples, changePoints)
+
+      selectedChangepoints.append(changePoints) # append the selected cps
+      
+      # segment X and Y according the new change points
+      partialData = selectData(self.data, pi)
+      # Design ndArray
+      X = constructNdArray(partialData, self.num_samples, changePoints)
+      respVector = self.data['response']['y'] # We have to partition y for each changepoint as well
+      y = constructResponseNdArray(respVector, changePoints)
+
       # Get the new column size of the design matrix
       X_cols = [cp.shape[1] for cp in X] # This is now a vector of shapes
-    
+      
     self.results = {
       'lambda_sqr_vector': lambda_sqr,
       'sigma_sqr_vector': sigma_sqr,

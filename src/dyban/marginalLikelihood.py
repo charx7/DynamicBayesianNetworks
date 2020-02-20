@@ -32,9 +32,9 @@ def vvLogMargLikelihood(X, y, mu, alpha_sigma,
     betaTilde = mu # if not mu is just the zero vector
 
     # Matrix multiplication elements
-    matrixElement1 = (y_h.reshape(currCplen, 1) - np.dot(X_h, betaTilde)).T 
+    matrixElement1 = (y_h.reshape(T_h, 1) - np.dot(X_h, betaTilde)).T 
     matrixElement2 = np.linalg.inv(cMatrix_h)
-    matrixElement3 = y_h.reshape(currCplen, 1) - np.dot(X_h, betaTilde)
+    matrixElement3 = y_h.reshape(T_h, 1) - np.dot(X_h, betaTilde)
     partial = np.dot(np.dot(matrixElement1, matrixElement2), matrixElement3)
     el3 = -(T_h / 2 + alpha_sigma) * math.log((2 * beta_sigma + partial)) 
 

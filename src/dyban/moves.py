@@ -10,7 +10,17 @@ from .utils import constructNdArray, generateInitialFeatureSet, \
   constructNdArray, constructMuMatrix, constructResponseNdArray, \
   constructDesignMatrix
 from .changepointMoves import cpBirthMove, cpRellocationMove, cpDeathMove
-from .samplers import muSampler, betaTildeSampler
+from .samplers import muSampler, betaTildeSampler, vvMuSampler
+
+# Switcher that defines what random move we are going to make
+def selectMoveDict(selectedFunc):
+  switcher = {
+    0: addMove,
+    1: deleteMove,
+    2: exchangeMove
+  }
+
+  return switcher.get(selectedFunc)
 
 def globCoupChangepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, sigma_sqr, pi, numSamples, it, change_points, method = '', delta_sqr = []):
@@ -225,16 +235,6 @@ def changepointsSetMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_
 
   return change_points
 
-# Switcher that defines what random move we are going to make
-def selectMoveDict(selectedFunc):
-  switcher = {
-    0: addMove,
-    1: deleteMove,
-    2: exchangeMove
-  }
-
-  return switcher.get(selectedFunc)
-
 def vvGlobCoupTauMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, sigma_sqr, pi, numSamples, change_points):
   
@@ -304,7 +304,116 @@ def vvGlobCoupTauMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sq
       change_points = newChangePoints
       
   return change_points
+
+def vvGlobCoupPiMove(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
+  lambda_sqr, sigma_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples,
+  it, change_points):
+  '''
+    Documentation is missing for this function
+  '''
+  # Get the possible features set
+  possibleFeaturesSet = list(data['features'].keys())
+  possibleFeaturesSet = [int(x.replace('X', '')) for x in possibleFeaturesSet]
+  
+  # Select a random add, delete or exchange move
+  randomInteger = randint(0,2)
+  # Do the calculation according to the randomly selected move
+  validMove = True
+  if randomInteger == 0:
+    # Add move
+    try:
+      piStar = addMove(pi, featureDimensionSpace, fanInRestriction, possibleFeaturesSet)
+      hr = (featureDimensionSpace - len(pi)) / len(piStar) # HR calculation
+    except ValueError:
+      validMove = False
+      piStar = pi
+      hr = 0
+  elif randomInteger == 1:
+    # Delete Move
+    try:
+      piStar = deleteMove(pi, featureDimensionSpace, fanInRestriction, possibleFeaturesSet)
+      hr = len(pi) / (featureDimensionSpace - len(piStar)) # HR calculation
+    except ValueError:
+      validMove = False
+      piStar = pi
+      hr = 0
+  elif randomInteger == 2:
+    # Exchange move
+    try:
+      piStar = exchangeMove(pi, featureDimensionSpace, fanInRestriction, possibleFeaturesSet)
+      hr = 1
+    except ValueError:
+      validMove = False
+      piStar = pi
+      hr = 0
+  # if we have a valid move -> we compute the marg likelihoods
+  if validMove:
+    # Construct the new X, mu
+    partialData = {
+      'features':{},
+      'response':{}
+    }
+    for feature in piStar:
+      currKey = 'X' + str(int(feature))
+      partialData['features'][currKey] = data['features'][currKey]
+
+    # Design Matrix Design tensor? Design NdArray?
+    XStar = constructNdArray(partialData, numSamples, change_points)
+    muDagger = constructMuMatrix(piStar) 
     
+    # TODO this should be different
+    # Mu matrix star matrix (new)
+    muStar, muStarDensity = vvMuSampler(muDagger, change_points,
+      XStar, y, sigma_sqr, lambda_sqr[it + 1])
+
+    # Calculate marginal likelihook for PiStar
+    logmarginalPiStar = vvLogMargLikelihood(XStar, y, muStar,
+      alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points)
+
+    # Calculate marginal likelihood for Pi
+    logmarginalPi = vvLogMargLikelihood(X, y, mu, alpha_gamma_sigma_sqr,
+      beta_gamma_sigma_sqr, lambda_sqr[it + 1], numSamples, change_points)
+    
+    # TODO verify from here
+    # Calculate mu density
+    _, muDensity = vvMuSampler(mu, change_points,
+      X, y, sigma_sqr, lambda_sqr[it + 1])
+    
+    # Calculate the prior probabilites of the move Pi -> Pi*
+    piPrior = calculateFeatureSetPriorProb(pi, featureDimensionSpace, fanInRestriction) 
+    logpiPrior = math.log(piPrior)
+    piStarPrior = calculateFeatureSetPriorProb(piStar, featureDimensionSpace, fanInRestriction)
+    logpiStarPrior = math.log(piStarPrior)
+
+    # Calculate the prior probabilities for mu and mu*
+    # TODO functionalize this calculations
+    muDagger = np.zeros(mu.shape[0])
+    muDaggerPlus = np.zeros(muStar.shape[0]) # we need this in order to calc the density
+    sigmaDagger = np.eye(muDagger.shape[0])
+    sigmaDaggerPlus = np.eye(muDaggerPlus.shape[0])
+    muStarPrior = multivariate_normal.pdf(muStar.flatten(), mean = muDaggerPlus.flatten(),
+      cov = sigmaDaggerPlus)
+    muPrior = multivariate_normal.pdf(mu.flatten(), mean = muDagger.flatten(),
+      cov = sigmaDagger)
+
+    # Calculate the final acceptance probability A(~) TODO this should be in log 
+    # terms to avoid underflow with very low densities!!!
+    acceptanceRatio = min(1,
+    logmarginalPiStar - logmarginalPi + 
+    logpiStarPrior - logpiPrior + math.log(muDensity) - math.log(muStarDensity) + 
+    math.log(muStarPrior) - math.log(muPrior) + math.log(hr)
+    )
+
+    # Get a sample from the U(0,1) to compare the acceptance ratio
+    u = np.random.uniform(0,1)
+    if u < math.exp(acceptanceRatio):
+      # if the sample is less than the acceptance ratio we accept the move to Pi*
+      X = XStar
+      pi = piStar
+      mu = muStar
+
+  return pi, mu, X
+
 def globCoupFeatureSetMoveWithChangePoints(data, X, y, mu, alpha_gamma_sigma_sqr, beta_gamma_sigma_sqr,
   lambda_sqr, sigma_sqr, pi, fanInRestriction, featureDimensionSpace, numSamples,
   it, change_points, method = '', delta_sqr = []):
