@@ -9,6 +9,7 @@ from .fullParentsBpwLinReg import FPBayesianPieceWiseLinearRegression
 from .fpBayesianLinearRegression import FpBayesianLinearRegression
 from .fpGlobCoupBpwLinReg import FpGlobCoupledBayesianPieceWiseLinearRegression
 from .fpSeqCoupBpwlinReg import FpSeqCoupledBayesianPieceWiseLinearRegression
+from .fpvvGlobCoup import FpVVglobCoupled
 import numpy as np
 
 class Network():
@@ -247,6 +248,18 @@ class Network():
       )
       baReg.fit() # call to the fit method of the glob coup regressor
       self.chain_results = baReg.results
+    elif method == 'fp_var_glob_coup_nh_dbn':
+      self.network_args['model'] = 'Varying Globally Coupled Non-Homogeneous'
+      self.network_args['type'] = 'Full Parents'
+      baReg = FpVVglobCoupled(
+        self.network_configuration,   # current data config
+        'var_glob_coup_nh',           # glob coup additional functions
+        num_samples,                  # number of data points
+        self.chain_length,            # len of chain
+        [num_samples + 2]             # just the last pseudo cp []
+      )
+      baReg.fit() # call to the fit method of the glob coup regressor
+      self.chain_results = baReg.results
 
   def score_edges(self, currResponse, method):
     '''
@@ -266,13 +279,16 @@ class Network():
 
     # check if the method is for full parents
     # this should only check the first 2 letters of the method
+
     if (method == 'fp_varying_nh_dbn' 
       or method == 'fp_h_dbn'
       or method == 'fp_seq_coup_nh_dbn'
-      or method == 'fp_glob_coup_nh_dbn'): 
+      or method == 'fp_glob_coup_nh_dbn'
+      or method == 'fp_var_glob_coup_nh_dbn'): 
       
       # thin + burn the chain on the global mean chain
-      if method == 'fp_glob_coup_nh_dbn':
+      if (method == 'fp_glob_coup_nh_dbn'
+        or method == 'fp_var_glob_coup_nh_dbn'):
         # if the method is from the glob coup we will use the global mean vector 
         burned_chain = self.chain_results['mu_vector'][self.burn_in:]
         thinned_chain = [burned_chain[x] for x in range(len(burned_chain)) if x%10==0]

@@ -64,6 +64,22 @@ def read_yeast():
   ]
   return(data_list, true_inc)
 
+def testVvGlobCoup(data, true_inc):
+  output_line = (
+    'Full Parents Credible Intervals Globally Coupled Segmented Variances Bayesian Piece-Wise Linear Regression' +
+    'with moves on change-points only Yeast Data.'
+  )
+  print(output_line) ; logger.info(output_line) # Print and write output
+
+  baNet = Network(data, args.chain_length, args.burn_in)
+  baNet.infer_network('fp_var_glob_coup_nh_dbn')
+
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+
+  # save the chain into the output folder
+  save_chain('fp_vv_glob_coup_dbn.pckl', baNet)
+
 def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
   output_line = (
     'Full Parents Credible Intervals Globally Coupled Bayesian Piece-Wise Linear Regression' +
@@ -157,6 +173,8 @@ def main():
     testSeqCoupPwBlrWithCpsParentMoves(data, true_inc)
   elif args.method == 'glob-dbn':
     testGlobCoupPwBlrWithCpsParentMoves(data, true_inc)
+  elif args.method == 'var-glob-dbn':
+    testVvGlobCoup(data, true_inc)
 
 if __name__ == "__main__":
   main()
