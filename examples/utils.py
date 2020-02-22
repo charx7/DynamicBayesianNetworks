@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from pprint import pprint
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, precision_score, recall_score, f1_score
 from numpy import genfromtxt
+import numpy as np
 
 # Logger configuration TODO move this into a config file
 logger = logging.getLogger(__name__) # create a logger obj
@@ -20,23 +21,37 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 def transformResults(trueAdjMatrix, adjMatrixProp):
+  # copy the arrays so we dont modify the original objs
+  trueAdjMatrix_copy = trueAdjMatrix.copy()
+  adjMatrixProp_copy = adjMatrixProp.copy()
   # Remove the diagonal that is allways going to be right
   trueAdjMatrixNoDiag = []
   idxToRemove = 0
-  for row in trueAdjMatrix:
+  for row in trueAdjMatrix_copy:
     row.pop(idxToRemove)
     trueAdjMatrixNoDiag.append(row)
     idxToRemove = idxToRemove + 1
   # Now for the inferred matrix  
   adjMatrixPropNoDiag = []
   idxToRemove = 0
-  for row in adjMatrixProp:
+  for row in adjMatrixProp_copy:
     row.pop(idxToRemove)
     adjMatrixPropNoDiag.append(row)
     idxToRemove = idxToRemove + 1
   # Re-assign them
   trueAdjMatrix = trueAdjMatrixNoDiag
   adjMatrixProp = adjMatrixPropNoDiag
+
+  # TODO functionalize/generalize and fix
+  # Quick fix to evaluate
+  if len(trueAdjMatrix[0]) < len(adjMatrixProp[0]):
+    adjMatrixProp = [] # reset to empty
+    # we have a lag
+    for row in adjMatrixPropNoDiag:
+      first_part = np.asarray(row[:4])
+      second_part = np.asarray(row[4:])
+      mean_row = np.max([first_part, second_part], axis=0)
+      adjMatrixProp.append(mean_row.tolist())
 
   # Flatten the adj matrix to pass to the RoC
   flattened_true = [item for sublist in trueAdjMatrix for item in sublist]

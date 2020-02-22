@@ -25,8 +25,9 @@ class Network():
       burn_in : int
         integer that determines the burn_in interval of the MCMC chain 
   '''
-  def __init__(self, data, chain_length, burn_in, change_points = []):
+  def __init__(self, data, chain_length, burn_in, lag, change_points = []):
     self.data = data
+    self.lag = lag
     self.change_points = change_points
     self.network_configuration = None
     self.chain_length = chain_length 
@@ -88,19 +89,37 @@ class Network():
       'response': {}
     }
 
-    # Add the features to the dict
-    for el in currFeatures:
-      col_name = 'X' + str(el)
-      feature_data = np.array([]) # data initilize as empty
-      for segment in network_list:
-        curr_segment_len = segment.shape[0]
-        # select all but the last data point
-        segment_data = segment[:curr_segment_len - 1, el]
-        # concatenate(stack) the segment data into the data of the curr feature
-        feature_data = np.concatenate((feature_data, segment_data)) if feature_data.size else segment_data
+    # add an aditional matrix for each max lag
+    count_label = 1
+    for lag in range(self.lag):
+      # Add the features to the dict
+      for el in currFeatures:
+        # if the lag is greater than 1 then label will be the count
+        if lag + 1 > 1:
+          label = count_label
+        else:
+          label = el
 
-      # add to the dict
-      data_dict['features'][col_name] = feature_data
+        col_name = 'X' + str(label)
+        feature_data = np.array([]) # data initilize as empty
+        for segment in network_list:
+          curr_segment_len = segment.shape[0]
+          # select all but the last data point
+          segment_data = segment[:curr_segment_len - (lag + 1), el]
+          # we do the insert only if lag > 1
+          if lag + 1 > 1:
+            # insert a 0 at the beginning for each lag beyond 1
+            for _ in range(lag):
+              # if we have a length greater than 1 then we append 0s to match the
+              # dimensions of the original design matrix
+              segment_data = np.insert(segment_data, 0, [0])
+          
+          # concatenate(stack) the segment data into the data of the curr feature
+          feature_data = np.concatenate((feature_data, segment_data)) if feature_data.size else segment_data
+
+        # add to the dict
+        data_dict['features'][col_name] = feature_data
+        count_label = count_label + 1 # sum 1 to the label
 
     # Select + stack the data for the response
     resp_data = np.array([]) # resp init as empty
@@ -274,12 +293,13 @@ class Network():
           with the chain_results of the pi_vector or with the credible intervals
           for the full parent sets
     '''
-    dims = self.data[0].shape[1] # dimensions of the data points
+    # current features + data dimensions according to the lag
     currFeatures = [int(string[1]) for string in list(self.network_configuration['features'])]
+    dims = self.data[0].shape[1] # dimensions of the data points
+    #dims = len(currFeatures) + 1
 
     # check if the method is for full parents
     # this should only check the first 2 letters of the method
-
     if (method == 'fp_varying_nh_dbn' 
       or method == 'fp_h_dbn'
       or method == 'fp_seq_coup_nh_dbn'
@@ -313,7 +333,8 @@ class Network():
       # This will get the betas over time as diagnostic
       if (method == 'fp_varying_nh_dbn'
         or method == 'fp_seq_coup_nh_dbn'
-        or method == 'fp_glob_coup_nh_dbn'): 
+        or method == 'fp_glob_coup_nh_dbn'
+        or method == 'fp_var_glob_coup_nh_dbn'): 
         # get the len of the time-series
         time_pts = self.network_configuration['response']['y'].shape[0]
         betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, betas_thinned_chain, dims) #TODO add the dims
@@ -361,8 +382,10 @@ class Network():
         burned_cps = self.chain_results['tau_vector'][self.burn_in:] 
         thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]
 
+        # get the dims of the betas
+        beta_dim = len(currFeatures) + 1 # we sum 1 because of the intercept
         time_pts = self.network_configuration['response']['y'].shape[0] # get the len of the time-series
-        betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, betas_thinned_chain, dims) #TODO add the dims
+        betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, betas_thinned_chain, beta_dim) #TODO add the dims
         self.betas_over_time.append(betas_over_time) # append to the network
         self.cps_over_response.append(thinned_changepoints) # append the cps chain over the curr response
       

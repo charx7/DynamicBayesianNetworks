@@ -153,7 +153,7 @@ def beta_post_matrix(thinned_chain):
   return betas_matrix
 
 def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, currentResponse):
-  adjRow = [0 for x in range(totalDims)]
+  adjRow = [0 for x in range(len(currentFeatures) + 1)]
   
   # Print and write the output
   output_line = (

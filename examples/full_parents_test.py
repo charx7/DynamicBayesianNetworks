@@ -16,6 +16,8 @@ parser.add_argument('-c_p', '--change_points', metavar='', type = int, default =
   help = 'a series of change points that will be generated. ')
 parser.add_argument('-m', '--method', metavar='', type = str, default = 'h-dbn',
   help = 'what method will be run')
+parser.add_argument('-l', '--lag', metavar='', type = int, default = 1,
+  help = 'lag of the time series')
 
 # Mutually exclusive arguments
 group  = parser.add_mutually_exclusive_group()
@@ -71,7 +73,7 @@ def testVvGlobCoup(data, true_inc):
   )
   print(output_line) ; logger.info(output_line) # Print and write output
 
-  baNet = Network(data, args.chain_length, args.burn_in)
+  baNet = Network(data, args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('fp_var_glob_coup_nh_dbn')
 
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
@@ -87,7 +89,7 @@ def testGlobCoupPwBlrWithCpsParentMoves(data, true_inc):
   )
   print(output_line) ; logger.info(output_line) # Print and write output
 
-  baNet = Network(data, args.chain_length, args.burn_in)
+  baNet = Network(data, args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('fp_glob_coup_nh_dbn')
 
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
@@ -103,7 +105,7 @@ def testSeqCoupPwBlrWithCpsParentMoves(data, true_inc):
   )
   print(output_line) ; logger.info(output_line) # Print and write output
 
-  baNet = Network(data, args.chain_length, args.burn_in)
+  baNet = Network(data, args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('fp_seq_coup_nh_dbn')
 
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
@@ -128,7 +130,7 @@ def testPwBlrWithCpsParentMoves(data, true_inc):
     data_len = data_len + segment.shape[0]
 
   args.change_points.append(data_len + 1) # append the len data + 1 so the algo works
-  baNet = Network(data, args.chain_length, args.burn_in)
+  baNet = Network(data, args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('fp_varying_nh_dbn')
 
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
@@ -147,7 +149,7 @@ def test_h_dbn(data, true_inc):
   change_points = [] # set the cps empty list because this is the homegeneous version
 
   # Create/Call the Network objects/methods
-  baNet = Network(data, args.chain_length, args.burn_in, args.change_points) # Create theh BN obj
+  baNet = Network(data, args.chain_length, args.burn_in, args.lag, args.change_points) # Create theh BN obj
   baNet.infer_network('fp_h_dbn') # Do the fixed parents version of the DBN algo
   
   # trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
