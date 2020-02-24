@@ -1,10 +1,29 @@
 import numpy as np
+import pandas as pd
 from scipy.spatial.distance import cdist, squareform
+from utils import read_pd_dataframe
+
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import ConstantKernel, RBF
 
 # plooter imports
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
+
+def plot_gp(mu, cov, X, X_train=None, Y_train=None, samples=[]):
+    X = X.ravel()
+    mu = mu.ravel()
+    uncertainty = 1.96 * np.sqrt(np.diag(cov))
+    
+    plt.fill_between(X, mu + uncertainty, mu - uncertainty, alpha=0.1)
+    plt.plot(X, mu, label='Mean')
+    for i, sample in enumerate(samples):
+        plt.plot(X, sample, lw=1, ls='--', label=f'Sample {i+1}')
+    if X_train is not None:
+        plt.plot(X_train, Y_train, 'rx')
+    plt.legend()
+    plt.show() 
 
 def kernel(X1, X2, l=1.0, sigma_f=1.0):
   '''
@@ -72,7 +91,7 @@ def generate_data():
 
   return X, y
 
-def main():
+def fit_example_data():
   X_train, y_train = generate_data()
 
   X_new = np.arange(-5, 5, 0.2).reshape(-1, 1)
@@ -84,19 +103,57 @@ def main():
   # plot the gp
   plot_gp(mu_s, cov_s, X_new, X_train=X_train, Y_train=y_train, samples=samples)
 
-def plot_gp(mu, cov, X, X_train=None, Y_train=None, samples=[]):
-    X = X.ravel()
-    mu = mu.ravel()
-    uncertainty = 1.96 * np.sqrt(np.diag(cov))
-    
-    plt.fill_between(X, mu + uncertainty, mu - uncertainty, alpha=0.1)
-    plt.plot(X, mu, label='Mean')
-    for i, sample in enumerate(samples):
-        plt.plot(X, sample, lw=1, ls='--', label=f'Sample {i+1}')
-    if X_train is not None:
-        plt.plot(X_train, Y_train, 'rx')
-    plt.legend()
-    plt.show() 
+def fit_mTor():
+  data = read_pd_dataframe('./data/mTOR_data.csv') 
+  
+  # select the treatment AS001_EQ
+  treatment = 'AS001_EQ'
+  norm_method = 'Normalized to loading control (GAPDH) for specific value at each time point'
+  df = data[(data.name == treatment) & (data.method == norm_method)]
+  
+  keep_cols = [
+    'aa + ins [min]',
+    'IR-beta-pY1146',
+    'IRS-pS636/639',
+    'AMPK-pT172',
+    'TSC2-pS1387',
+    'Akt-pT308',
+    'Akt-pS473',
+    'mTOR-pS2448',
+    'mTOR-pS2481',
+    'p70-S6K-pT389',
+    'PRAS40-pS183',
+    'PRAS40-pT246'
+    #'PRAS40-pT246.1' #-> current treatment doesnt have this column
+  ]
+  df = df[keep_cols] # subset the columns to keep
+  df = df.rename(columns = {'aa + ins [min]': 'time'}) # rename the time column
+  #df = df.iloc[:len(df) - 2] # drop the last idx -> impossible to fit a gp
 
+  curr_column = 'IR-beta-pY1146' 
+  X_train = df['time'].to_numpy().reshape(-1,1) # we need explicitely make it nx1 matrix
+  y_train = df[curr_column].to_numpy().reshape(-1,1) # we need explicitely make it nx1 matrix
+  y_train = y_train - np.mean(y_train) # center the data
+  y_train = y_train / np.std(y_train) # scale
+
+  # parameters of the gp
+  noise = 1e-8 # we are not considering noise in our sampled data
+  rbf = ConstantKernel(1.0) * RBF(length_scale=1.0) # kernel of our gp
+  gpr = GaussianProcessRegressor(kernel = rbf, alpha = noise ** 2)
+
+  # fit the gp
+  gpr.fit(X_train, y_train)
+
+  # Compute posterior predictive mean and covariance
+  X_pred = np.arange(0, 125, 0.1).reshape(-1, 1) # sample every 1 min
+  mu_s, cov_s = gpr.predict(X_pred, return_cov=True)
+  samples = np.random.multivariate_normal(mu_s.ravel(), cov_s, 3) # get a posterior sample 3 times
+
+  # Obtain optimized kernel parameters
+  l = gpr.kernel_.k2.get_params()['length_scale']
+  sigma_f = np.sqrt(gpr.kernel_.k1.get_params()['constant_value'])
+  
+  plot_gp(mu_s, cov_s, X_pred, X_train = X_train, Y_train = y_train, samples = samples)
+  
 if __name__ == '__main__':
-  main()
+  fit_mTor()

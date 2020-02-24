@@ -4,6 +4,7 @@ import pathlib
 import pickle
 import logging
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from pprint import pprint
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, precision_score, recall_score, f1_score
@@ -159,7 +160,20 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
     adjRow[feat] = freqSum / denom
 
   return adjRow
+
+def read_pd_dataframe(data_dir):
+  # get the current path
+  path = pathlib.Path.cwd()
+  # Path handling with the debugger
+  clPath = path.joinpath('examples')
     
+  # Try catch block to either run on the console or on the debugger/root folder
+  try: # try that we are executing on the same path as the file is
+    pandas_data = pd.read_csv(path.joinpath(data_dir), delimiter=',')
+  except: # we are executing from the root of our project 
+    pandas_data = pd.read_csv(clPath.joinpath(data_dir), delimiter=',')
+  return pandas_data  # return the data
+
 def data_reader(data_dir):
   # get the current path
   path = pathlib.Path.cwd()
