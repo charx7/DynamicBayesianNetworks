@@ -162,7 +162,8 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
   print(output_line) ; logger.info(output_line)
 
   results = {}
-  for feat in currentFeatures:
+  subl_features = currentFeatures[:totalDims -1] # slice the current features in case we have a lag
+  for idx, feat in enumerate(subl_features):
     output_line = (
       'Edge score for X{0}: '.format(feat + 1)
     )
@@ -170,8 +171,15 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
     freqSum = 0
     # Calculate the % of apperance
     for currentPi in selectedFeaturesVector:
-      if feat in currentPi:
-        freqSum = freqSum + 1
+      if len(currentFeatures) > totalDims: # if the lag is > 1 then:
+        lag_idx = (len(currentFeatures) - totalDims) + 1 
+        current_feature_lagged = currentFeatures[idx + lag_idx]
+        # this should be a loop to generalize over lags > 2
+        if (feat in currentPi) or (current_feature_lagged in currentPi):
+            freqSum = freqSum + 1
+      else:
+        if feat in currentPi:
+          freqSum = freqSum + 1
     
     denom = len([x for x in selectedFeaturesVector if x.size != 0])
     # Append to the dictionary of the results
