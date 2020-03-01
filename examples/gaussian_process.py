@@ -131,7 +131,7 @@ class GP():
     X = X.ravel()
     mu = mu.ravel()
     uncertainty = 1.96 * np.sqrt(np.diag(cov))
-    
+    uncertainty = np.nan_to_num(uncertainty) # replace the possible 0s
     plt.fill_between(X, mu + uncertainty, mu - uncertainty, alpha=0.1)
     plt.plot(X, mu, label='Mean')
     for i, sample in enumerate(samples):
@@ -142,15 +142,19 @@ class GP():
     plt.show() 
 
   @staticmethod
-  def generate_data():
+  def generate_data(noise):
     '''
       Generates 1d data points from -5 to 5 and 
       assigns y = sin(x) as a response (true function)
     '''
     # generate points from -5 to 5 with step 0.2
     X = np.array([-4, -3, -2, -1, 1]).reshape(-1, 1)
-    y = np.sin(X) # make the response the sin of X
-
+    y = np.sin(X)
+    # np.random.seed(42) # set seed
+    # noise = noise
+    # X = np.arange(-3, 4, 1).reshape(-1, 1)
+    # y = np.sin(X) + noise * np.random.randn(*X.shape) # make the response the sin of X
+    
     return X, y
 
   @staticmethod

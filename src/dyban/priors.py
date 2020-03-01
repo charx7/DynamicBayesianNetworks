@@ -57,7 +57,7 @@ def calculateFeatureSetPriorProb(featureSet, featuresDimensions, fanInRestrictio
     Returns:
         The prior probability of the set Pi.
   '''
-  if len(featureSet) > 3:
+  if len(featureSet) > fanInRestriction:
     return 0
 
   c = 0
