@@ -98,9 +98,9 @@ def query_data(treatment, insulin, norm_method, protein):
   return X_train, y_train
 
 def fit_mTor_example():
-  treatment = 'AS001_FM'
+  treatment = 'AS001_EQ'
   insulin = 'yes'
-  protein = 'IRS-pS636/639' 
+  protein = 'mTOR-pS2481' 
   norm_method = 'Normalized to loading control (GAPDH) for specific value at each time point'
   
   X_train, y_train = query_data(treatment, insulin, norm_method, protein)
@@ -116,10 +116,10 @@ def fit_mTor_example():
   GP.plot_gp(mu_post, cov_post, X_new, X_train, y_train, samples = samples)
 
 def loocv_fit_mTor():
-  treatment = 'AS001_EQ'
+  treatment = 'AVERAGE'
   insulin = 'yes'
   norm_method = 'Normalized to loading control (GAPDH) for specific value at each time point'
-  protein = 'IR-beta-pY1146' 
+  protein = 'PRAS40-pT246' 
 
   X_train, y_train = query_data(treatment, insulin, norm_method, protein)
   noise = 1e-8
@@ -137,19 +137,22 @@ def loocv_fit_mTor():
     curr_y_train, curr_y_test = y_train[train_index], y_train[test_index]
     # fit the current training data
     gp = GP(curr_X_train, curr_y_train, noise=noise)
-    gp.fit() # optimize
-    # current hyper-params
-    curr_mle_smoothness = gp.smoothness_opt
-    curr_mle_vert_variation = gp.vert_variation_opt
-    # get the prediction mean + cov value and calculate mse
-    mu_post, _ = gp.pred(curr_X_test)
-    curr_mse = (curr_y_test - mu_post) ** 2
-    mse_vector.append(curr_mse)
-    if curr_mse < cv_opt_mse:
-      gp_opt = gp
-      cv_opt_mse = curr_mse
-      cv_opt_smoothness = curr_mle_smoothness
-      cv_opt_vert_variation = curr_mle_vert_variation
+    try:
+      gp.fit() # optimize
+      # current hyper-params
+      curr_mle_smoothness = gp.smoothness_opt
+      curr_mle_vert_variation = gp.vert_variation_opt
+      # get the prediction mean + cov value and calculate mse
+      mu_post, _ = gp.pred(curr_X_test)
+      curr_mse = (curr_y_test - mu_post) ** 2
+      mse_vector.append(curr_mse)
+      if curr_mse < cv_opt_mse:
+        gp_opt = gp
+        cv_opt_mse = curr_mse
+        cv_opt_smoothness = curr_mle_smoothness
+        cv_opt_vert_variation = curr_mle_vert_variation
+    except:
+      pass # singular matrix -> go to the next iteration of loocv
 
   # select the best model and then run predictions
   X_new = np.arange(0, 125, 0.1).reshape(-1, 1) # to get the prediction curves
