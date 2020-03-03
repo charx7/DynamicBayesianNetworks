@@ -15,7 +15,7 @@ def parseCoefs(coefs_file):
   coefs = []
   path = pathlib.Path.cwd()
   # Path handling with the debugger
-  clPath = path.joinpath('src', 'NhDBN')
+  clPath = path.joinpath('examples', 'data')
   # parse the coefficients file
   try:
     with open(path.joinpath(coefs_file)) as file:

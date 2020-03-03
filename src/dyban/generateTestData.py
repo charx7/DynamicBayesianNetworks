@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import logging
-from systemUtils import writeOutputFile
+from .systemUtils import writeOutputFile
 
 # Logger configuration TODO move this into a config file
 logger = logging.getLogger(__name__) # create a logger obj
