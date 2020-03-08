@@ -58,7 +58,7 @@ def test_h_dbn(coefs):
   change_points = [] # set the cps empty list because this is the homegeneous version
   # Generate data to test our algo
   network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
-  coefs, args.num_samples, change_points, args.verbose, args.generated_noise_var)
+  coefs, args.num_samples, args.change_points, args.verbose, args.generated_noise_var)
 
   baNet = Network([network], args.chain_length, args.burn_in, args.lag, change_points) # Create theh BN obj
   baNet.infer_network('h_dbn') # Do the fixed parents version of the DBN algo

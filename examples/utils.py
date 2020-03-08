@@ -23,29 +23,31 @@ logger.addHandler(file_handler)
 
 def transformResults(trueAdjMatrix, adjMatrixProp):
   # copy the arrays so we dont modify the original objs
-  trueAdjMatrix_copy = trueAdjMatrix.copy()
+  trueAdjMatrix_copy = trueAdjMatrix.copy() # we can also copy with list(list_name)
   adjMatrixProp_copy = adjMatrixProp.copy()
   # Remove the diagonal that is allways going to be right
   trueAdjMatrixNoDiag = []
   idxToRemove = 0
   for row in trueAdjMatrix_copy:
-    row.pop(idxToRemove)
-    trueAdjMatrixNoDiag.append(row)
+    row_cpy = row.copy() # copy so it doesnt mutate the original obj
+    row_cpy.pop(idxToRemove)
+    trueAdjMatrixNoDiag.append(row_cpy)
     idxToRemove = idxToRemove + 1
   # Now for the inferred matrix  
   adjMatrixPropNoDiag = []
   idxToRemove = 0
   for row in adjMatrixProp_copy:
-    row.pop(idxToRemove)
-    adjMatrixPropNoDiag.append(row)
+    row_cpy = row.copy() # copy so it doesnt mutate the original obj
+    row_cpy.pop(idxToRemove)
+    adjMatrixPropNoDiag.append(row_cpy)
     idxToRemove = idxToRemove + 1
   # Re-assign them
-  trueAdjMatrix = trueAdjMatrixNoDiag
-  adjMatrixProp = adjMatrixPropNoDiag
+  trueAdjMatrix_copy = trueAdjMatrixNoDiag
+  adjMatrixProp_copy = adjMatrixPropNoDiag
 
   # TODO functionalize/generalize and fix
   # Quick fix to evaluate
-  if len(trueAdjMatrix[0]) < len(adjMatrixProp[0]):
+  if len(trueAdjMatrix_copy[0]) < len(adjMatrixProp_copy[0]):
     adjMatrixProp = [] # reset to empty
     # we have a lag
     for row in adjMatrixPropNoDiag:
@@ -55,14 +57,11 @@ def transformResults(trueAdjMatrix, adjMatrixProp):
       adjMatrixProp.append(mean_row.tolist())
 
   # Flatten the adj matrix to pass to the RoC
-  flattened_true = [item for sublist in trueAdjMatrix for item in sublist]
+  flattened_true = [item for sublist in trueAdjMatrix_copy for item in sublist]
   flattened_true = [1 if item else 0 for item in flattened_true] # convert to binary response vector
-  flattened_scores = [item for sublist in adjMatrixProp for item in sublist]
+  flattened_scores = [item for sublist in adjMatrixProp_copy for item in sublist]
   
-  trueAdjMatrix = flattened_true
-  adjMatrixProp = flattened_scores
-
-  return trueAdjMatrix, adjMatrixProp
+  return flattened_true, flattened_scores
 
 def scoreMetrics(adjMatrixProp, trueAdjMatrix):
   # calculate various metrics
