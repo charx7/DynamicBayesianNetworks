@@ -242,7 +242,7 @@ def chain_points_prob_plot(cps_over_response, network_configs):
     cps_plot(cps_prob, curr_resp_label)
 
 def main():
-  file_name = 'vv_glob_coup_dbn.pckl'
+  file_name = 'yeast_fp_glob_coup_dbn_1.pckl'
   network = load_chain(file_name)
   network_configurations_list = network.network_configurations
   

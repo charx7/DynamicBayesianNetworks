@@ -55,6 +55,8 @@ def transformResults(trueAdjMatrix, adjMatrixProp):
       second_part = np.asarray(row[4:])
       mean_row = np.max([first_part, second_part], axis=0)
       adjMatrixProp.append(mean_row.tolist())
+    # set it as copy so the flatten works
+    adjMatrixProp_copy = adjMatrixProp
 
   # Flatten the adj matrix to pass to the RoC
   flattened_true = [item for sublist in trueAdjMatrix_copy for item in sublist]

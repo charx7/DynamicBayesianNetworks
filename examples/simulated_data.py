@@ -1,7 +1,11 @@
 import argparse
 import logging
 import numpy as np
-from utils import transformResults, adjMatrixRoc
+import concurrent.futures
+import time
+import copy
+
+from utils import transformResults, adjMatrixRoc, save_chain
 from dyban.generateTestData import generateNetwork
 from dyban.utils import parseCoefs
 from dyban.systemUtils import cleanOutput, writeOutputFile
@@ -32,6 +36,8 @@ parser.add_argument('-m', '--method', metavar='', type = str, default = 'h-dbn',
   help = 'what method will be run')
 parser.add_argument('-l', '--lag', metavar='', type = int, default = 1,
   help = 'lag of the time series')
+parser.add_argument('-n_c', '--number_chains', metavar='', type = int, default = 1,
+  help = 'number of MCMC chains to run')
 
 # Mutually exclusive arguments
 group  = parser.add_mutually_exclusive_group()
@@ -48,7 +54,10 @@ file_handler = logging.FileHandler('output.log', mode='w') # The file output nam
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-def test_h_dbn(coefs):
+def test_h_dbn(f_args):
+  thread_id, coefs = f_args # deconstruct the f_arguments
+  start = time.perf_counter() # for timing the algorithm
+  
   output_line = (
     'Bayesian Linear Regression with moves on' +
     'the parent set only. \n'
@@ -58,14 +67,19 @@ def test_h_dbn(coefs):
   change_points = [] # set the cps empty list because this is the homegeneous version
   # Generate data to test our algo
   network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
-  coefs, args.num_samples, args.change_points, args.verbose, args.generated_noise_var)
+  coefs, args.num_samples, args.change_points.copy(), args.verbose, args.generated_noise_var)
 
   baNet = Network([network], args.chain_length, args.burn_in, args.lag, change_points) # Create theh BN obj
   baNet.infer_network('h_dbn') # Do the fixed parents version of the DBN algo
   
   true_inc = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
-  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+  
+  finish = time.perf_counter()
+  print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
+  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
+
+  return baNet, file_name, flattened_true, flattened_scores
 
 def testPwBlrWithParentMoves(coefs):
   output_line = (
@@ -137,20 +151,54 @@ def testGlobCoupPwBlrWithCpsParentMoves(coefs):
   trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
 
+def testVvGlobCoup(coefs):
+  output_line = (
+    'Varying Variances Globally Coupled Bayesian Piece-Wise Linear Regression with moves on ' +
+    'change-points and parent sets on Yeast Data.'
+  )
+  print(output_line) ; logger.info(output_line) # Print and write output
+  
+  # Generate data to test our algo
+  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
+  coefs, args.num_samples, args.change_points.copy(), args.verbose, args.generated_noise_var)
+
+  baNet = Network([network], args.chain_length, args.burn_in, args.lag)
+  baNet.infer_network('var_glob_coup_nh_dbn')
+
+  trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
+  adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
+
 def main():
   # The coefficients that will be used to generate the random data
   coefs = parseCoefs(args.coefs_file)
+  
   # Select and run the chosen algorithm
   if args.method == 'h-dbn':
-    test_h_dbn(coefs) # Uncomment for testing the second algo on a network  
-  elif args.method == 'nh-dbn':
-    testPwBlrWithCpsParentMoves(coefs) # Test the fourth algorithm  
-  elif args.method == 'seq-dbn':
-    testSeqCoupPwBlrWithCpsParentMoves(coefs) # test the fifth algorithm  
-  elif args.method == 'glob-dbn':
-    testGlobCoupPwBlrWithCpsParentMoves(coefs) # test the sixth algorithm
-  #elif args.method == 'var-glob-dbn':
-  #  testVvGlobCoup(data, true_inc)
+    func = test_h_dbn # Uncomment for testing the second algo on a network  
+  # elif args.method == 'nh-dbn':
+  #   testPwBlrWithCpsParentMoves(coefs, thread_id) # Test the fourth algorithm  
+  # elif args.method == 'seq-dbn':
+  #   testSeqCoupPwBlrWithCpsParentMoves(coefs) # test the fifth algorithm  
+  # elif args.method == 'glob-dbn':
+  #   testGlobCoupPwBlrWithCpsParentMoves(coefs) # test the sixth algorithm
+  # elif args.method == 'var-glob-dbn':
+  #   testVvGlobCoup(coefs)
+
+  with concurrent.futures.ThreadPoolExecutor() as executor:
+    chain_number = [1,2]
+    coefs_vec = [copy.deepcopy(coefs), copy.deepcopy(coefs)]
+
+    results = [executor.submit(func, args) for args in zip(chain_number, coefs_vec)]
+
+    for f  in concurrent.futures.as_completed(results):
+      print(f.result()) # debug to check if the result was computed
+
+      baNet, file_name, flattened_true, flattened_scores = f.result() # deconstruct future output
+      adjMatrixRoc(flattened_scores, flattened_true, args.verbose) # cannot display or save on a non-main thread
+
+      # save the chain into the output folder
+      save_chain(file_name, baNet)
+
 
 if __name__ == "__main__":
   main()

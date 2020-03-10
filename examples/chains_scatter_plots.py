@@ -12,8 +12,8 @@ def main():
     [0, 0, 1, 0, 0]
   ]
 
-  nmbr_chains = 3
-  model_name = 'yeast_glob_coup_dbn'
+  nmbr_chains = 5
+  model_name = 'yeast_vv_glob_coup_dbn'
   chains = []
   for idx in range(nmbr_chains):
     file_name = model_name + '_' + str(idx + 1) + '.pckl'
