@@ -375,9 +375,15 @@ class Network():
 
       # cps chain pruning
       if len(self.chain_results['tau_vector']) == 0:
-        # TODO fix the betas over time so it works with the homogeneous model
-        # we are on the homogeneous dbn model
-        pass
+        # we are on the homogeneous dbn model 
+        beta_dim = len(currFeatures) + 1 # we sum 1 because of the intercept
+        time_pts = self.network_configuration['response']['y'].shape[0] # get the len of the time-series
+        # -> create an artificial cps set that has just 1 cp as cp length + 2 so get_betas_over_time works
+        thinned_changepoints = [[time_pts + 2] for _ in range(len(betas_thinned_chain))]
+        betas_over_time = get_betas_over_time(time_pts, thinned_changepoints, betas_thinned_chain, beta_dim) #TODO add the dims
+        self.betas_over_time.append(betas_over_time) # append to the network
+        self.cps_over_response.append(thinned_changepoints) # append the cps chain over the curr response
+      
       else:
         burned_cps = self.chain_results['tau_vector'][self.burn_in:] 
         thinned_changepoints = [burned_cps[x] for x in range(len(burned_cps)) if x%10==0]

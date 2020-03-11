@@ -81,7 +81,10 @@ def test_h_dbn(f_args):
 
   return baNet, file_name, flattened_true, flattened_scores
 
-def testPwBlrWithParentMoves(coefs):
+def testPwBlrWithParentMoves(f_args):
+  thread_id, coefs = f_args # deconstruct the f_arguments
+  start = time.perf_counter() # for timing the algorithm
+  
   output_line = (
     'Bayesian Piece-Wise Linear Regression with moves on' +
     'the parent set only with fixed changepoints. \n'
@@ -97,9 +100,18 @@ def testPwBlrWithParentMoves(coefs):
 
   true_inc = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
-  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+  
+  finish = time.perf_counter()
+  print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
+  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
 
-def testPwBlrWithCpsParentMoves(coefs):
+  return baNet, file_name, flattened_true, flattened_scores
+
+
+def testPwBlrWithCpsParentMoves(f_args):
+  thread_id, coefs = f_args # deconstruct the f_arguments
+  start = time.perf_counter() # for timing the algorithm
+  
   output_line = (
     'Bayesian Piece-Wise Linear Regression with moves on' +
     'change-points and parent sets.'
@@ -115,9 +127,17 @@ def testPwBlrWithCpsParentMoves(coefs):
 
   trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
   flattened_true, flattened_scores = transformResults(trueAdjMatrix, baNet.proposed_adj_matrix)
-  adjMatrixRoc(flattened_scores, flattened_true, args.verbose)
+  
+  finish = time.perf_counter()
+  print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
+  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
 
-def testSeqCoupPwBlrWithCpsParentMoves(coefs):
+  return baNet, file_name, flattened_true, flattened_scores
+
+def testSeqCoupPwBlrWithCpsParentMoves(f_args):
+  thread_id, coefs = f_args # deconstruct the f_arguments
+  start = time.perf_counter() # for timing the algorithm
+  
   output_line = (
     'Sequentially Coupled Bayesian Piece-Wise Linear Regression with moves on' +
     'change-points and parent sets.'
@@ -131,10 +151,19 @@ def testSeqCoupPwBlrWithCpsParentMoves(coefs):
   baNet = Network([network], args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('seq_coup_nh_dbn')
 
-  trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
-  adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
+  true_inc = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  
+  finish = time.perf_counter()
+  print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
+  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
 
-def testGlobCoupPwBlrWithCpsParentMoves(coefs):
+  return baNet, file_name, flattened_true, flattened_scores
+
+def testGlobCoupPwBlrWithCpsParentMoves(f_args):
+  thread_id, coefs = f_args # deconstruct the f_arguments
+  start = time.perf_counter() # for timing the algorithm
+  
   output_line = (
     'Globally Coupled Bayesian Piece-Wise Linear Regression with moves on' +
     'change-points and parent sets.'
@@ -148,10 +177,19 @@ def testGlobCoupPwBlrWithCpsParentMoves(coefs):
   baNet = Network([network], args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('glob_coup_nh_dbn')
 
-  trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
-  adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
+  true_inc = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  
+  finish = time.perf_counter()
+  print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
+  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
 
-def testVvGlobCoup(coefs):
+  return baNet, file_name, flattened_true, flattened_scores
+
+def testVvGlobCoup(f_args):
+  thread_id, coefs = f_args # deconstruct the f_arguments
+  start = time.perf_counter() # for timing the algorithm
+  
   output_line = (
     'Varying Variances Globally Coupled Bayesian Piece-Wise Linear Regression with moves on ' +
     'change-points and parent sets on Yeast Data.'
@@ -165,8 +203,14 @@ def testVvGlobCoup(coefs):
   baNet = Network([network], args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('var_glob_coup_nh_dbn')
 
-  trueAdjMatrix = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
-  adjMatrixRoc(baNet.proposed_adj_matrix, trueAdjMatrix, args.verbose)
+  true_inc = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
+  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
+  
+  finish = time.perf_counter()
+  print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
+  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
+
+  return baNet, file_name, flattened_true, flattened_scores
 
 def main():
   # The coefficients that will be used to generate the random data
@@ -175,18 +219,19 @@ def main():
   # Select and run the chosen algorithm
   if args.method == 'h-dbn':
     func = test_h_dbn # Uncomment for testing the second algo on a network  
-  # elif args.method == 'nh-dbn':
-  #   testPwBlrWithCpsParentMoves(coefs, thread_id) # Test the fourth algorithm  
-  # elif args.method == 'seq-dbn':
-  #   testSeqCoupPwBlrWithCpsParentMoves(coefs) # test the fifth algorithm  
-  # elif args.method == 'glob-dbn':
-  #   testGlobCoupPwBlrWithCpsParentMoves(coefs) # test the sixth algorithm
-  # elif args.method == 'var-glob-dbn':
-  #   testVvGlobCoup(coefs)
+  elif args.method == 'nh-dbn':
+    func = testPwBlrWithCpsParentMoves # Test the fourth algorithm  
+  elif args.method == 'seq-dbn':
+    func = testSeqCoupPwBlrWithCpsParentMoves # test the fifth algorithm  
+  elif args.method == 'glob-dbn':
+    func = testGlobCoupPwBlrWithCpsParentMoves # test the sixth algorithm
+  elif args.method == 'var-glob-dbn':
+    func = testVvGlobCoup
 
   with concurrent.futures.ThreadPoolExecutor() as executor:
-    chain_number = [1,2]
-    coefs_vec = [copy.deepcopy(coefs), copy.deepcopy(coefs)]
+    
+    chain_number = [x + 1 for x in range(args.number_chains)]
+    coefs_vec = [copy.deepcopy(coefs) for _ in range(args.number_chains)]
 
     results = [executor.submit(func, args) for args in zip(chain_number, coefs_vec)]
 
