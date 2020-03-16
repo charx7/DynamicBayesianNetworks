@@ -55,7 +55,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 def test_h_dbn(f_args):
-  thread_id, coefs = f_args # deconstruct the f_arguments
+  thread_id, network, adjMatrix = f_args # deconstruct the f_arguments
   start = time.perf_counter() # for timing the algorithm
   
   output_line = (
@@ -65,10 +65,6 @@ def test_h_dbn(f_args):
   print(output_line) ; logger.info(output_line) # Print and write output
 
   change_points = [] # set the cps empty list because this is the homegeneous version
-  # Generate data to test our algo
-  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
-  coefs, args.num_samples, args.change_points.copy(), args.verbose, args.generated_noise_var)
-
   baNet = Network([network], args.chain_length, args.burn_in, args.lag, change_points) # Create theh BN obj
   baNet.infer_network('h_dbn') # Do the fixed parents version of the DBN algo
   
@@ -81,35 +77,8 @@ def test_h_dbn(f_args):
 
   return baNet, file_name, flattened_true, flattened_scores
 
-def testPwBlrWithParentMoves(f_args):
-  thread_id, coefs = f_args # deconstruct the f_arguments
-  start = time.perf_counter() # for timing the algorithm
-  
-  output_line = (
-    'Bayesian Piece-Wise Linear Regression with moves on' +
-    'the parent set only with fixed changepoints. \n'
-  )
-  print(output_line) ; logger.info(output_line) # Print and write output
-
-  # Generate data to test our algo
-  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep, coefs, args.num_samples,
-  args.change_points, args.verbose, args.generated_noise_var)
-
-  baNet = Network(network, args.chain_length, args.burn_in, args.change_points) # Create theh BN obj
-  baNet.infer_network('fixed_nh_dbn') # Do the fixed chnagepoints version of the DBN algo
-
-  true_inc = adjMatrix[0] # For the moment we just get the adj matrix of the first cp
-  flattened_true, flattened_scores = transformResults(true_inc, baNet.proposed_adj_matrix)
-  
-  finish = time.perf_counter()
-  print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
-  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
-
-  return baNet, file_name, flattened_true, flattened_scores
-
-
 def testPwBlrWithCpsParentMoves(f_args):
-  thread_id, coefs = f_args # deconstruct the f_arguments
+  thread_id, network, adjMatrix = f_args # deconstruct the f_arguments
   start = time.perf_counter() # for timing the algorithm
   
   output_line = (
@@ -117,10 +86,6 @@ def testPwBlrWithCpsParentMoves(f_args):
     'change-points and parent sets.'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
-
-  # Generate data to test our algo
-  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
-  coefs, args.num_samples, args.change_points, args.verbose, args.generated_noise_var)
 
   baNet = Network([network], args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('varying_nh_dbn')
@@ -130,12 +95,12 @@ def testPwBlrWithCpsParentMoves(f_args):
   
   finish = time.perf_counter()
   print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
-  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
+  file_name = 'sim_nh_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
 
   return baNet, file_name, flattened_true, flattened_scores
 
 def testSeqCoupPwBlrWithCpsParentMoves(f_args):
-  thread_id, coefs = f_args # deconstruct the f_arguments
+  thread_id, network, adjMatrix = f_args # deconstruct the f_arguments
   start = time.perf_counter() # for timing the algorithm
   
   output_line = (
@@ -143,10 +108,6 @@ def testSeqCoupPwBlrWithCpsParentMoves(f_args):
     'change-points and parent sets.'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
-
-  # Generate data to test our algo
-  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
-  coefs, args.num_samples, args.change_points, args.verbose, args.generated_noise_var)
 
   baNet = Network([network], args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('seq_coup_nh_dbn')
@@ -156,12 +117,12 @@ def testSeqCoupPwBlrWithCpsParentMoves(f_args):
   
   finish = time.perf_counter()
   print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
-  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
+  file_name = 'sim_seq_coup_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
 
   return baNet, file_name, flattened_true, flattened_scores
 
 def testGlobCoupPwBlrWithCpsParentMoves(f_args):
-  thread_id, coefs = f_args # deconstruct the f_arguments
+  thread_id, network, adjMatrix = f_args # deconstruct the f_arguments
   start = time.perf_counter() # for timing the algorithm
   
   output_line = (
@@ -169,10 +130,6 @@ def testGlobCoupPwBlrWithCpsParentMoves(f_args):
     'change-points and parent sets.'
   )
   print(output_line) ; logger.info(output_line) # Print and write output
-
-  # Generate data to test our algo
-  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
-  coefs, args.num_samples, args.change_points, args.verbose, args.generated_noise_var)
 
   baNet = Network([network], args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('glob_coup_nh_dbn')
@@ -182,12 +139,12 @@ def testGlobCoupPwBlrWithCpsParentMoves(f_args):
   
   finish = time.perf_counter()
   print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
-  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
+  file_name = 'sim_glob_coup_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
 
   return baNet, file_name, flattened_true, flattened_scores
 
 def testVvGlobCoup(f_args):
-  thread_id, coefs = f_args # deconstruct the f_arguments
+  thread_id, network, adjMatrix = f_args # deconstruct the f_arguments
   start = time.perf_counter() # for timing the algorithm
   
   output_line = (
@@ -196,10 +153,6 @@ def testVvGlobCoup(f_args):
   )
   print(output_line) ; logger.info(output_line) # Print and write output
   
-  # Generate data to test our algo
-  network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
-  coefs, args.num_samples, args.change_points.copy(), args.verbose, args.generated_noise_var)
-
   baNet = Network([network], args.chain_length, args.burn_in, args.lag)
   baNet.infer_network('var_glob_coup_nh_dbn')
 
@@ -208,7 +161,7 @@ def testVvGlobCoup(f_args):
   
   finish = time.perf_counter()
   print('My thread id is: ',thread_id, ' and I took: ', round(finish - start, 2), ' to run.')
-  file_name = 'sim_h_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
+  file_name = 'sim_seg_glob_coup_dbn_' + str(thread_id) + '.pckl' # set filename that is based on thread id
 
   return baNet, file_name, flattened_true, flattened_scores
 
@@ -229,11 +182,15 @@ def main():
     func = testVvGlobCoup
 
   with concurrent.futures.ThreadPoolExecutor() as executor:
-    
-    chain_number = [x + 1 for x in range(args.number_chains)]
-    coefs_vec = [copy.deepcopy(coefs) for _ in range(args.number_chains)]
+    # Generate data to test our algo
+    network, _, adjMatrix = generateNetwork(args.num_features, args.num_indep,
+      coefs, args.num_samples, args.change_points.copy(), args.verbose, args.generated_noise_var)
 
-    results = [executor.submit(func, args) for args in zip(chain_number, coefs_vec)]
+    chain_number = [x + 1 for x in range(args.number_chains)]
+    networks_vec = [copy.deepcopy(network) for _ in range(args.number_chains)]
+    adjMatrix_vec = [copy.deepcopy(adjMatrix) for _ in range(args.number_chains)]
+    
+    results = [executor.submit(func, args) for args in zip(chain_number, networks_vec, adjMatrix_vec)]
 
     for f  in concurrent.futures.as_completed(results):
       print(f.result()) # debug to check if the result was computed
@@ -243,7 +200,6 @@ def main():
 
       # save the chain into the output folder
       save_chain(file_name, baNet)
-
 
 if __name__ == "__main__":
   main()

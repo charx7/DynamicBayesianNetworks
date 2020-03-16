@@ -18,6 +18,8 @@ def generateNetwork(num_features, independent_features, parsed_coefs, num_sample
   '''
     Documentation is missing for the function
   '''
+  np.random.seed(42)
+
   if verbose:
     # Output file write
     output_line =  (

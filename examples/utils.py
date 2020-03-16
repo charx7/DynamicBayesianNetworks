@@ -50,9 +50,10 @@ def transformResults(trueAdjMatrix, adjMatrixProp):
   if len(trueAdjMatrix_copy[0]) < len(adjMatrixProp_copy[0]):
     adjMatrixProp = [] # reset to empty
     # we have a lag
+    num_scoring_dimensions = len(trueAdjMatrix[0]) - 1
     for row in adjMatrixPropNoDiag:
-      first_part = np.asarray(row[:4])
-      second_part = np.asarray(row[4:])
+      first_part = np.asarray(row[:num_scoring_dimensions])
+      second_part = np.asarray(row[num_scoring_dimensions:])
       mean_row = np.max([first_part, second_part], axis=0)
       adjMatrixProp.append(mean_row.tolist())
     # set it as copy so the flatten works

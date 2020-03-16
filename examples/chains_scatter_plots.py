@@ -4,16 +4,25 @@ from matplotlib.ticker import MaxNLocator
 from utils import load_chain, transformResults
 
 def main():
+  # true incidence for yeast data
+  # true_inc = [
+  #   [0, 0, 1, 0, 1],
+  #   [1, 0, 0, 1, 0],
+  #   [0, 1, 0, 0 ,0],
+  #   [0, 1, 1, 0, 0],
+  #   [0, 0, 1, 0, 0]
+  # ]
+  # true incidence for simulated data
   true_inc = [
-    [0, 0, 1, 0, 1],
-    [1, 0, 0, 1, 0],
-    [0, 1, 0, 0 ,0],
-    [0, 1, 1, 0, 0],
-    [0, 0, 1, 0, 0]
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [1, 0, 1, 0, 0, 0],
+    [1, 1, 0, 0, 0 ,0],
+    [1, 1, 1, 0, 0 ,0]
   ]
-
   nmbr_chains = 5
-  model_name = 'yeast_vv_glob_coup_dbn'
+  model_name = 'sim_glob_coup_dbn'
   chains = []
   for idx in range(nmbr_chains):
     file_name = model_name + '_' + str(idx + 1) + '.pckl'
