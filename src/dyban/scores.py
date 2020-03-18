@@ -153,7 +153,7 @@ def beta_post_matrix(thinned_chain):
   return betas_matrix
 
 def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, currentResponse):
-  adjRow = [0 for x in range(len(currentFeatures) + 1)]
+  adjCol = [0 for x in range(len(currentFeatures) + 1)]
   
   # Print and write the output
   output_line = (
@@ -189,9 +189,9 @@ def calculateFeatureScores(selectedFeaturesVector, totalDims, currentFeatures, c
     )
     print(output_line) ; logger.info(output_line)
     # Better return a row on the proposed adj matrix
-    adjRow[feat] = freqSum / denom
+    adjCol[feat] = freqSum / denom
 
-  return adjRow
+  return adjCol
 
 def credible_score(posterior_sample):
   post_len = len(posterior_sample)

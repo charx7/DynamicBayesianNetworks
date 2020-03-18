@@ -115,6 +115,73 @@ def fit_mTor_example():
   plt.title(f'treatment = {treatment}, protein = {protein}, insulin = {insulin}')
   GP.plot_gp(mu_post, cov_post, X_new, X_train, y_train, samples = samples)
 
+def mTOR_generate_data():
+  treatment = 'AVERAGE'
+  insulin = 'yes'
+  norm_method = 'Normalized to loading control (GAPDH) for specific value at each time point'
+  proteins = [
+      'IR-beta-pY1146',
+      'IRS-pS636/639',
+      'AMPK-pT172',
+      'TSC2-pS1387',
+      'Akt-pT308',
+      'Akt-pS473',
+      'mTOR-pS2448',
+      'mTOR-pS2481',
+      'p70-S6K-pT389',
+      'PRAS40-pS183',
+      'PRAS40-pT246'
+      #'PRAS40-pT246.1' #-> current treatment doesnt have this column
+  ]
+
+  gp_matrix_fit = np.array([]) 
+  for protein in proteins:
+    X_train, y_train = query_data(treatment, insulin, norm_method, protein)
+    noise = 1e-8
+
+    # LOOCV - fit for the current protein
+    cv_opt_mse = float('inf')
+    cv_opt_smoothness = None
+    cv_opt_vert_variation = None
+    gp_opt = None
+    mse_vector = []
+    loo = LeaveOneOut()
+    loo.get_n_splits(X_train)
+    for train_index, test_index in loo.split(X_train):
+      curr_X_train, curr_X_test = X_train[train_index], X_train[test_index]
+      curr_y_train, curr_y_test = y_train[train_index], y_train[test_index]
+      # fit the current training data
+      gp = GP(curr_X_train, curr_y_train, noise=noise)
+      try:
+        gp.fit() # optimize
+        # current hyper-params
+        curr_mle_smoothness = gp.smoothness_opt
+        curr_mle_vert_variation = gp.vert_variation_opt
+        # get the prediction mean + cov value and calculate mse
+        mu_post, _ = gp.pred(curr_X_test)
+        curr_mse = (curr_y_test - mu_post) ** 2
+        mse_vector.append(curr_mse)
+        if curr_mse < cv_opt_mse:
+          gp_opt = gp
+          cv_opt_mse = curr_mse
+          cv_opt_smoothness = curr_mle_smoothness
+          cv_opt_vert_variation = curr_mle_vert_variation
+      except:
+        pass # singular matrix -> go to the next iteration of loocv
+
+    # select the best model and then run predictions
+    X_new = np.arange(0, 120, 1).reshape(-1, 1) # to get the prediction curves
+    # the mu_post will be our equidistant time-points
+    mu_post, cov_post = gp_opt.pred(X_new)
+    
+    # stack the current mu_post to a numpy matrix
+    gp_matrix_fit = np.concatenate((gp_matrix_fit, mu_post), axis = 1) if gp_matrix_fit.size else mu_post
+
+  # transform the numpy matrix into a pandas df
+  fitted_df = pd.DataFrame(data = gp_matrix_fit, columns = proteins)
+  path = './examples/data/gp_mTOR.csv' 
+  fitted_df.to_csv(path, index = False)
+
 def loocv_fit_mTor():
   treatment = 'AVERAGE'
   insulin = 'yes'
@@ -232,4 +299,5 @@ def deterministic_data_example():
   GP.plot_gp(mu_s, cov_s, X_new, X_train=X_train, Y_train=y_train, samples=samples)
 
 if __name__ == '__main__':
-  loocv_fit_mTor()
+  #loocv_fit_mTor()
+  mTOR_generate_data()

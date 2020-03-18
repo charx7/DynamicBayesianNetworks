@@ -294,7 +294,7 @@ class Network():
           for the full parent sets
     '''
     # current features + data dimensions according to the lag
-    currFeatures = [int(string[1]) for string in list(self.network_configuration['features'])]
+    currFeatures = [int(string[1:]) for string in list(self.network_configuration['features'])]
     dims = self.data[0].shape[1] # dimensions of the data points
     #dims = len(currFeatures) + 1
 
